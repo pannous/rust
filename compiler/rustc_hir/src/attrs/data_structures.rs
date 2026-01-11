@@ -720,6 +720,9 @@ pub enum AttributeKind {
     /// Represents `#[rustc_dummy]`.
     Dummy,
 
+    /// Represents `#[dynexport]` for stable dynamic library exports.
+    DynExport(Span),
+
     /// Implementation detail of `#[eii]`
     EiiExternItem,
 

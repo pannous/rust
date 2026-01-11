@@ -21,9 +21,9 @@ use crate::attributes::allow_unstable::{
 use crate::attributes::body::CoroutineParser;
 use crate::attributes::cfi_encoding::CfiEncodingParser;
 use crate::attributes::codegen_attrs::{
-    ColdParser, CoverageParser, EiiExternItemParser, ExportNameParser, ForceTargetFeatureParser,
-    NakedParser, NoMangleParser, ObjcClassParser, ObjcSelectorParser, OptimizeParser,
-    RustcPassIndirectlyInNonRusticAbisParser, SanitizeParser, TargetFeatureParser,
+    ColdParser, CoverageParser, DynExportParser, EiiExternItemParser, ExportNameParser,
+    ForceTargetFeatureParser, NakedParser, NoMangleParser, ObjcClassParser, ObjcSelectorParser,
+    OptimizeParser, RustcPassIndirectlyInNonRusticAbisParser, SanitizeParser, TargetFeatureParser,
     ThreadLocalParser, TrackCallerParser, UsedParser,
 };
 use crate::attributes::confusables::ConfusablesParser;
@@ -241,6 +241,7 @@ attribute_parsers!(
         Single<WithoutArgs<CoroutineParser>>,
         Single<WithoutArgs<DenyExplicitImplParser>>,
         Single<WithoutArgs<DoNotImplementViaObjectParser>>,
+        Single<WithoutArgs<DynExportParser>>,
         Single<WithoutArgs<EiiExternItemParser>>,
         Single<WithoutArgs<ExportStableParser>>,
         Single<WithoutArgs<FfiConstParser>>,

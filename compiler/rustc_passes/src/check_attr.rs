@@ -280,6 +280,7 @@ impl<'tcx> CheckAttrVisitor<'tcx> {
                     | AttributeKind::LinkName { .. }
                     | AttributeKind::LinkOrdinal { .. }
                     | AttributeKind::NoMangle(..)
+                    | AttributeKind::DynExport(..)
                     | AttributeKind::Used { .. }
                     | AttributeKind::PassByValue (..)
                     | AttributeKind::StdInternalSymbol (..)

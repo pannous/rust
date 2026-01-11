@@ -660,6 +660,11 @@ pub static BUILTIN_ATTRIBUTES: &[BuiltinAttribute] = &[
         WarnFollowing, EncodeCrossCrate::No
     ),
     ungated!(
+        dynexport, Normal,
+        template!(Word),
+        WarnFollowing, EncodeCrossCrate::No
+    ),
+    ungated!(
         used, Normal,
         template!(Word, List: &["compiler", "linker"], "https://doc.rust-lang.org/reference/abi.html#the-used-attribute"),
         WarnFollowing, EncodeCrossCrate::No
