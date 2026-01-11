@@ -160,6 +160,11 @@ fn configure_and_expand(
         )
     });
 
+    // Script mode: wrap bare statements in main before macro expansion
+    sess.time("maybe_inject_script_main", || {
+        rustc_builtin_macros::script_harness::inject(&mut krate, sess, features, resolver)
+    });
+
     util::check_attr_crate_type(sess, pre_configured_attrs, resolver.lint_buffer());
 
     // Expand all macros
