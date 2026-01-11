@@ -1,0 +1,12 @@
+[package]
+name = "dynload"
+version = "0.1.0"
+edition = "2021"
+description = "Safe dynamic loading of Rust libraries with ABI verification"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+libloading = "0.8"
+thiserror = "1.0"
+
+[dev-dependencies]
