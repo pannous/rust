@@ -1,0 +1,1 @@
+./rustc -Z script probes/test_main.rs -o test && test
