@@ -515,7 +515,7 @@ impl Cursor<'_> {
             ':' => Colon,
             '$' => Dollar,
             '=' => Eq,
-            '!' => Bang,
+            '!' | '¬' => Bang,  // ¬ is U+00AC NOT SIGN
             '<' => Lt,
             '>' => Gt,
             '-' => Minus,

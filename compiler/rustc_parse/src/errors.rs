@@ -250,43 +250,6 @@ pub(crate) struct TildeAsUnaryOperator(
 );
 
 #[derive(Diagnostic)]
-#[diag(parse_unexpected_token_after_not)]
-pub(crate) struct NotAsNegationOperator {
-    #[primary_span]
-    pub negated: Span,
-    pub negated_desc: String,
-    #[subdiagnostic]
-    pub sub: NotAsNegationOperatorSub,
-}
-
-#[derive(Subdiagnostic)]
-pub(crate) enum NotAsNegationOperatorSub {
-    #[suggestion(
-        parse_unexpected_token_after_not_default,
-        style = "verbose",
-        applicability = "machine-applicable",
-        code = "!"
-    )]
-    SuggestNotDefault(#[primary_span] Span),
-
-    #[suggestion(
-        parse_unexpected_token_after_not_bitwise,
-        style = "verbose",
-        applicability = "machine-applicable",
-        code = "!"
-    )]
-    SuggestNotBitwise(#[primary_span] Span),
-
-    #[suggestion(
-        parse_unexpected_token_after_not_logical,
-        style = "verbose",
-        applicability = "machine-applicable",
-        code = "!"
-    )]
-    SuggestNotLogical(#[primary_span] Span),
-}
-
-#[derive(Diagnostic)]
 #[diag(parse_malformed_loop_label)]
 pub(crate) struct MalformedLoopLabel {
     #[primary_span]
