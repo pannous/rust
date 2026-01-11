@@ -242,35 +242,6 @@ pub(crate) enum InvalidComparisonOperatorSub {
 }
 
 #[derive(Diagnostic)]
-#[diag(parse_invalid_logical_operator)]
-#[note]
-pub(crate) struct InvalidLogicalOperator {
-    #[primary_span]
-    pub span: Span,
-    pub incorrect: String,
-    #[subdiagnostic]
-    pub sub: InvalidLogicalOperatorSub,
-}
-
-#[derive(Subdiagnostic)]
-pub(crate) enum InvalidLogicalOperatorSub {
-    #[suggestion(
-        parse_use_amp_amp_for_conjunction,
-        style = "verbose",
-        applicability = "machine-applicable",
-        code = "&&"
-    )]
-    Conjunction(#[primary_span] Span),
-    #[suggestion(
-        parse_use_pipe_pipe_for_disjunction,
-        style = "verbose",
-        applicability = "machine-applicable",
-        code = "||"
-    )]
-    Disjunction(#[primary_span] Span),
-}
-
-#[derive(Diagnostic)]
 #[diag(parse_tilde_is_not_unary_operator)]
 pub(crate) struct TildeAsUnaryOperator(
     #[primary_span]

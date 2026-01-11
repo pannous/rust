@@ -363,7 +363,7 @@ impl<'a> Parser<'a> {
     /// Possibly translate the current token to an associative operator.
     /// The method does not advance the current token.
     ///
-    /// Also performs recovery for `and` / `or` which are mistaken for `&&` and `||` respectively.
+    /// Also accepts `and` / `or` as aliases for `&&` and `||` respectively (C++ style).
     pub(super) fn check_assoc_op(&self) -> Option<Spanned<AssocOp>> {
         let (op, span) = match (AssocOp::from_token(&self.token), self.token.ident()) {
             // When parsing const expressions, stop parsing when encountering `>`.
@@ -390,22 +390,12 @@ impl<'a> Parser<'a> {
                 return None;
             }
             (Some(op), _) => (op, self.token.span),
-            (None, Some((Ident { name: sym::and, span }, IdentIsRaw::No)))
-                if self.may_recover() =>
-            {
-                self.dcx().emit_err(errors::InvalidLogicalOperator {
-                    span: self.token.span,
-                    incorrect: "and".into(),
-                    sub: errors::InvalidLogicalOperatorSub::Conjunction(self.token.span),
-                });
+            // C++ style: `and` as alias for `&&`
+            (None, Some((Ident { name: sym::and, span }, IdentIsRaw::No))) => {
                 (AssocOp::Binary(BinOpKind::And), span)
             }
-            (None, Some((Ident { name: sym::or, span }, IdentIsRaw::No))) if self.may_recover() => {
-                self.dcx().emit_err(errors::InvalidLogicalOperator {
-                    span: self.token.span,
-                    incorrect: "or".into(),
-                    sub: errors::InvalidLogicalOperatorSub::Disjunction(self.token.span),
-                });
+            // C++ style: `or` as alias for `||`
+            (None, Some((Ident { name: sym::or, span }, IdentIsRaw::No))) => {
                 (AssocOp::Binary(BinOpKind::Or), span)
             }
             _ => return None,
