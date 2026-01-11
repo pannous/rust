@@ -1,7 +1,8 @@
 //! Generates a main function wrapper for script-mode files.
 //!
-//! When `-Z script` is enabled, this module wraps bare statements/expressions
-//! in a generated `fn main()` if no main function exists.
+//! When `-Z script` is enabled OR the file has a shebang (`#!`), this module
+//! wraps bare statements/expressions in a generated `fn main()` if no main
+//! function exists.
 
 use rustc_ast as ast;
 use rustc_ast::attr::contains_name;
@@ -9,7 +10,9 @@ use rustc_ast::entry::EntryPointType;
 use rustc_expand::base::ResolverExpand;
 use rustc_feature::Features;
 use rustc_session::Session;
+use rustc_session::config::Input;
 use rustc_span::{DUMMY_SP, Ident, Span, sym};
+use std::fs;
 use thin_vec::ThinVec;
 
 /// Inject a main function wrapper for script mode.
@@ -19,8 +22,9 @@ pub fn inject(
     _features: &Features,
     _resolver: &mut dyn ResolverExpand,
 ) {
-    // Only activate if -Z script is enabled
-    if !sess.opts.unstable_opts.script {
+    // Activate if -Z script is enabled OR file has a shebang
+    let script_mode = sess.opts.unstable_opts.script || has_shebang(&sess.io.input);
+    if !script_mode {
         return;
     }
 
@@ -35,6 +39,33 @@ pub fn inject(
     }
 
     wrap_in_main(krate);
+}
+
+/// Check if the input source starts with a shebang (`#!`).
+fn has_shebang(input: &Input) -> bool {
+    match input {
+        Input::File(path) => {
+            // Read first few bytes of the file to check for shebang
+            if let Ok(content) = fs::read_to_string(path) {
+                is_shebang_line(&content)
+            } else {
+                false
+            }
+        }
+        Input::Str { input, .. } => is_shebang_line(input),
+    }
+}
+
+/// Check if the content starts with a shebang line.
+/// A shebang is `#!` at the start, but NOT `#![` which is a Rust attribute.
+fn is_shebang_line(content: &str) -> bool {
+    if let Some(rest) = content.strip_prefix("#!") {
+        // `#![` is a Rust inner attribute, not a shebang
+        let next_char = rest.chars().next();
+        next_char != Some('[')
+    } else {
+        false
+    }
 }
 
 /// Check if the crate already has an entry point (main or #[rustc_main]).
