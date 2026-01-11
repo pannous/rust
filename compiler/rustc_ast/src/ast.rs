@@ -991,6 +991,8 @@ pub enum BinOpKind {
     Sub,
     /// The `*` operator (multiplication)
     Mul,
+    /// The `**` operator (exponentiation)
+    Pow,
     /// The `/` operator (division)
     Div,
     /// The `%` operator (modulus)
@@ -1030,6 +1032,7 @@ impl BinOpKind {
             Add => "+",
             Sub => "-",
             Mul => "*",
+            Pow => "**",
             Div => "/",
             Rem => "%",
             And => "&&",
@@ -1055,6 +1058,7 @@ impl BinOpKind {
     pub fn precedence(&self) -> ExprPrecedence {
         use BinOpKind::*;
         match *self {
+            Pow => ExprPrecedence::Power,
             Mul | Div | Rem => ExprPrecedence::Product,
             Add | Sub => ExprPrecedence::Sum,
             Shl | Shr => ExprPrecedence::Shift,
@@ -1071,6 +1075,7 @@ impl BinOpKind {
         use BinOpKind::*;
         match self {
             Eq | Ne | Lt | Le | Gt | Ge => Fixity::None,
+            Pow => Fixity::Right,  // 2**3**4 = 2**(3**4)
             Add | Sub | Mul | Div | Rem | And | Or | BitXor | BitAnd | BitOr | Shl | Shr => {
                 Fixity::Left
             }
@@ -1081,7 +1086,7 @@ impl BinOpKind {
         use BinOpKind::*;
         match self {
             Eq | Ne | Lt | Le | Gt | Ge => true,
-            Add | Sub | Mul | Div | Rem | And | Or | BitXor | BitAnd | BitOr | Shl | Shr => false,
+            Add | Sub | Mul | Pow | Div | Rem | And | Or | BitXor | BitAnd | BitOr | Shl | Shr => false,
         }
     }
 

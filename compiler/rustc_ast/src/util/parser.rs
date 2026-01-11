@@ -164,6 +164,8 @@ pub enum ExprPrecedence {
     Sum,
     // * / %
     Product,
+    // **
+    Power,
     // as
     Cast,
     // unary - * ! & &mut

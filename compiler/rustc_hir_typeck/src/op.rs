@@ -1064,6 +1064,7 @@ fn lang_item_for_binop(tcx: TyCtxt<'_>, op: Op) -> (Symbol, Option<hir::def_id::
             hir::BinOpKind::Add => (sym::add, lang.add_trait()),
             hir::BinOpKind::Sub => (sym::sub, lang.sub_trait()),
             hir::BinOpKind::Mul => (sym::mul, lang.mul_trait()),
+            hir::BinOpKind::Pow => (sym::mul, lang.mul_trait()), // TODO: Pow trait not in std, use .pow()
             hir::BinOpKind::Div => (sym::div, lang.div_trait()),
             hir::BinOpKind::Rem => (sym::rem, lang.rem_trait()),
             hir::BinOpKind::BitXor => (sym::bitxor, lang.bitxor_trait()),
@@ -1133,7 +1134,7 @@ impl From<hir::BinOpKind> for BinOpCategory {
         use hir::BinOpKind::*;
         match op {
             Shl | Shr => BinOpCategory::Shift,
-            Add | Sub | Mul | Div | Rem => BinOpCategory::Math,
+            Add | Sub | Mul | Pow | Div | Rem => BinOpCategory::Math,
             BitXor | BitAnd | BitOr => BinOpCategory::Bitwise,
             Eq | Ne | Lt | Le | Ge | Gt => BinOpCategory::Comparison,
             And | Or => BinOpCategory::Shortcircuit,

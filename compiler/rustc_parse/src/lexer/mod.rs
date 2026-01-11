@@ -432,6 +432,17 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                     }
                     let mut it = self.str_from_to_end(start).chars();
                     let c = it.next().unwrap();
+
+                    // Unicode comparison operators - silently accept as valid syntax
+                    if let Some(tok) = match c {
+                        '≤' => Some(token::Le),  // U+2264 LESS-THAN OR EQUAL TO
+                        '≥' => Some(token::Ge),  // U+2265 GREATER-THAN OR EQUAL TO
+                        '≠' => Some(token::Ne),  // U+2260 NOT EQUAL TO
+                        '…' => Some(token::DotDot), // U+2026 HORIZONTAL ELLIPSIS (range syntax)
+                        _ => None,
+                    } {
+                        tok
+                    } else {
                     if c == '\u{00a0}' {
                         // If an error has already been reported on non-breaking
                         // space characters earlier in the file, treat all
@@ -470,6 +481,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                         preceded_by_whitespace = true;
                         continue;
                     }
+                    } // close else block for non-Unicode operators
                 }
                 rustc_lexer::TokenKind::Eof => token::Eof,
             };

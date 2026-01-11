@@ -1,25 +1,28 @@
 #!/usr/bin/env rustc
+// Test Unicode comparison operators
 
-a := 5
-b := 10
+fn main() {
+    // Test ≤ (less than or equal to)
+    assert!(1 ≤ 2);
+    assert!(2 ≤ 2);
+    assert!(!(3 ≤ 2));
 
-// Test ≠ operator (should work like !=)
-if a ≠ b {
-	fmt.Println("a ≠ b is true")
-}
+    // Test ≥ (greater than or equal to)
+    assert!(2 ≥ 1);
+    assert!(2 ≥ 2);
+    assert!(!(1 ≥ 2));
 
-// Test ¬ operator (should work like !)
-if ¬(a == b) {
-	fmt.Println("¬(a == b) is true")
-}
+    // Test ≠ (not equal to)
+    assert!(1 ≠ 2);
+    assert!(!(1 ≠ 1));
 
-// Test operators in expressions
-printf("a ≠ b = %v\n", a ≠ b)
-printf("¬(a > b) = %v\n", ¬(a > b))
+    // Test … (ellipsis for range)
+    let range_sum: i32 = (0…5).sum();
+    assert!(range_sum == 10); // 0+1+2+3+4 = 10
 
-// Test with strings
-str1 := "hello"
-str2 := "world"
-if str1 ≠ str2 {
-	printf("%s ≠ %s is true\n", str1, str2)
+    // Mix with regular operators
+    assert!(1 <= 2 and 2 ≥ 1);
+    assert!(1 ≠ 2 and 1 != 2);
+
+    println!("All Unicode operator tests passed!");
 }

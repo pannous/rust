@@ -191,6 +191,10 @@ impl<'a> Parser<'a> {
 
             parsed_something = true;
             self.bump();
+            // Power operator `**` consumes two tokens
+            if op.node == AssocOp::Binary(BinOpKind::Pow) {
+                self.bump();
+            }
             if op.node.is_comparison() {
                 if let Some(expr) = self.check_no_chained_comparison(&lhs, &op)? {
                     return Ok((expr, parsed_something));
@@ -388,6 +392,12 @@ impl<'a> Parser<'a> {
                 _,
             ) if self.restrictions.contains(Restrictions::IS_PAT) => {
                 return None;
+            }
+            // Power operator: `**`
+            (Some(AssocOp::Binary(BinOpKind::Mul)), _)
+                if self.look_ahead(1, |t| t.kind == token::Star) =>
+            {
+                (AssocOp::Binary(BinOpKind::Pow), self.token.span.to(self.look_ahead(1, |t| t.span)))
             }
             (Some(op), _) => (op, self.token.span),
             // C++ style: `and` as alias for `&&`
