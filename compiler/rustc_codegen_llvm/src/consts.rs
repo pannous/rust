@@ -782,4 +782,48 @@ impl<'ll> StaticCodegenMethods for CodegenCx<'ll, '_> {
     fn codegen_static(&mut self, def_id: DefId) {
         self.codegen_static_item(def_id)
     }
+
+    fn emit_dynexport_metadata(&mut self, symbol_name: &str, type_hash: u64) {
+        // Create metadata struct: { u64 type_hash, u32 compiler_version, u32 flags }
+
+        // Compiler version - use a simple hash of the version string
+        let version_str = env!("CFG_VERSION");
+        let compiler_hash: u32 = {
+            use std::hash::{Hash, Hasher};
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            version_str.hash(&mut hasher);
+            hasher.finish() as u32
+        };
+
+        // Build the metadata struct
+        let type_hash_val = self.const_u64(type_hash);
+        let compiler_hash_val = self.const_u32(compiler_hash);
+        let flags_val = self.const_u32(0); // Reserved for future use
+
+        let metadata_struct = self.const_struct(&[type_hash_val, compiler_hash_val, flags_val], false);
+
+        // Create the global variable name (avoid double underscore which makes symbols private)
+        let meta_name = format!("dynexport_meta_{}", symbol_name);
+
+        // Define the global
+        let llty = self.val_ty(metadata_struct);
+        if let Some(g) = self.define_global(&meta_name, llty) {
+            llvm::set_initializer(g, metadata_struct);
+            llvm::set_global_constant(g, true);
+            llvm::set_linkage(g, llvm::Linkage::ExternalLinkage);
+            llvm::set_visibility(g, llvm::Visibility::Default);
+            set_global_alignment(self, g, Align::from_bytes(8).unwrap());
+
+            // Put in .rustc_dynexport section
+            let section_name = if self.tcx.sess.target.is_like_darwin {
+                c"__DATA,__dynexport"
+            } else {
+                c".rustc_dynexport"
+            };
+            llvm::set_section(g, section_name);
+
+            // Prevent linker from stripping this symbol (use llvm.used, not llvm.compiler.used)
+            self.add_used_global(g);
+        }
+    }
 }

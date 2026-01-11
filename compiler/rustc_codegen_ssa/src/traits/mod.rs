@@ -21,7 +21,7 @@ mod debuginfo;
 mod declare;
 mod intrinsic;
 mod misc;
-mod statics;
+pub mod statics;
 mod type_;
 mod write;
 

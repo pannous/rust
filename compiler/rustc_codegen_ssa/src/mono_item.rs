@@ -7,6 +7,7 @@ use tracing::debug;
 use crate::base;
 use crate::mir::naked_asm;
 use crate::traits::*;
+use crate::traits::statics::compute_fn_type_hash;
 
 pub trait MonoItemExt<'a, 'tcx> {
     fn define<Bx: BuilderMethods<'a, 'tcx>>(
@@ -37,12 +38,29 @@ impl<'a, 'tcx: 'a> MonoItemExt<'a, 'tcx> for MonoItem<'tcx> {
         match *self {
             MonoItem::Static(def_id) => {
                 cx.codegen_static(def_id);
+
+                // Emit dynexport metadata if this static has the DYNEXPORT flag
+                let attrs = cx.tcx().codegen_fn_attrs(def_id);
+                if attrs.flags.contains(CodegenFnAttrFlags::DYNEXPORT) {
+                    let symbol_name = self.symbol_name(cx.tcx()).name;
+                    // For statics, use 0 as type hash (could be improved to hash the type)
+                    cx.emit_dynexport_metadata(symbol_name, 0);
+                }
             }
             MonoItem::GlobalAsm(item_id) => {
                 base::codegen_global_asm(cx, item_id);
             }
             MonoItem::Fn(instance) => {
-                let flags = cx.tcx().codegen_instance_attrs(instance.def).flags;
+                let attrs = cx.tcx().codegen_instance_attrs(instance.def);
+                let flags = attrs.flags;
+
+                // Emit dynexport metadata BEFORE codegen (due to lifetime constraints)
+                if flags.contains(CodegenFnAttrFlags::DYNEXPORT) {
+                    let symbol_name = self.symbol_name(cx.tcx()).name;
+                    let type_hash = compute_fn_type_hash(cx.tcx(), instance);
+                    cx.emit_dynexport_metadata(symbol_name, type_hash);
+                }
+
                 if flags.contains(CodegenFnAttrFlags::NAKED) {
                     naked_asm::codegen_naked_asm::<Bx::CodegenCx>(cx, instance, item_data);
                 } else {

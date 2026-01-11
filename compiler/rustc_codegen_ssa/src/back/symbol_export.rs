@@ -707,12 +707,32 @@ pub(crate) fn exporting_symbol_name_for_instance_in_crate<'tcx>(
 /// On amdhsa, `gpu-kernel` functions have an associated metadata object with a `.kd` suffix.
 /// Add it to the symbols list for all kernel functions, so that it is exported in the linked
 /// object.
+/// Also adds dynexport metadata symbols for items marked with #[dynexport].
 pub(crate) fn extend_exported_symbols<'tcx>(
     symbols: &mut Vec<(String, SymbolExportKind)>,
     tcx: TyCtxt<'tcx>,
     symbol: ExportedSymbol<'tcx>,
     instantiating_crate: CrateNum,
 ) {
+    use rustc_middle::middle::codegen_fn_attrs::CodegenFnAttrFlags;
+
+    // Check for dynexport flag and add metadata symbol
+    let def_id = match symbol {
+        ExportedSymbol::NonGeneric(def_id) => Some(def_id),
+        ExportedSymbol::Generic(def_id, _) => Some(def_id),
+        _ => None,
+    };
+
+    if let Some(def_id) = def_id {
+        let attrs = tcx.codegen_fn_attrs(def_id);
+        if attrs.flags.contains(CodegenFnAttrFlags::DYNEXPORT) {
+            let undecorated = symbol_name_for_instance_in_crate(tcx, symbol, instantiating_crate);
+            // Add the dynexport metadata symbol (must match the name generated in codegen)
+            symbols.push((format!("dynexport_meta_{undecorated}"), SymbolExportKind::Data));
+        }
+    }
+
+    // Handle GPU kernel metadata
     let (callconv, _) = calling_convention_for_symbol(tcx, symbol);
 
     if callconv != CanonAbi::GpuKernel || tcx.sess.target.os != Os::AmdHsa {

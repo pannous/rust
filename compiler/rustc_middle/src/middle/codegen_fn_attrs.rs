@@ -210,6 +210,9 @@ bitflags::bitflags! {
         /// As such, we must make sure these symbols really do exist in the final binary/library.
         /// This flag is put on both the implementations of EIIs and the foreign item they implement.
         const EXTERNALLY_IMPLEMENTABLE_ITEM = 1 << 18;
+        /// `#[dynexport]`: indicates this item should be exported with stable ABI for dynamic linking.
+        /// A companion metadata static will be emitted for ABI verification.
+        const DYNEXPORT = 1 << 19;
     }
 }
 rustc_data_structures::external_bitflags_debug! { CodegenFnAttrFlags }

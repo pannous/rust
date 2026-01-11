@@ -161,9 +161,10 @@ fn process_builtin_attrs(
                 }
                 AttributeKind::DynExport(attr_span) => {
                     // #[dynexport] marks items for stable dynamic export
-                    // For now, this acts like #[no_mangle] to provide stable symbols
+                    // Sets NO_MANGLE for stable symbol names and DYNEXPORT for metadata emission
                     if tcx.opt_item_name(did.to_def_id()).is_some() {
                         codegen_fn_attrs.flags |= CodegenFnAttrFlags::NO_MANGLE;
+                        codegen_fn_attrs.flags |= CodegenFnAttrFlags::DYNEXPORT;
                     } else {
                         tcx.dcx().span_delayed_bug(
                             *attr_span,
