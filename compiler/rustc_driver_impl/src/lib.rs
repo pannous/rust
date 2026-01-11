@@ -108,6 +108,44 @@ use crate::session_diagnostics::{
 
 rustc_fluent_macro::fluent_messages! { "../messages.ftl" }
 
+/// Check if the input file has a shebang line (used for script mode auto-run).
+/// A shebang is `#!` at the start, but NOT `#![` which is a Rust attribute.
+fn has_shebang(input: &Input) -> bool {
+    match input {
+        Input::File(path) => {
+            if let Ok(content) = fs::read_to_string(path) {
+                if let Some(rest) = content.strip_prefix("#!") {
+                    rest.chars().next() != Some('[')
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        }
+        Input::Str { input, .. } => {
+            if let Some(rest) = input.strip_prefix("#!") {
+                rest.chars().next() != Some('[')
+            } else {
+                false
+            }
+        }
+    }
+}
+
+/// Get the default output executable path for script mode.
+/// Returns a path relative to current directory (prefixed with ./) so Command can find it.
+fn get_script_output_path(input: &Input) -> Option<PathBuf> {
+    match input {
+        Input::File(path) => {
+            let stem = path.file_stem()?;
+            // Prefix with "./" so Command::new finds it in current directory
+            Some(PathBuf::from(".").join(stem))
+        }
+        Input::Str { .. } => None,
+    }
+}
+
 pub fn default_translator() -> Translator {
     Translator::with_fallback_bundle(DEFAULT_LOCALE_RESOURCES.to_vec(), false)
 }
@@ -387,6 +425,31 @@ pub fn run_compiler(at_args: &[String], callbacks: &mut (dyn Callbacks + Send)) 
         // `GlobalCtxt` within `Queries` can be freed as early as possible.
         if let Some(linker) = linker {
             linker.link(sess, codegen_backend);
+
+            // Auto-run the compiled binary if:
+            // 1. The source has a shebang line (script mode)
+            // 2. No explicit output file was specified (user wants script behavior)
+            // 3. No compilation errors
+            let is_shebang_script = has_shebang(&sess.io.input)
+                && sess.io.output_file.is_none()
+                && sess.dcx().has_errors().is_none();
+
+            if is_shebang_script {
+                if let Some(exe_path) = get_script_output_path(&sess.io.input) {
+                    // Run the compiled binary and exit with its exit code
+                    match Command::new(&exe_path).status() {
+                        Ok(status) => {
+                            // Clean up the temporary binary after execution
+                            let _ = fs::remove_file(&exe_path);
+                            process::exit(status.code().unwrap_or(1));
+                        }
+                        Err(e) => {
+                            eprintln!("error: failed to run {}: {}", exe_path.display(), e);
+                            process::exit(1);
+                        }
+                    }
+                }
+            }
         }
     })
 }
