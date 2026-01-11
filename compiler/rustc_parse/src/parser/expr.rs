@@ -398,6 +398,10 @@ impl<'a> Parser<'a> {
             (None, Some((Ident { name: sym::or, span }, IdentIsRaw::No))) => {
                 (AssocOp::Binary(BinOpKind::Or), span)
             }
+            // C++ style: `xor` as alias for `^`
+            (None, Some((Ident { name: sym::xor, span }, IdentIsRaw::No))) => {
+                (AssocOp::Binary(BinOpKind::BitXor), span)
+            }
             _ => return None,
         };
         Some(source_map::respan(span, op))

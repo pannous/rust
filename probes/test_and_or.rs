@@ -1,4 +1,4 @@
-// Test C++ style operators: and, or, not, ¬
+// Test C++ style operators: and, or, xor, not, ¬
 
 fn main() {
     let t = true;
@@ -38,6 +38,15 @@ fn main() {
     assert!(¬f);
     assert!(¬¬t);
     assert!(¬(x > 10));
+
+    // Test 'xor' as alias for ^
+    assert!(t xor f);           // true ^ false = true
+    assert!(f xor t);           // false ^ true = true
+    assert!(!(t xor t));        // true ^ true = false
+    assert!(!(f xor f));        // false ^ false = false
+    let a: u8 = 0b1010;
+    let b: u8 = 0b1100;
+    assert_eq!(a xor b, 0b0110);
 
     // Mix all styles
     assert!(!f and not f and ¬f);

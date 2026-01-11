@@ -2522,6 +2522,7 @@ symbols! {
         xer,
         xmm_reg,
         xop_target_feature,
+        xor,
         xtensa,
         yeet_desugar_details,
         yeet_expr,
