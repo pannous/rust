@@ -878,6 +878,7 @@ impl<'tcx> BinOp {
             | &BinOp::SubUnchecked
             | &BinOp::Mul
             | &BinOp::MulUnchecked
+            | &BinOp::Pow
             | &BinOp::Div
             | &BinOp::Rem
             | &BinOp::BitXor
@@ -916,6 +917,7 @@ impl<'tcx> BinOp {
             BinOp::Add | BinOp::AddWithOverflow => hir::BinOpKind::Add,
             BinOp::Sub | BinOp::SubWithOverflow => hir::BinOpKind::Sub,
             BinOp::Mul | BinOp::MulWithOverflow => hir::BinOpKind::Mul,
+            BinOp::Pow => hir::BinOpKind::Pow,
             BinOp::Div => hir::BinOpKind::Div,
             BinOp::Rem => hir::BinOpKind::Rem,
             BinOp::BitXor => hir::BinOpKind::BitXor,

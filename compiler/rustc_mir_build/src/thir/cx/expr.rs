@@ -1503,6 +1503,7 @@ fn bin_op(op: hir::BinOpKind) -> BinOp {
         hir::BinOpKind::Add => BinOp::Add,
         hir::BinOpKind::Sub => BinOp::Sub,
         hir::BinOpKind::Mul => BinOp::Mul,
+        hir::BinOpKind::Pow => BinOp::Pow,
         hir::BinOpKind::Div => BinOp::Div,
         hir::BinOpKind::Rem => BinOp::Rem,
         hir::BinOpKind::BitXor => BinOp::BitXor,

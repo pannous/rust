@@ -581,6 +581,7 @@ impl<'tcx> Stable<'tcx> for mir::BinOp {
             BinOp::Mul => crate::mir::BinOp::Mul,
             BinOp::MulUnchecked => crate::mir::BinOp::MulUnchecked,
             BinOp::MulWithOverflow => bug!("AddWithOverflow should have been translated already"),
+            BinOp::Pow => crate::mir::BinOp::Pow,
             BinOp::Div => crate::mir::BinOp::Div,
             BinOp::Rem => crate::mir::BinOp::Rem,
             BinOp::BitXor => crate::mir::BinOp::BitXor,

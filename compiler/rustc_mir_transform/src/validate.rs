@@ -1226,7 +1226,7 @@ impl<'a, 'tcx> Visitor<'tcx> for TypeChecker<'a, 'tcx> {
                             )
                         }
                     }
-                    Add | Sub | Mul | Div | Rem => {
+                    Add | Sub | Mul | Pow | Div | Rem => {
                         for x in [a, b] {
                             check_kinds!(
                                 x,

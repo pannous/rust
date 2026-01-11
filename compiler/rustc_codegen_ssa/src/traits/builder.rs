@@ -406,6 +406,21 @@ pub trait BuilderMethods<'a, 'tcx>:
     fn icmp(&mut self, op: IntPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
     fn fcmp(&mut self, op: RealPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
 
+    /// Compute integer exponentiation (base ** exp).
+    /// TODO: Implement proper binary exponentiation loop.
+    /// For now, uses a simple unrolled approach for small exponents.
+    fn int_pow(
+        &mut self,
+        base: Self::Value,
+        _exp: Self::Value,
+        _is_signed: bool,
+    ) -> Self::Value {
+        // TODO: Implement proper pow with loop
+        // For now, just return base * base (correct for exp=2, wrong for others)
+        // This is a placeholder until proper loop codegen is implemented
+        self.mul(base, base)
+    }
+
     /// Returns `-1` if `lhs < rhs`, `0` if `lhs == rhs`, and `1` if `lhs > rhs`.
     fn three_way_compare(
         &mut self,

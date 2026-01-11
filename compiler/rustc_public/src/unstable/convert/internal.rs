@@ -722,6 +722,7 @@ impl RustcInternal for BinOp {
             BinOp::SubUnchecked => rustc_middle::mir::BinOp::SubUnchecked,
             BinOp::Mul => rustc_middle::mir::BinOp::Mul,
             BinOp::MulUnchecked => rustc_middle::mir::BinOp::MulUnchecked,
+            BinOp::Pow => rustc_middle::mir::BinOp::Pow,
             BinOp::Div => rustc_middle::mir::BinOp::Div,
             BinOp::Rem => rustc_middle::mir::BinOp::Rem,
             BinOp::BitXor => rustc_middle::mir::BinOp::BitXor,

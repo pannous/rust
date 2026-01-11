@@ -539,6 +539,7 @@ impl<'tcx> Validator<'_, 'tcx> {
                     | BinOp::Mul
                     | BinOp::MulUnchecked
                     | BinOp::MulWithOverflow
+                    | BinOp::Pow
                     | BinOp::BitXor
                     | BinOp::BitAnd
                     | BinOp::BitOr

@@ -357,6 +357,7 @@ pub enum BinOp {
     SubUnchecked,
     Mul,
     MulUnchecked,
+    Pow,
     Div,
     Rem,
     BitXor,

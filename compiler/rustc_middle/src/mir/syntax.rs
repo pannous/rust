@@ -1624,6 +1624,8 @@ pub enum BinOp {
     Mul,
     /// Like `Mul`, but with UB on overflow.  (Integers only.)
     MulUnchecked,
+    /// The `**` operator (exponentiation)
+    Pow,
     /// Like `Mul`, but returns `(T, bool)` of both the wrapped result
     /// and a bool indicating whether it overflowed.
     MulWithOverflow,

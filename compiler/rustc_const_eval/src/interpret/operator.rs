@@ -184,6 +184,19 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
             if bin_op == Cmp {
                 return interp_ok(self.three_way_compare(l_signed(), r_signed()));
             }
+            // Handle Pow specially - compute base ** exp
+            if bin_op == Pow {
+                let base = l_signed();
+                let exp = r_signed();
+                // For now, only support non-negative exponents
+                if exp < 0 {
+                    span_bug!(self.cur_span(), "Pow with negative exponent not supported");
+                }
+                let exp = exp as u32;
+                let result = base.pow(exp);
+                let (result, _lossy) = ScalarInt::truncate_from_int(result, left.layout.size);
+                return interp_ok(ImmTy::from_scalar_int(result, left.layout));
+            }
             let op: Option<fn(i128, i128) -> (i128, bool)> = match bin_op {
                 Div if r.is_null() => throw_ub!(DivisionByZero),
                 Rem if r.is_null() => throw_ub!(RemainderByZero),
@@ -247,6 +260,15 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
             BitOr => ImmTy::from_uint(l | r, left.layout),
             BitAnd => ImmTy::from_uint(l & r, left.layout),
             BitXor => ImmTy::from_uint(l ^ r, left.layout),
+
+            Pow => {
+                let exp = u32::try_from(r).unwrap_or_else(|_| {
+                    span_bug!(self.cur_span(), "Pow exponent too large: {r}");
+                });
+                let result = l.pow(exp);
+                let (result, _lossy) = ScalarInt::truncate_from_uint(result, left.layout.size);
+                ImmTy::from_scalar_int(result, left.layout)
+            }
 
             _ => {
                 assert!(!left.layout.backend_repr.is_signed());
