@@ -1,0 +1,73 @@
+#!/usr/bin/env rustc
+
+# TODO hash vs comment FAILS:
+#put("OK") # syntax error: unexpected name is after top level declaration
+#put("OK")  #  multiple-value printf("%v\n", "OK") (value of type (n int, err error)) in single-value context  valid
+put("OK") // ok
+
+// Test arrays and slices with 1-indexed access
+z := []rune{'a', 'b', 'c'}
+nums := []int{10, 20, 30, 40}
+
+// Basic 1-indexed access
+check z#1 == 'a'
+check z#2 == 'b'
+check z#3 == 'c'
+check nums#1 == 10
+
+// Compare with 0-indexed (traditional Go)
+check z[0] == z#1
+check z[1] == z#2
+check z[2] == z#3
+
+// Test with comparison operators (precedence)
+check z#1 == 'a'
+check z#1 != 'b'
+check nums#1 < 15
+check nums#2 > 15
+check nums#1 <= 10
+check nums#2 >= 20
+
+// Test with arithmetic operators (# should have higher precedence)
+check nums#1 + 5 == 15    // Addition
+check nums#2 - 5 == 15    // Subtraction  
+check nums#1 * 2 == 20    // Multiplication
+check nums#2 / 2 == 10    // Division
+
+// Test with logical operators
+check (z#1 == 'a') && (z#2 == 'b')
+check (z#1 == 'a') || (z#2 == 'x')
+check !(z#1 == 'x')
+
+// Test with expressions as index
+idx := 2
+check z#idx == 'b'
+check z#(1+1) == 'b'
+check z#len("x") == 'a' // len("x") == 1
+
+// Test with parentheses
+check (z#1) == 'a'
+check z#(1) == 'a'
+
+// Test whitespace variations
+check z #1 == 'a'
+check z# 1 == 'a'  
+check z # 1 == 'a'
+
+// Test assignment with hash indexing
+z#1 = 'X'
+check z#1 == 'X'
+check z[0] == 'X'
+
+// Test in different contexts
+_ = 1; check z#2 == 'b'  // After semicolon
+check z#2	== 'b'       // With tab
+
+// Multi-line
+check z#2 == 
+	'b'
+
+check
+z#2 == 'b'
+
+put("All checks passed!")

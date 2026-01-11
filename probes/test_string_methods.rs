@@ -1,0 +1,54 @@
+#!/usr/bin/env rustc
+#import "strings" // auto import on demand WORKS!
+#import "fmt" // auto import on demand WORKS!
+#import "unicode" // auto import on demand WORKS!
+#import "strconv" // for string conversion
+#import "string_tools" // for string manipulation utilities  'cannot find package' <WHICH?>c TODO
+
+// Check string methods and conversions THAT WORK!
+
+check "a"+"1" == "a1"
+check "a"+1 == "a1" 
+check "hi".first() == "h"
+check "hi".last() == "i"
+check "hi".size() == 2
+check "hi".length() == 2
+check "hi".reverse() == "ih"
+check "hello".reverse() == "olleh"
+check "hello"
+
+check "hi".contains("h") == true
+check "hi".contains("x") == false
+check "hi".indexOf("h") == 0
+check "hi".indexOf("x") == -1
+check "hi".indexOf("i") == 1
+check "hi"[1:] == "i" // index -1 (constant of type int) must not be negative
+check "hi".from(1) == "i"
+check "hi".to(1) == "h"
+check "hello".sub(1,3) == "el" // sub(start, end) is inclusive of start and exclusive of end
+check "hello".replace("l", "x") == "hexxo"
+check "hello".toUpper() == "HELLO"
+check "hello".toLower() == "hello"
+check "hello".upper() == "HELLO" // toUpper is an alias for upper, show 💡
+check "hello".lower() == "hello"
+check "hello".upperCase() == "HELLO"
+check "hello".lowerCase() == "hello"
+check "hello".capitalize() == "Hello"
+check "hello".title() == "Hello"
+check "hello".trim() == "hello"
+check " hello ".trim() == "hello"
+check " hello ".trim() == "hello"
+check "hello".join("-") == "h-e-l-l-o"
+check "hello".join("") == "hello"
+check "hello".startsWith("he") == true
+check "hello".startsWith("lo") == false
+check "hello".endsWith("lo") == true
+check "hello".endsWith("he") == false
+
+put("hello".split("")) // [h e l l o]  without quotes ?!
+check "hello".split("l") == ["he", "", "o"] // as string[] // split returns a list of strings
+check "hello".split("") == ["h", "e", "l", "l", "o"]
+check "hello".splits() == ["h", "e", "l", "l", "o"]
+
+
+printf("All checks passed!\n")

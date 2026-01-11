@@ -1,0 +1,14 @@
+#!/usr/bin/env rustc
+#Apply := (f, x) => f(x)
+func Apply[T any, R any](f func(T) R, x T) R {
+	return f(x)
+}
+def testLambdaArg() {
+		square := x => x * x
+		check Apply(square, 4) == 16 // 4*4 = 16
+		check Apply(x => x + 1, 5) == 6 // 5+1 = 6
+		println("Lambda argument test passed")
+}
+
+testLambdaArg()
+println("All lambda tests passed!")

@@ -1,0 +1,7 @@
+#!/usr/bin/env rustc
+
+// Using fmt package functions
+fmt.Print("fmt.Print:", "hello", 42, true)
+print("print:", "hello", 42, true)
+println("println:", "world", 123, false) 
+printf("printf:", "test", 99, true)

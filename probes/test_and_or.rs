@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 // Test C++ style operators: and, or, xor, not, ¬
 
 fn main() {

@@ -1,0 +1,8 @@
+#!/usr/bin/env rustc
+import "fmt"
+
+func put(x int) {
+	printf("USER DEFINED: %d\n", x)
+}
+
+put(123)  // Should call user-defined function, not builtin

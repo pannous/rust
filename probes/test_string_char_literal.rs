@@ -1,0 +1,9 @@
+#!/usr/bin/env rustc
+import "fmt"
+
+// Test direct literal comparison
+result1 := "你" == '你'
+result2 := '你' == "你"
+
+fmt.Printf("\"你\" == '你': %t\n", result1)
+fmt.Printf("'你' == \"你\": %t\n", result2)

@@ -1,0 +1,7 @@
+#!/usr/bin/env rustc
+try {
+	panic("something went wrong")
+} catch err {
+	printf("Caught error: %v\n",err)
+}
+printf("After try-catch")

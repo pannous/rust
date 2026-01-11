@@ -1,0 +1,28 @@
+#!/usr/bin/env rustc
+#import "reflect"
+
+// Simple typeMatches function for IS operator
+#def typeMatches(value any, typeName string) bool {
+#	if value == nil {
+#		return typeName == "nil"
+#	}
+#	actualType := reflect.TypeOf(value).String()
+#	return actualType == typeName
+#}
+
+// Simple test of IS operator
+x := 1
+ok := x is int
+check ok
+println("1 is int:", ok)
+
+str := "hello"  
+ok2 := str is string
+check ok2
+println("hello is string:", ok2)
+
+arr := [1, 2, 3]
+ok3 := arr is []int
+check ok3
+println("[1,2,3] is []int:", ok3)
+

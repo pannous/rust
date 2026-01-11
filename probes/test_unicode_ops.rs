@@ -1,0 +1,25 @@
+#!/usr/bin/env rustc
+
+a := 5
+b := 10
+
+// Test ≠ operator (should work like !=)
+if a ≠ b {
+	fmt.Println("a ≠ b is true")
+}
+
+// Test ¬ operator (should work like !)
+if ¬(a == b) {
+	fmt.Println("¬(a == b) is true")
+}
+
+// Test operators in expressions
+printf("a ≠ b = %v\n", a ≠ b)
+printf("¬(a > b) = %v\n", ¬(a > b))
+
+// Test with strings
+str1 := "hello"
+str2 := "world"
+if str1 ≠ str2 {
+	printf("%s ≠ %s is true\n", str1, str2)
+}

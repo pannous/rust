@@ -1,0 +1,16 @@
+#!/usr/bin/env rustc
+// FAILS:
+#import "strings"  // auto import TOO HARD for in operator! Claude spent 4 hours on this :(
+
+text := "hello world"
+result1 := "hello" in text
+result2 := "xyz" in text
+
+printf("'hello' in '%s': %t\n", text, result1)
+printf("'xyz' in '%s': %t\n", text, result2)
+
+// Test with variables
+needle := "world"
+result3 := needle in text
+printf("'%s' in '%s': %t\n", needle, text, result3)
+check needle in text

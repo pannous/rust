@@ -1,0 +1,16 @@
+#!/usr/bin/env rustc
+import "strconv"
+#
+// see as_cast_transform.go
+
+check 1 as string == "1"
+check 1 as rune == '1'
+check '1' as int == 1
+check 3 as float == 3
+
+printf("some tests OK;)")
+
+check 3.14 as int == 3
+check 3.14 as string == "3.14"
+// TODO - Now working!
+# check "1" as int == 1 # HARD! later?

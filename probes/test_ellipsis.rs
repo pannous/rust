@@ -1,0 +1,4 @@
+#!/usr/bin/env rustc
+check 1…3 == [1, 2, 3] // Check range syntax
+check 'a'…'c' == ['a', 'b', 'c'] // Check character range syntax
+printf("Range checks passed!\n")

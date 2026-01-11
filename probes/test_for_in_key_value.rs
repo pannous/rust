@@ -1,0 +1,32 @@
+#!/usr/bin/env rustc
+// Test for-in with both single and double variable patterns
+myMap := map[string]int{
+	"apple":  1,
+	"banana": 2,
+	"cherry": 3,
+}
+
+printf("Single variable (keys only):\n")
+for key in myMap {
+	put(key)
+}
+
+printf("\nDouble variable (key-value pairs):\n")
+for key, value in myMap {
+	printf("Key: %s, Value: %d\n", key, value)
+}
+
+printf("\nTesting with slice:")
+numbers := [10, 20, 30]
+
+printf("Single variable (values):\n")
+for num in numbers {
+	printf("Value: %d\n", num)
+}
+
+printf("\nDouble variable (index-value pairs):\n")
+for i, num in numbers {
+	printf("Index: %d, Value: %d\n", i, num)
+}
+
+printf("All key-value tests completed!")

@@ -1,0 +1,14 @@
+#!/usr/bin/env rustc
+import fmt
+import slices
+
+# depends on test_list_typed.goo and map function test_list_map.goo
+xs := []int{1, 2, 3}
+ys := xs.apply(x=>x*2) // should return []int{2, 4, 6}
+
+check ys == []int{2, 4, 6}
+
+nums := []int{1, 2, 3, 4, 5}
+check nums.filter(x => x%2==1) == []int{1, 3, 5}
+#check nums.reduce((a,b)=>a+b, 0) == 15
+put("All tests passed")

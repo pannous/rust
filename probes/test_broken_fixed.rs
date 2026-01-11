@@ -1,0 +1,10 @@
+#!/usr/bin/env rustc
+aList := [1, 2, 3]
+check aList[1] == 2
+check aList.first() == 1
+
+check aList.sortDesc() == [3,2,1]
+check aList.pop() == 3
+check aList.shift() == 1
+
+printf("All tests completed successfully.\n")

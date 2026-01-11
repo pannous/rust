@@ -1,0 +1,9 @@
+#!/usr/bin/env rustc
+#!/usr/bin/env goo
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Explicit main still works!")
+}

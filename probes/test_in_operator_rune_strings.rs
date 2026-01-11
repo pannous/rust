@@ -1,0 +1,7 @@
+#!/usr/bin/env rustc
+import "strings"
+
+check 'b' in "abc"
+check not ('d' in "abc")
+
+printf("ALL TESTS PASSED\n")

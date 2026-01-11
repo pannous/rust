@@ -1,0 +1,10 @@
+#!/usr/bin/env rustc
+import "fmt"
+
+// Test string to character comparison
+s := "你"
+c := '你'
+
+printf("String: %s\n", s)
+printf("Char: %c\n", c)
+printf("s == c: %t\n", s == c)

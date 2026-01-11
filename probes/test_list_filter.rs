@@ -1,0 +1,35 @@
+#!/usr/bin/env rustc
+import "slices"
+type number = int // float64
+class User {
+		Name string;
+		Age number;
+}
+users := []User{{ Name: "Bob", Age: 17 }, { Name: "Charlie", Age: 22 }, { Name: "Alice", Age: 20 }, { Name: "Diana", Age: 15 }}
+
+// Option 1: Single expression (current working approach)
+/*
+alice := users.filter(u => u.Age > 18).apply(u => u.Name).sort().first()
+put("First user over 18: ", alice)
+check alice == "Alice"
+ 🔧 Chained Method Call Challenge:
+
+  The complex chained call users.filter(...).apply(...).sort().first() is a sophisticated challenge that
+  requires:
+  1. Inter-method type propagation through the AST transformation pipeline
+  2. Type context preservation across multiple transforms
+  3. Complex AST analysis to track intermediate result types
+
+  This is definitely solvable but would require substantial additional work on the type inference system. For
+  now, users can achieve the same functionality by breaking the chain into steps (as shown in the working
+  examples).
+*/
+
+// Option 2: Different variables for different types
+filtered := users.filter(u => u.Age > 18)        // []User
+names := filtered.apply(u => u.Name)              // []string
+names.sort!()                            // []string
+result := names.first()                          // string
+check result == "Alice"
+printf("First user over 18: %s\n", result)
+put("All tests passed")

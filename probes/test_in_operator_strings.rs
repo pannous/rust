@@ -1,0 +1,31 @@
+#!/usr/bin/env rustc
+import "strings"
+
+// Complete test of in operator functionality
+text := "hello world"
+substr := "hello"
+
+// Test various combinations
+result1 := substr in text        // variable in variable
+result2 := "world" in text       // literal in variable
+result3 := "hello" in "hello world"  // literal in literal
+result4 := "xyz" in text         // negative case
+
+printf("'%s' in '%s': %t\n", substr, text, result1)
+printf("'world' in '%s': %t\n", text, result2)
+printf("'hello' in 'hello world': %t\n", result3)
+printf("'xyz' in '%s': %t\n", text, result4)
+
+// counterexamples with string literals
+check not ("x" in "abc")    // false
+check not ("123" in "456")  // false
+
+
+text2 := "goodbye world"
+check not ("hello" in text2)  // false
+check not ("xyz" in text2)  // false
+needleText2 := "goodbye"
+check (needleText2 in text2)  // false
+check not not (needleText2 in text2)  // false
+
+printf("ALL TESTS PASSED\n")

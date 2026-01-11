@@ -1,0 +1,9 @@
+#!/usr/bin/env rustc
+def ignore() {
+	if 1 {
+		return println("OK")  //  (no value) used as value
+	}
+	println("NO")
+}
+
+ignore()

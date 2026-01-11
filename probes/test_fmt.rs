@@ -1,0 +1,8 @@
+#!/usr/bin/env rustc
+package main
+
+import "fmt"  // must not conflict with auto import
+
+func main() {
+	printf("Hello, world!")
+}

@@ -1,0 +1,3 @@
+#!/usr/bin/env rustc
+check 1>0
+printf("Test passed: 1 is greater than 0")

@@ -1,0 +1,4 @@
+#!/usr/bin/env rustc
+xs := [1, 2, 3]
+ys := []int{1, 2, 3}
+check xs == ys // should return true. currently: (mismatched types []any and []int)

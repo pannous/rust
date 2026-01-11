@@ -1,0 +1,10 @@
+#!/usr/bin/env rustc
+type Person struct {
+		name string
+		age  int
+}
+p := Person{name: "Alice", age: 30}
+
+check "Name: " + p.name == "Name: Alice"
+check "Age: " + p.age == "Age: 30"
+#check "Name: " + p.name + ", Age: " + p.age == "Name: Alice, Age: 30"

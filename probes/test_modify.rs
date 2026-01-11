@@ -1,0 +1,7 @@
+#!/usr/bin/env rustc
+// allow modify in place enforced by "!" !
+
+def modify!(xs []int) { for i, x := range xs { xs[i] = x * 2 } } 
+xs:=[1,2,3]
+modify!(xs)
+check xs == [2,4,6]
