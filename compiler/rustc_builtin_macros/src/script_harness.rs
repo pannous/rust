@@ -106,9 +106,137 @@ fn wrap_in_main(krate: &mut ast::Crate) {
     let span = main_stmts.first().map(|s| s.span).unwrap_or(DUMMY_SP);
     let main_fn = build_main(span, main_stmts);
 
-    // Rebuild crate with module items + main function
-    krate.items = module_items;
+    // Rebuild crate with script macros + module items + main function
+    krate.items = inject_script_macros(span);
+    krate.items.extend(module_items);
     krate.items.push(main_fn);
+}
+
+/// Inject convenience macros for script mode: put! and eq!
+fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
+    use rustc_ast::token::{self, Delimiter, Lit, LitKind, TokenKind};
+    use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
+    use rustc_span::Symbol;
+
+    let mut items = ThinVec::new();
+
+    // Helper to create a delimited group
+    let delim = |d: Delimiter, inner: Vec<TokenTree>| -> TokenTree {
+        TokenTree::Delimited(
+            DelimSpan::from_single(span),
+            DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+            d,
+            TokenStream::new(inner),
+        )
+    };
+
+    // Helper to create an identifier token
+    let ident = |s: &str| -> TokenTree {
+        TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), span)
+    };
+
+    // Helper to create a string literal token
+    let str_lit = |s: &str| -> TokenTree {
+        TokenTree::token_alone(
+            TokenKind::Literal(Lit { kind: LitKind::Str, symbol: Symbol::intern(s), suffix: None }),
+            span,
+        )
+    };
+
+    // macro_rules! put { ($e:expr) => { println!("{}", $e) }; }
+    // Body: ($e:expr) => { println!("{}", $e) };
+    let put_body = vec![
+        // ($e:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Colon, span),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, span),
+        // { println!("{}", $e) }
+        delim(Delimiter::Brace, vec![
+            ident("println"),
+            TokenTree::token_alone(TokenKind::Bang, span),
+            delim(Delimiter::Parenthesis, vec![
+                str_lit("{}"),
+                TokenTree::token_alone(TokenKind::Comma, span),
+                TokenTree::token_alone(TokenKind::Dollar, span),
+                ident("e"),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, span),
+    ];
+
+    let put_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(span),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(put_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: ast::AttrVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::put, span), put_macro),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    }));
+
+    // macro_rules! eq { ($left:expr, $right:expr) => { assert_eq!($left, $right) }; }
+    let eq_body = vec![
+        // ($left:expr, $right:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("left"),
+            TokenTree::token_alone(TokenKind::Colon, span),
+            ident("expr"),
+            TokenTree::token_alone(TokenKind::Comma, span),
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("right"),
+            TokenTree::token_alone(TokenKind::Colon, span),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, span),
+        // { assert_eq!($left, $right) }
+        delim(Delimiter::Brace, vec![
+            ident("assert_eq"),
+            TokenTree::token_alone(TokenKind::Bang, span),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, span),
+                ident("left"),
+                TokenTree::token_alone(TokenKind::Comma, span),
+                TokenTree::token_alone(TokenKind::Dollar, span),
+                ident("right"),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, span),
+    ];
+
+    let eq_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(span),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(eq_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: ast::AttrVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::eq, span), eq_macro),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    }));
+
+    items
 }
 
 /// Partition items into module-level items and statements for main.

@@ -15,32 +15,32 @@ func main() {
 	printf("%q\n", runes)
 	put(runes) // [104 101 108 108 111]
 	//put("hello".runes())
-	check "hellø".runes() == chars
-	check "hellø".runes() == ['h', 'e', 'l', 'l', 'ø']
+	assert_eq!( "hellø".runes() , chars);
+	assert_eq!( "hellø".runes() , ['h', 'e', 'l', 'l', 'ø']);
 
 //	i := 2
-//check "你" == '你'
-//check "你好"#2 == '好' // charAt returns a rune at the given index
-//check "你好"#i == '好'
+//assert_eq!( "你" , '你');
+//assert_eq!( "你好"#2 , '好' ); // charAt returns a rune at the given index
+//assert_eq!( "你好"#i , '好');
 bytos := []byte{104, 101, 108, 108, 111}
-check "hello".bytes() == bytos // returns a list of bytes (ASCII values)
+assert_eq!( "hello".bytes() , bytos ); // returns a list of bytes (ASCII values)
 
 //byts := []int("你好") // nah, ok
 byts := []byte("你好") // [228 189 160 229 165 189] OK
 put(byts) // prints [104 101 108 108 111]
-check "你好".bytes() == []byte{228, 189, 160, 229, 165, 189} // returns a list of bytes (UTF-8 encoded values)
+assert_eq!( "你好".bytes() , []byte{228, 189, 160, 229, 165, 189} ); // returns a list of bytes (UTF-8 encoded values)
 
 //invalid use of [...] array (outside a composite literal)
-check "hello".codePoints() == []int{104, 101, 108, 108, 111} // returns a list of code points (Unicode values)
-check "hello".runes() == []rune{'h', 'e', 'l', 'l', 'o'}
-check "42".toInt() == 42
-check "42".toInt(10) == 42
-check "42".toInt(16) == 66 // 42 in hex is
-check "42".toInt(2) == 0 // 42 in binary is 101010, which is not a valid binary number
-check "101010".toInt(2) == 42 // 101010 in binary is 42
-check "42".toFloat() == 42.0
-check "42.5".toFloat() == 42.5
-#check "a" == 'a'
+assert_eq!( "hello".codePoints() , []int{104, 101, 108, 108, 111} ); // returns a list of code points (Unicode values)
+assert_eq!( "hello".runes() , []rune{'h', 'e', 'l', 'l', 'o'});
+assert_eq!( "42".toInt() , 42);
+assert_eq!( "42".toInt(10) , 42);
+assert_eq!( "42".toInt(16) , 66 ); // 42 in hex is
+assert_eq!( "42".toInt(2) , 0 ); // 42 in binary is 101010, which is not a valid binary number
+assert_eq!( "101010".toInt(2) , 42 ); // 101010 in binary is 42
+assert_eq!( "42".toFloat() , 42.0);
+assert_eq!( "42.5".toFloat() , 42.5);
+#assert_eq!( "a" , 'a');
 
 printf("All checks passed!\n")
 }

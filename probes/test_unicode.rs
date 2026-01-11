@@ -4,7 +4,7 @@ import math
 // Test Unicode identifiers
 var δ = 42
 var 变量 = "Chinese variable 变量"
-#check 变量#-1 == '量'
+#assert_eq!( 变量#-1 , '量');
 var переменная = "Russian variable"
 var π = 3.14159
 

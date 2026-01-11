@@ -9,4 +9,4 @@ if z#1 != 'a' {
 }
 
 // Does check work?
-check z#1 == 'a'
+assert_eq!( z#1 , 'a');

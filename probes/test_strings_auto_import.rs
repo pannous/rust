@@ -1,3 +1,3 @@
 #!/usr/bin/env rustc
-check "hello".toUpper() == "HELLO"
+assert_eq!( "hello".toUpper() , "HELLO");
 printf("All checks passed!\n")

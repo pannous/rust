@@ -5,36 +5,36 @@
 // String interpolation with integer
 result2 := "value:" 42 "units"
 put("Test 2: " + result2)
-check result2 == "value: 42 units"
+assert_eq!( result2 , "value: 42 units");
 
 // Basic string interpolation with variable
 x := "middle"
 y := "right"
 result1 := "left" x "right"
 put("Test 1: " + result1)
-check result1 == "left middle right"
+assert_eq!( result1 , "left middle right");
 
-check x+y == "middleright"  // no space with + operator
+assert_eq!( x+y , "middleright"  ); // no space with + operator
 
 // String interpolation with expression
 result3 := "result:" (2 + 3) "total"
 put("Test 3: " + result3)
-check result3 == "result: 5 total"
+assert_eq!( result3 , "result: 5 total");
 
 // String interpolation with identifier
 name := "world"
 result4 := "hello" name "!"
 put("Test 4: " + result4)
-check result4 == "hello world !"
+assert_eq!( result4 , "hello world !");
 
 // String interpolation with float literal
 result5 := "pi" 3.14159 "approximately"
 put("Test 5: " + result5)
-check result5 == "pi 3.14159 approximately"
+assert_eq!( result5 , "pi 3.14159 approximately");
 
 // String interpolation with negative number
 result6 := "temp:" (-5) "degrees"
 put("Test 6: " + result6)
-check result6 == "temp: -5 degrees"
+assert_eq!( result6 , "temp: -5 degrees");
 
 put("All string interpolation tests passed!")

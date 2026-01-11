@@ -6,4 +6,4 @@ for i in [1,2,3] {
 		put(i)
 		sum += i
 }
-check sum == 6
+assert_eq!( sum , 6);

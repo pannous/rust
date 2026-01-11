@@ -6,15 +6,15 @@ println("Testing enum String() method:")
 // Test normal cases
 var s State = OK
 printf("OK.String() = %v\n", s)
-check s as string == "OK"
+assert_eq!( s as string , "OK");
 
 s = ERROR
 printf("ERROR.String() = %s\n", s.String())
-check s as string == "ERROR"
+assert_eq!( s as string , "ERROR");
 
 s = PENDING
 printf("PENDING.String() = %s\n", s.String())
-check s as string == "PENDING"
+assert_eq!( s as string , "PENDING");
 
 // Test unknown value (should return "UNKNOWN")
 try{

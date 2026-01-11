@@ -11,7 +11,7 @@ users := []User{{ Name: "Bob", Age: 17 }, { Name: "Charlie", Age: 22 }, { Name: 
 /*
 alice := users.filter(u => u.Age > 18).apply(u => u.Name).sort().first()
 put("First user over 18: ", alice)
-check alice == "Alice"
+assert_eq!( alice , "Alice");
  🔧 Chained Method Call Challenge:
 
   The complex chained call users.filter(...).apply(...).sort().first() is a sophisticated challenge that
@@ -30,6 +30,6 @@ filtered := users.filter(u => u.Age > 18)        // []User
 names := filtered.apply(u => u.Name)              // []string
 names.sort!()                            // []string
 result := names.first()                          // string
-check result == "Alice"
+assert_eq!( result , "Alice");
 printf("First user over 18: %s\n", result)
 put("All tests passed")

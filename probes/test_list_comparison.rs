@@ -4,7 +4,7 @@ import "reflect"
 
 var x any = 42
 var y any = 41 + 1
-check x == y
+assert_eq!( x , y);
 if [1,2] == [1,2] {
 	printf("Test passed: lists are equal")
 } else {
@@ -12,9 +12,9 @@ if [1,2] == [1,2] {
 }
 a := [1, 2, 3]
 b := [1, 2, 3]
-check a == b
+assert_eq!( a , b);
 
-check [1,2] == [1,2]
+assert_eq!( [1,2] , [1,2]);
 
 printf("Test passed: a and b are equal")
 

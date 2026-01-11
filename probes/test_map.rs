@@ -26,7 +26,7 @@ printf("Access z1[a]: %v\n", z1["a"])
 // Test map comparison  
 z5 := {a: 1, b: 2}
 printf("z2 == z5: %v\n", z2 == z5) // map can only be compared to nil HARD!
-#check z2 == z5   TODO: fix this HARD?
+#assert_eq!( z2 , z5   TODO: fix this HARD?);
 
 // Test typeof
 printf("typeof(z1): %v\n", typeof(z1))

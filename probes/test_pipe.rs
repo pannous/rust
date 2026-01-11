@@ -18,28 +18,28 @@ func negate(x int) int {
 // Basic pipe operator tests
 result := 2 | square
 println("2 | square =", result)
-check result == 4
+assert_eq!( result , 4);
 
 // Basic pipe test with different number
 result1 := 3 | square
 println("3 | square =", result1)
-check result1 == 9
+assert_eq!( result1 , 9);
 
 // Pipe with variable
 val := 4
 result2 := val | double
 println("4 | double =", result2)
-check result2 == 8
+assert_eq!( result2 , 8);
 
 // Chained pipes
 result3 := 2 | square | double
 println("2 | square | double =", result3)
-check result3 == 8
+assert_eq!( result3 , 8);
 
 // Pipe in assignment
 x := 5 | square
 println("x = 5 | square =", x)
-check x == 25
+assert_eq!( x , 25);
 
 // Test in function call arguments
 println("Testing pipe in function args:", increment(5 | negate))
@@ -47,34 +47,34 @@ println("Testing pipe in function args:", increment(5 | negate))
 // Test with expressions
 exprResult := (2 + 3) | increment
 println("(2 + 3) | increment =", exprResult)
-check exprResult == 6
+assert_eq!( exprResult , 6);
 
 // Pipe vs bitwise OR distinction
 // This should be pipe operator (function call)
 pipeResult := 2 | square
 println("2 | square =", pipeResult) // Should be 4
-check pipeResult == 4
+assert_eq!( pipeResult , 4);
 
 // This should be bitwise OR (number | number)
 bitwiseResult := 2 | 4
 println("2 | 4 =", bitwiseResult) // Should be 6 (bitwise OR)
-check bitwiseResult == 6
+assert_eq!( bitwiseResult , 6);
 
 // Mixed operations
 temp := 3 | square
 mixed := temp | 1
 println("temp = 3 | square =", temp)
 println("temp | 1 =", mixed) // Should be 9 | 1 = 9
-check temp == 9
-check mixed == 9
+assert_eq!( temp , 9);
+assert_eq!( mixed , 9);
 
 // Test parenthesized pipe operations
 parenResult1 := (3 | square) | 1
 println("(3 | square) | 1 =", parenResult1)
-check parenResult1 == 9  // 3^2 = 9, 9|1 = 9
+assert_eq!( parenResult1 , 9  ); // 3^2 = 9, 9|1 = 9
 
 parenResult2 := 2 | (4 | square)
 println("2 | (4 | square) =", parenResult2)
-check parenResult2 == 18  // 4^2 = 16, 2|16 = 18
+assert_eq!( parenResult2 , 18  ); // 4^2 = 16, 2|16 = 18
 
 println("All pipe operator tests passed!")

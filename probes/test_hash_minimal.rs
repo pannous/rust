@@ -1,4 +1,4 @@
 #!/usr/bin/env rustc
 
 z := []rune{'a', 'b', 'c'}
-check z#1 == 'a'
+assert_eq!( z#1 , 'a');

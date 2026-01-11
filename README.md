@@ -11,10 +11,11 @@ Features working:
 • shebang support:
 • run rust as scripts with implicit main
 • ./probes/test_main.rs
+• dynamic linking via dlsym C-ABI (rust ABI dependent on build!)
 
 Future:
 • Optionals via '?' as in other sane languages
 • functions return Results, yes, no need to write it
-• dynamic linking!!
+• dynamic linking Swift ABI ...
 
 See [Goo](https://github.com/pannous/goo) the Go++ language extensions for a list of some planned features. 

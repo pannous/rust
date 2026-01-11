@@ -5,47 +5,47 @@ import "units"
 // Test comprehensive units system across all categories
 
 // Length conversions
-check 1000mm == 1m
-check 100cm == 1m  
-check 1km == 1000m
-check 1ft == 12inch
-check 1mi == 5280ft
+assert_eq!( 1000mm , 1m);
+assert_eq!( 100cm , 1m  );
+assert_eq!( 1km , 1000m);
+assert_eq!( 1ft , 12inch);
+assert_eq!( 1mi , 5280ft);
 
 // Time conversions  
-check 1000ms == 1s
-check 60s == 1min
-check 60min == 1h
-check 24h == 1d
+assert_eq!( 1000ms , 1s);
+assert_eq!( 60s , 1min);
+assert_eq!( 60min , 1h);
+assert_eq!( 24h , 1d);
 
 // Mass conversions
-check 1000g == 1kg
-check 1000kg == 1t
-check 1lb == 16oz
+assert_eq!( 1000g , 1kg);
+assert_eq!( 1000kg , 1t);
+assert_eq!( 1lb , 16oz);
 
 // Energy conversions - comparing different energy units
 j_val := 1000J
 kj_val := 1kJ
-check j_val == kj_val
+assert_eq!( j_val , kj_val);
 
 // Power units
 w_val := 1000W  
 kw_val := 1kW
-check w_val == kw_val
+assert_eq!( w_val , kw_val);
 
 // Pressure units
 pa_val := 100000Pa
 bar_val := 1bar
-check pa_val == bar_val
+assert_eq!( pa_val , bar_val);
 
 // Area units
 m2_val := 10000m²
 ha_val := 1ha  
-check m2_val == ha_val
+assert_eq!( m2_val , ha_val);
 
 // Volume units
 ml_val := 1000mL
 l_val := 1L
-check ml_val == l_val
+assert_eq!( ml_val , l_val);
 
 // Velocity units
 mps_val := 1m/s

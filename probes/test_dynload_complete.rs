@@ -1,0 +1,299 @@
+//! Complete dynload test with forked rustc #[dynexport] library
+
+use std::ffi::{c_char, c_int, c_void, CStr, CString};
+
+type VecU8Handle = *mut ();
+type VecI32Handle = *mut ();
+type StringHandle = *mut ();
+type HashMapSSHandle = *mut ();
+type HashMapIIHandle = *mut ();
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+struct OptionI32 {
+    value: i32,
+    is_some: bool,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+struct DynexportMeta {
+    type_hash: u64,
+    compiler_hash: u32,
+    flags: u32,
+}
+
+const RTLD_NOW: c_int = 0x2;
+
+extern "C" {
+    fn dlopen(filename: *const c_char, flags: c_int) -> *mut c_void;
+    fn dlsym(handle: *mut c_void, symbol: *const c_char) -> *mut c_void;
+    fn dlclose(handle: *mut c_void) -> c_int;
+    fn dlerror() -> *mut c_char;
+}
+
+struct DynLib(*mut c_void);
+
+impl DynLib {
+    fn open(path: &str) -> Result<Self, String> {
+        let path_cstr = CString::new(path).unwrap();
+        let handle = unsafe { dlopen(path_cstr.as_ptr(), RTLD_NOW) };
+        if handle.is_null() {
+            let err = unsafe { dlerror() };
+            let msg = if err.is_null() {
+                "unknown error".to_string()
+            } else {
+                unsafe { CStr::from_ptr(err).to_string_lossy().to_string() }
+            };
+            return Err(msg);
+        }
+        Ok(Self(handle))
+    }
+
+    fn sym(&self, name: &str) -> *mut c_void {
+        let name_cstr = CString::new(name).unwrap();
+        unsafe { dlsym(self.0, name_cstr.as_ptr()) }
+    }
+
+    fn meta(&self, name: &str) -> Option<DynexportMeta> {
+        let meta_name = format!("dynexport_meta_{}", name);
+        let sym = self.sym(&meta_name);
+        if sym.is_null() {
+            None
+        } else {
+            Some(unsafe { *(sym as *const DynexportMeta) })
+        }
+    }
+}
+
+impl Drop for DynLib {
+    fn drop(&mut self) {
+        unsafe { dlclose(self.0); }
+    }
+}
+
+macro_rules! load_fn {
+    ($lib:expr, $name:literal -> $ty:ty) => {{
+        let sym = $lib.sym($name);
+        assert!(!sym.is_null(), "Symbol {} not found", $name);
+        unsafe { std::mem::transmute::<_, $ty>(sym) }
+    }};
+}
+
+fn main() {
+    println!("=== Complete dynload test with forked rustc ===\n");
+
+    let lib = DynLib::open("/tmp/libdynexport_prelude_forked.dylib")
+        .expect("Failed to open library");
+
+    // === Metadata verification ===
+    println!("--- Metadata Verification ---");
+    let symbols = ["vec_u8_new", "string_from_cstr", "hashmap_ss_new", "hashmap_ii_get", "slice_i32_sum"];
+    for sym in &symbols {
+        if let Some(meta) = lib.meta(sym) {
+            println!("{}: type=0x{:016x} compiler=0x{:08x}", sym, meta.type_hash, meta.compiler_hash);
+        } else {
+            println!("{}: NO METADATA", sym);
+        }
+    }
+
+    // === Vec<u8> ===
+    println!("\n--- Vec<u8> ---");
+    {
+        let new = load_fn!(lib, "vec_u8_new" -> extern "C" fn() -> VecU8Handle);
+        let push = load_fn!(lib, "vec_u8_push" -> extern "C" fn(VecU8Handle, u8));
+        let len = load_fn!(lib, "vec_u8_len" -> extern "C" fn(VecU8Handle) -> usize);
+        let get = load_fn!(lib, "vec_u8_get" -> extern "C" fn(VecU8Handle, usize) -> u8);
+        let drop_fn = load_fn!(lib, "vec_u8_drop" -> extern "C" fn(VecU8Handle));
+
+        let v = new();
+        push(v, 1); push(v, 2); push(v, 3);
+        assert_eq!(len(v), 3);
+        assert_eq!(get(v, 0), 1);
+        assert_eq!(get(v, 2), 3);
+        drop_fn(v);
+        println!("Vec<u8> PASSED");
+    }
+
+    // === Vec<i32> ===
+    println!("\n--- Vec<i32> ---");
+    {
+        let new = load_fn!(lib, "vec_i32_new" -> extern "C" fn() -> VecI32Handle);
+        let push = load_fn!(lib, "vec_i32_push" -> extern "C" fn(VecI32Handle, i32));
+        let len = load_fn!(lib, "vec_i32_len" -> extern "C" fn(VecI32Handle) -> usize);
+        let get = load_fn!(lib, "vec_i32_get" -> extern "C" fn(VecI32Handle, usize) -> i32);
+        let drop_fn = load_fn!(lib, "vec_i32_drop" -> extern "C" fn(VecI32Handle));
+
+        let v = new();
+        push(v, -1000); push(v, 0); push(v, 1000);
+        assert_eq!(len(v), 3);
+        assert_eq!(get(v, 0), -1000);
+        assert_eq!(get(v, 2), 1000);
+        drop_fn(v);
+        println!("Vec<i32> PASSED");
+    }
+
+    // === String ===
+    println!("\n--- String ---");
+    {
+        let from_cstr = load_fn!(lib, "string_from_cstr" -> extern "C" fn(*const c_char) -> StringHandle);
+        let str_len = load_fn!(lib, "string_len" -> extern "C" fn(StringHandle) -> usize);
+        let push_str = load_fn!(lib, "string_push_str" -> extern "C" fn(StringHandle, *const c_char));
+        let to_cstr = load_fn!(lib, "string_to_cstr" -> extern "C" fn(StringHandle) -> *mut c_char);
+        let free_cstr = load_fn!(lib, "string_free_cstr" -> extern "C" fn(*mut c_char));
+        let clone = load_fn!(lib, "string_clone" -> extern "C" fn(StringHandle) -> StringHandle);
+        let drop_fn = load_fn!(lib, "string_drop" -> extern "C" fn(StringHandle));
+
+        let hello = CString::new("Hello").unwrap();
+        let s = from_cstr(hello.as_ptr());
+        assert_eq!(str_len(s), 5);
+
+        let world = CString::new(", World!").unwrap();
+        push_str(s, world.as_ptr());
+        assert_eq!(str_len(s), 13);
+
+        let s2 = clone(s);
+        assert_eq!(str_len(s2), 13);
+
+        let cstr = to_cstr(s);
+        let result = unsafe { CStr::from_ptr(cstr).to_str().unwrap() };
+        println!("String: {}", result);
+        assert_eq!(result, "Hello, World!");
+        free_cstr(cstr);
+
+        drop_fn(s);
+        drop_fn(s2);
+        println!("String PASSED");
+    }
+
+    // === HashMap<String, String> ===
+    println!("\n--- HashMap<String, String> ---");
+    {
+        let new = load_fn!(lib, "hashmap_ss_new" -> extern "C" fn() -> HashMapSSHandle);
+        let insert = load_fn!(lib, "hashmap_ss_insert" -> extern "C" fn(HashMapSSHandle, *const c_char, *const c_char) -> bool);
+        let get = load_fn!(lib, "hashmap_ss_get" -> extern "C" fn(HashMapSSHandle, *const c_char) -> StringHandle);
+        let map_len = load_fn!(lib, "hashmap_ss_len" -> extern "C" fn(HashMapSSHandle) -> usize);
+        let drop_fn = load_fn!(lib, "hashmap_ss_drop" -> extern "C" fn(HashMapSSHandle));
+        let to_cstr = load_fn!(lib, "string_to_cstr" -> extern "C" fn(StringHandle) -> *mut c_char);
+        let free_cstr = load_fn!(lib, "string_free_cstr" -> extern "C" fn(*mut c_char));
+        let str_drop = load_fn!(lib, "string_drop" -> extern "C" fn(StringHandle));
+
+        let m = new();
+        let k1 = CString::new("lang").unwrap();
+        let v1 = CString::new("Rust").unwrap();
+        assert!(insert(m, k1.as_ptr(), v1.as_ptr()));
+
+        let k2 = CString::new("feature").unwrap();
+        let v2 = CString::new("dynexport").unwrap();
+        insert(m, k2.as_ptr(), v2.as_ptr());
+
+        assert_eq!(map_len(m), 2);
+
+        let val = get(m, k1.as_ptr());
+        assert!(!val.is_null());
+        let cstr = to_cstr(val);
+        let result = unsafe { CStr::from_ptr(cstr).to_str().unwrap() };
+        println!("map[\"lang\"] = {}", result);
+        assert_eq!(result, "Rust");
+        free_cstr(cstr);
+        str_drop(val);
+
+        drop_fn(m);
+        println!("HashMap<String, String> PASSED");
+    }
+
+    // === HashMap<i32, i32> with OptionI32 ===
+    println!("\n--- HashMap<i32, i32> ---");
+    {
+        let new = load_fn!(lib, "hashmap_ii_new" -> extern "C" fn() -> HashMapIIHandle);
+        let insert = load_fn!(lib, "hashmap_ii_insert" -> extern "C" fn(HashMapIIHandle, i32, i32));
+        let get = load_fn!(lib, "hashmap_ii_get" -> extern "C" fn(HashMapIIHandle, i32) -> OptionI32);
+        let map_len = load_fn!(lib, "hashmap_ii_len" -> extern "C" fn(HashMapIIHandle) -> usize);
+        let drop_fn = load_fn!(lib, "hashmap_ii_drop" -> extern "C" fn(HashMapIIHandle));
+
+        let m = new();
+        insert(m, 1, 100);
+        insert(m, 2, 200);
+        insert(m, 42, 4200);
+
+        assert_eq!(map_len(m), 3);
+
+        let opt1 = get(m, 1);
+        assert!(opt1.is_some);
+        assert_eq!(opt1.value, 100);
+
+        let opt42 = get(m, 42);
+        assert!(opt42.is_some);
+        assert_eq!(opt42.value, 4200);
+        println!("get(42) = Some({})", opt42.value);
+
+        let opt_none = get(m, 999);
+        assert!(!opt_none.is_some);
+        println!("get(999) = None");
+
+        drop_fn(m);
+        println!("HashMap<i32, i32> PASSED");
+    }
+
+    // === Option<i32> functions ===
+    println!("\n--- Option<i32> ---");
+    {
+        let some = load_fn!(lib, "option_i32_some" -> extern "C" fn(i32) -> OptionI32);
+        let none = load_fn!(lib, "option_i32_none" -> extern "C" fn() -> OptionI32);
+        let unwrap_or = load_fn!(lib, "option_i32_unwrap_or" -> extern "C" fn(OptionI32, i32) -> i32);
+
+        let s = some(42);
+        assert!(s.is_some);
+        assert_eq!(s.value, 42);
+
+        let n = none();
+        assert!(!n.is_some);
+
+        assert_eq!(unwrap_or(s, 0), 42);
+        assert_eq!(unwrap_or(n, 999), 999);
+
+        println!("Option<i32> PASSED");
+    }
+
+    // === Slice utilities ===
+    println!("\n--- Slice Utilities ---");
+    {
+        let sum = load_fn!(lib, "slice_i32_sum" -> extern "C" fn(*const i32, usize) -> i64);
+        let sort = load_fn!(lib, "slice_i32_sort" -> extern "C" fn(*mut i32, usize));
+        let mean = load_fn!(lib, "slice_f64_mean" -> extern "C" fn(*const f64, usize) -> f64);
+
+        let nums: [i32; 5] = [1, 2, 3, 4, 5];
+        assert_eq!(sum(nums.as_ptr(), 5), 15);
+        println!("sum([1,2,3,4,5]) = 15");
+
+        let mut unsorted: [i32; 5] = [5, 1, 4, 2, 3];
+        sort(unsorted.as_mut_ptr(), 5);
+        assert_eq!(unsorted, [1, 2, 3, 4, 5]);
+        println!("sort([5,1,4,2,3]) = {:?}", unsorted);
+
+        let floats: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
+        let m = mean(floats.as_ptr(), 4);
+        assert!((m - 2.5).abs() < 0.001);
+        println!("mean([1,2,3,4]) = {}", m);
+
+        println!("Slice utilities PASSED");
+    }
+
+    // === Compiler hash consistency ===
+    println!("\n--- Compiler Hash Check ---");
+    let mut hashes: Vec<(String, u32)> = vec![];
+    for sym in &["vec_u8_new", "string_new", "hashmap_ss_new", "option_i32_some"] {
+        if let Some(meta) = lib.meta(sym) {
+            hashes.push((sym.to_string(), meta.compiler_hash));
+        }
+    }
+    if !hashes.is_empty() {
+        let first = hashes[0].1;
+        let all_same = hashes.iter().all(|(_, h)| *h == first);
+        println!("All {} symbols compiled with same rustc: {}", hashes.len(), all_same);
+        println!("Compiler hash: 0x{:08x}", first);
+        assert!(all_same);
+    }
+
+    println!("\n=== ALL TESTS PASSED! ===");
+}

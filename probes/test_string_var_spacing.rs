@@ -3,4 +3,4 @@
 name := "world"
 result := "hello" name "!"
 printf("String var result: '%s'\n", result)
-check result == "hello world !"
+assert_eq!( result , "hello world !");

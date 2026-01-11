@@ -4,49 +4,49 @@ import "strings" // for reverse
 // DON'T REMOVE TESTS even if they fail
 aList:=[1, 2, 3]
 
-check aList[1] == 2
-check aList#2 == 2
-check aList[1:] == [2, 3]
-check aList[:2] == [1, 2]
-#check aList[1:2] == 2       // slice(start, end)
-check aList[1:2] == [2,]       // slice(start, end)
+assert_eq!( aList[1] , 2);
+assert_eq!( aList#2 , 2);
+assert_eq!( aList[1:] , [2, 3]);
+assert_eq!( aList[:2] , [1, 2]);
+#assert_eq!( aList[1:2] , 2       ); // slice(start, end)
+assert_eq!( aList[1:2] , [2,]       ); // slice(start, end)
 
-check aList.first() == 1
-check aList.last() == 3
-check aList.size() == 3
-check aList.length() == 3
-#check len([]) == 0
-#check len([1]) == 1
-check len([]int{}) == 0
-check len([]int{1}) == 1
+assert_eq!( aList.first() , 1);
+assert_eq!( aList.last() , 3);
+assert_eq!( aList.size() , 3);
+assert_eq!( aList.length() , 3);
+#assert_eq!( len([]) , 0);
+#assert_eq!( len([1]) , 1);
+assert_eq!( len([]int{}) , 0);
+assert_eq!( len([]int{1}) , 1);
 
-check aList.contains(2) == true
-check aList.contains(5) == false
+assert_eq!( aList.contains(2) , true);
+assert_eq!( aList.contains(5) , false);
 
-check aList.indexOf(2) == 1
-check aList.indexOf(5) == -1
+assert_eq!( aList.indexOf(2) , 1);
+assert_eq!( aList.indexOf(5) , -1);
 
 aList.sort() // sorts in place!!
-check aList == [1,2,3] // sorted in place
+assert_eq!( aList , [1,2,3] ); // sorted in place
 
 
-check aList.slice(1,2) == [2,]
-check aList.copy() == aList
+assert_eq!( aList.slice(1,2) , [2,]);
+assert_eq!( aList.copy() , aList);
 
-check aList.append(4) == [1,2,3,4]
+assert_eq!( aList.append(4) , [1,2,3,4]);
 
 
 #aList:=[1, 2, 3]
-check aList[1] == 2
-check aList.first() == 1
+assert_eq!( aList[1] , 2);
+assert_eq!( aList.first() , 1);
 ## ^^ works in principle
 
 
 
 stringList := ["3", "2", "1"]
-check stringList.join("-") == "3-2-1" // join
-check stringList.join("") == "321" // join
-#check strings.Join(stringList, "-") == "3-2-1" // join
+assert_eq!( stringList.join("-") , "3-2-1" ); // join
+assert_eq!( stringList.join("") , "321" ); // join
+#assert_eq!( strings.Join(stringList, "-") , "3-2-1" ); // join
 
 printf("All list method tests passed!\n")
 
