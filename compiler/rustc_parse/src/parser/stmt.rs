@@ -205,6 +205,34 @@ impl<'a> Parser<'a> {
                 ));
             }
 
+            // Go-style short variable declaration: `x := expr` -> `let x = expr`
+            if this.token == token::Colon && this.look_ahead(1, |t| *t == token::Eq) {
+                // Only allow simple identifiers (single path segment, no generics)
+                if path.segments.len() == 1 && path.segments[0].args.is_none() {
+                    let ident = path.segments[0].ident;
+                    this.bump(); // consume `:`
+                    this.bump(); // consume `=`
+                    let expr = this.parse_expr()?;
+                    let pat = Box::new(this.mk_pat_ident(lo, ast::BindingMode::NONE, ident));
+                    let local = Box::new(Local {
+                        id: DUMMY_NODE_ID,
+                        super_: None,
+                        pat,
+                        ty: None,
+                        kind: LocalKind::Init(expr),
+                        span: lo.to(this.prev_token.span),
+                        colon_sp: None,
+                        attrs,
+                        tokens: None,
+                    });
+                    return Ok((
+                        this.mk_stmt(lo.to(this.prev_token.span), StmtKind::Let(local)),
+                        Trailing::No,
+                        UsePreAttrPos::No,
+                    ));
+                }
+            }
+
             let expr = if this.eat(exp!(OpenBrace)) {
                 this.parse_expr_struct(None, path, true)?
             } else {

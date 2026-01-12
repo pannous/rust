@@ -7,8 +7,8 @@ result1 := ("hello" in myMap)
 result2 := "world" in myMap
 result3 := "missing" in myMap
 
-printf("'hello' in myMap: %t\n", result1)
-printf("'world' in myMap: %t\n", result2)
-printf("'missing' in myMap: %t\n", result3)
+put!("'hello' in myMap: %t\n", result1)
+put!("'world' in myMap: %t\n", result2)
+put!("'missing' in myMap: %t\n", result3)
 
-printf("ALL MAP TESTS COMPLETED\n")
+put!("ALL MAP TESTS COMPLETED\n")

@@ -5,17 +5,17 @@ import "strconv"
 
 def testBasicTry() error {
     try i := strconv.Atoi("42")
-    printf("Converted successfully: %d\n", i)
+    put!("Converted successfully: %d\n", i)
     
     try val := strconv.Atoi("invalid") 
-    printf("This should not be reached: %d\n", val)
+    put!("This should not be reached: %d\n", val)
     
     return nil
 }
 
 err := testBasicTry()
 if err != nil {
-    printf("Caught error: %v\n", err)
+    put!("Caught error: %v\n", err)
 } else {
-    printf("No error - unexpected!\n")
+    put!("No error - unexpected!\n")
 }

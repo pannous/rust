@@ -4,4 +4,4 @@ def meaning() int {42} // ^^ easy
 #def meaning(){return 42} // harder but doable? OR BUG?
 #def meaning(){42} // harder but doable? OR UNINTENDED?
 
-printf("Meaning of life is %d\n", meaning())
+put!("Meaning of life is %d\n", meaning())

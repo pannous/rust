@@ -11,21 +11,21 @@ result2 := "world" in text       // literal in variable
 result3 := "hello" in "hello world"  // literal in literal
 result4 := "xyz" in text         // negative case
 
-printf("'%s' in '%s': %t\n", substr, text, result1)
-printf("'world' in '%s': %t\n", text, result2)
-printf("'hello' in 'hello world': %t\n", result3)
-printf("'xyz' in '%s': %t\n", text, result4)
+put!("'%s' in '%s': %t\n", substr, text, result1)
+put!("'world' in '%s': %t\n", text, result2)
+put!("'hello' in 'hello world': %t\n", result3)
+put!("'xyz' in '%s': %t\n", text, result4)
 
 // counterexamples with string literals
-check not ("x" in "abc")    // false
-check not ("123" in "456")  // false
+assert!(not ("x" in "abc")   ) // false
+assert!(not ("123" in "456") ) // false
 
 
 text2 := "goodbye world"
-check not ("hello" in text2)  // false
-check not ("xyz" in text2)  // false
+assert!(not ("hello" in text2) ) // false
+assert!(not ("xyz" in text2) ) // false
 needleText2 := "goodbye"
-check (needleText2 in text2)  // false
-check not not (needleText2 in text2)  // false
+assert!((needleText2 in text2) ) // false
+assert!(not not (needleText2 in text2) ) // false
 
-printf("ALL TESTS PASSED\n")
+put!("ALL TESTS PASSED\n")

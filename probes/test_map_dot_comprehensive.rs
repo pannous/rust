@@ -6,26 +6,26 @@ settings := map[string]bool{"debug": true, "verbose": false}
 data := map[string]any{"count": 42, "message": "hello"}
 
 // Test basic access
-printf("User: %v from %v\n", user.name, user.city)
-printf("Scores: Math=%v, English=%v\n", scores.math, scores.english)
-printf("Settings: Debug=%v, Verbose=%v\n", settings.debug, settings.verbose)
-printf("Data: Count=%v, Message=%v\n", data.count, data.message)
+put!("User: %v from %v\n", user.name, user.city)
+put!("Scores: Math=%v, English=%v\n", scores.math, scores.english)
+put!("Settings: Debug=%v, Verbose=%v\n", settings.debug, settings.verbose)
+put!("Data: Count=%v, Message=%v\n", data.count, data.message)
 
 // Test in expressions
 total := scores.math + scores.english
-printf("Total score: %v\n", total)
+put!("Total score: %v\n", total)
 
 // Test in conditionals
 if settings.debug {
-    printf("Debug mode is enabled\n")
+    put!("Debug mode is enabled\n")
 }
 
 // Test assignments
 newScore := scores.math
-printf("New score: %v\n", newScore)
+put!("New score: %v\n", newScore)
 
 // Test function calls with dot notation
-printf("Function call test: %v\n", data.count)
+put!("Function call test: %v\n", data.count)
 
 // Test compatibility with bracket notation
-printf("Bracket notation still works: %v\n", user["name"])
+put!("Bracket notation still works: %v\n", user["name"])

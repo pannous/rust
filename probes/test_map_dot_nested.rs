@@ -9,8 +9,8 @@ config := map[string]map[string]string{
 }
 
 // This should transform to config["database"]["host"]
-printf("Database host: %v\n", config.database.host)
-printf("Redis port: %v\n", config.redis.port)
+put!("Database host: %v\n", config.database.host)
+put!("Redis port: %v\n", config.redis.port)
 
 // Test 2: Map in struct
 type Settings struct {
@@ -22,11 +22,11 @@ settings := Settings{
 }
 
 // This should transform to settings.flags["debug"]
-printf("Debug flag: %v\n", settings.flags.debug)
+put!("Debug flag: %v\n", settings.flags.debug)
 
 // Test 3: Map method calls with dot notation
 data := map[string]string{"message": "hello world"}
-printf("Message length: %v\n", len(data.message))
+put!("Message length: %v\n", len(data.message))
 
 // Test 4: Complex expressions
 users := map[string]map[string]any{
@@ -36,11 +36,11 @@ users := map[string]map[string]any{
 
 // Multiple transformations in one expression
 if users.john.active {
-    printf("John is active and age %v\n", users.john.age)
+    put!("John is active and age %v\n", users.john.age)
 }
 
 // Test 5: Assignment from map dot notation
 johnAge := users.john.age
-printf("John's age: %v\n", johnAge)
+put!("John's age: %v\n", johnAge)
 
-printf("All edge case tests completed.\n")
+put!("All edge case tests completed.\n")

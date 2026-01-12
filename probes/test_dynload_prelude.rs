@@ -100,7 +100,7 @@ fn main() {
             .expect("Failed to open library")
     };
 
-    // Test 1: Check metadata for vec_u8_new
+    // Test 1: assert!()metadata for vec_u8_new
     println!("--- Metadata Checks ---");
     if let Some(meta) = lib.get_metadata("vec_u8_new") {
         println!("vec_u8_new metadata:");
@@ -135,15 +135,15 @@ fn main() {
 
         let len = vec_u8_len(vec);
         println!("Vec<u8> length: {}", len);
-        assert_eq!(len, 3);
+        eq!(len, 3);
 
         let v0 = vec_u8_get(vec, 0);
         let v1 = vec_u8_get(vec, 1);
         let v2 = vec_u8_get(vec, 2);
         println!("Elements: {}, {}, {}", v0, v1, v2);
-        assert_eq!(v0, 10);
-        assert_eq!(v1, 20);
-        assert_eq!(v2, 30);
+        eq!(v0, 10);
+        eq!(v1, 20);
+        eq!(v2, 30);
 
         vec_u8_drop(vec);
         println!("Vec<u8> test PASSED");
@@ -164,9 +164,9 @@ fn main() {
         vec_i32_push(vec, 100);
         vec_i32_push(vec, 42);
 
-        assert_eq!(vec_i32_len(vec), 4);
-        assert_eq!(vec_i32_get(vec, 0), -100);
-        assert_eq!(vec_i32_get(vec, 3), 42);
+        eq!(vec_i32_len(vec), 4);
+        eq!(vec_i32_get(vec, 0), -100);
+        eq!(vec_i32_get(vec, 3), 42);
 
         vec_i32_drop(vec);
         println!("Vec<i32> test PASSED");
@@ -188,17 +188,17 @@ fn main() {
         let hello = CString::new("Hello").unwrap();
         let s = string_from_cstr(hello.as_ptr());
 
-        assert_eq!(string_len(s), 5);
+        eq!(string_len(s), 5);
 
         let world = CString::new(", World!").unwrap();
         string_push_str(s, world.as_ptr());
 
-        assert_eq!(string_len(s), 13);
+        eq!(string_len(s), 13);
 
         let result = string_to_cstr(s);
         let result_str = CStr::from_ptr(result).to_str().unwrap();
         println!("String content: {}", result_str);
-        assert_eq!(result_str, "Hello, World!");
+        eq!(result_str, "Hello, World!");
 
         string_free_cstr(result);
         string_drop(s);
@@ -231,14 +231,14 @@ fn main() {
         let v2 = CString::new("1.75.0").unwrap();
         hashmap_ss_insert(map, k2.as_ptr(), v2.as_ptr());
 
-        assert_eq!(hashmap_ss_len(map), 2);
+        eq!(hashmap_ss_len(map), 2);
 
         let val = hashmap_ss_get(map, k1.as_ptr());
         assert!(!val.is_null());
         let val_cstr = string_to_cstr(val);
         let val_str = CStr::from_ptr(val_cstr).to_str().unwrap();
         println!("map[\"name\"] = {}", val_str);
-        assert_eq!(val_str, "Rust");
+        eq!(val_str, "Rust");
         string_free_cstr(val_cstr);
         string_drop(val);
 
@@ -260,13 +260,13 @@ fn main() {
         let nums: [i32; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         let sum = slice_i32_sum(nums.as_ptr(), nums.len());
         println!("Sum of 1..10: {}", sum);
-        assert_eq!(sum, 55);
+        eq!(sum, 55);
 
         // Test sort
         let mut unsorted: [i32; 5] = [5, 2, 8, 1, 9];
         slice_i32_sort(unsorted.as_mut_ptr(), unsorted.len());
         println!("Sorted: {:?}", unsorted);
-        assert_eq!(unsorted, [1, 2, 5, 8, 9]);
+        eq!(unsorted, [1, 2, 5, 8, 9]);
 
         // Test mean
         let floats: [f64; 5] = [1.0, 2.0, 3.0, 4.0, 5.0];

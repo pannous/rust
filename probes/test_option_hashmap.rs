@@ -47,18 +47,18 @@ fn main() {
         hashmap_ii_insert(map, 42, 4200);
 
         println!("Map length: {}", hashmap_ii_len(map));
-        assert_eq!(hashmap_ii_len(map), 3);
+        eq!(hashmap_ii_len(map), 3);
 
         // Test get existing key
         let opt1 = hashmap_ii_get(map, 1);
         println!("get(1) = {:?}", opt1);
         assert!(opt1.is_some);
-        assert_eq!(opt1.value, 100);
+        eq!(opt1.value, 100);
 
         let opt42 = hashmap_ii_get(map, 42);
         println!("get(42) = {:?}", opt42);
         assert!(opt42.is_some);
-        assert_eq!(opt42.value, 4200);
+        eq!(opt42.value, 4200);
 
         // Test get non-existing key
         let opt_none = hashmap_ii_get(map, 999);
@@ -75,7 +75,7 @@ fn main() {
         let some_val = option_i32_some(42);
         println!("\noption_i32_some(42) = {:?}", some_val);
         assert!(some_val.is_some);
-        assert_eq!(some_val.value, 42);
+        eq!(some_val.value, 42);
 
         let none_val = option_i32_none();
         println!("option_i32_none() = {:?}", none_val);
@@ -83,11 +83,11 @@ fn main() {
 
         let unwrapped = option_i32_unwrap_or(some_val, 0);
         println!("unwrap_or(Some(42), 0) = {}", unwrapped);
-        assert_eq!(unwrapped, 42);
+        eq!(unwrapped, 42);
 
         let unwrapped_none = option_i32_unwrap_or(none_val, 999);
         println!("unwrap_or(None, 999) = {}", unwrapped_none);
-        assert_eq!(unwrapped_none, 999);
+        eq!(unwrapped_none, 999);
 
         dlclose(handle);
     }

@@ -299,6 +299,9 @@ impl<'a> Parser<'a> {
         } else if let IsMacroRulesItem::Yes { has_bang } = self.is_macro_rules_item() {
             // MACRO_RULES ITEM
             self.parse_item_macro_rules(vis, has_bang)?
+        } else if self.is_walrus_assignment() {
+            // Go-style short variable declaration: x := expr -> __walrus!(x = expr)
+            return self.parse_walrus_assignment(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -396,6 +399,66 @@ impl<'a> Parser<'a> {
     /// Are we sure this could not possibly be a macro invocation?
     fn isnt_macro_invocation(&mut self) -> bool {
         self.check_ident() && self.look_ahead(1, |t| *t != token::Bang && *t != token::PathSep)
+    }
+
+    /// Check for Go-style short variable declaration: `x :=`
+    fn is_walrus_assignment(&self) -> bool {
+        self.token.is_ident()
+            && self.look_ahead(1, |t| *t == token::Colon)
+            && self.look_ahead(2, |t| *t == token::Eq)
+    }
+
+    /// Parse Go-style short variable declaration: `x := expr`
+    /// Transforms to `__walrus!(x = expr)` macro call for script mode
+    fn parse_walrus_assignment(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, Spacing, TokenStream, TokenTree};
+
+        let ident = self.parse_ident()?;
+        self.bump(); // consume `:`
+        self.bump(); // consume `=`
+
+        // Collect all tokens until semicolon or newline/EOF for the expression
+        let expr_lo = self.token.span;
+        let mut expr_tokens = Vec::new();
+
+        // Parse tokens until we hit a semicolon or end of statement
+        while !self.check(exp!(Semi)) && !self.check(exp!(Eof)) && self.token != token::CloseBrace {
+            expr_tokens.push(TokenTree::Token(self.token.clone(), Spacing::Alone));
+            self.bump();
+        }
+
+        let expr_hi = self.prev_token.span;
+
+        // Build __walrus!(ident = expr) macro call
+        let walrus_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__walrus, lo))],
+            tokens: None,
+        };
+
+        // Build the macro arguments: ident = expr_tokens
+        let mut args_tokens = vec![
+            TokenTree::Token(
+                token::Token::new(token::Ident(ident.name, IdentIsRaw::No), ident.span),
+                Spacing::Alone,
+            ),
+            TokenTree::Token(token::Token::new(token::Eq, ident.span), Spacing::Alone),
+        ];
+        args_tokens.extend(expr_tokens);
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(expr_lo, expr_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(args_tokens),
+        };
+
+        let mac = MacCall { path: walrus_path, args: Box::new(args) };
+
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
 
     /// Recover on encountering a struct, enum, or method definition where the user

@@ -8,7 +8,7 @@ println("world!")   // adds newline
 func helper() int {
 	return 42
 }
-printf("The answer is: ", helper()) // UN-formatted output
+put!("The answer is: ", helper()) // UN-formatted output
 
 x := 421
 print("The answer is: ", x, "\n")

@@ -10,4 +10,4 @@
  that should be foldable
  in the IDE
 */
-put("OK")
+put!("OK")

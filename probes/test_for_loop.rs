@@ -3,7 +3,7 @@ xs := [1,2,3]
 
 sum := 0
 for i in [1,2,3] {
-		put(i)
+		put!(i)
 		sum += i
 }
-assert_eq!( sum , 6);
+eq!( sum , 6);

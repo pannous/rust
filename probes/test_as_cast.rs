@@ -5,14 +5,14 @@
 
 any_list := [1, "two", 3.0, true, nil]
 
-assert_eq!( any_list[0] as int , 1 ); // neccessary?
-assert_eq!( any_list[1] as string , "two" ); // neccessary?
-assert_eq!( any_list[2] as float64 , 3.0 ); // neccessary?
-assert_eq!( any_list[3] as bool , true ); // neccessary?
+eq!( any_list[0] as int , 1 ); // neccessary?
+eq!( any_list[1] as string , "two" ); // neccessary?
+eq!( any_list[2] as float64 , 3.0 ); // neccessary?
+eq!( any_list[3] as bool , true ); // neccessary?
 #int_list []any := [1, 2, 3]  unexpected ]
 #int_list :=  []any{1, 2, 3} # (variable of type []any) is not an interface
 #int_list any :=  []any{1, 2, 3}  unexpected name any after top level declaration
 # int_list := [1, 2, 3]
 # int_list (variable of type []int) is not an interface
-#assert_eq!( int_list as []int , [1, 2, 3]  ); // !!not an interface
-# assert_eq!( int_list as int[] , [1, 2, 3] !!not an interface);
+#eq!( int_list as []int , [1, 2, 3]  ); // !!not an interface
+# eq!( int_list as int[] , [1, 2, 3] !!not an interface);

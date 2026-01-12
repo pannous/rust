@@ -5,8 +5,8 @@ func Apply[T any, R any](f func(T) R, x T) R {
 }
 def testLambdaArg() {
 		square := x => x * x
-		assert_eq!( Apply(square, 4) , 16 ); // 4*4 = 16
-		assert_eq!( Apply(x => x + 1, 5) , 6 ); // 5+1 = 6
+		eq!( Apply(square, 4) , 16 ); // 4*4 = 16
+		eq!( Apply(x => x + 1, 5) , 6 ); // 5+1 = 6
 		println("Lambda argument test passed")
 }
 

@@ -5,25 +5,25 @@ println("Testing enum String() method:")
 
 // Test normal cases
 var s State = OK
-printf("OK.String() = %v\n", s)
-assert_eq!( s as string , "OK");
+put!("OK.String() = %v\n", s)
+eq!( s as string , "OK");
 
 s = ERROR
-printf("ERROR.String() = %s\n", s.String())
-assert_eq!( s as string , "ERROR");
+put!("ERROR.String() = %s\n", s.String())
+eq!( s as string , "ERROR");
 
 s = PENDING
-printf("PENDING.String() = %s\n", s.String())
-assert_eq!( s as string , "PENDING");
+put!("PENDING.String() = %s\n", s.String())
+eq!( s as string , "PENDING");
 
 // Test unknown value (should return "UNKNOWN")
 try{
 	s = State(999)
-	printf("State(999).String() = %s\n", s.String())
+	put!("State(999).String() = %s\n", s.String())
 } catch err{
-	printf("OK! Caught error for unknown enum value:", err)
+	put!("OK! Caught error for unknown enum value:", err)
 }
 // Test direct string formatting
-printf("Direct formatting: %s\n", OK)
+put!("Direct formatting: %s\n", OK)
 
-printf("All tests passed!\n")
+put!("All tests passed!\n")

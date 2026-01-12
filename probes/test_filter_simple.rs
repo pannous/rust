@@ -3,9 +3,9 @@ import "slices"
 
 xs := [1, 2, 3, 4, 5]
 evens := xs.filter(x => x%2 == 0)
-assert_eq!( evens , [2, 4]);
+eq!( evens , [2, 4]);
 
 odds := xs.filter(x => x%2 == 1) 
-assert_eq!( odds , [1, 3, 5]);
+eq!( odds , [1, 3, 5]);
 
 print("Filter tests passed")

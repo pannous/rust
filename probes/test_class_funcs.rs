@@ -9,11 +9,11 @@ func (p Point) sum() int {
 }
 
 func (p Point) display() {
-    printf("x: %d, y: %d\n", p.x, p.y)
+    put!("x: %d, y: %d\n", p.x, p.y)
 }
 
 func main() {
     t := Point{x: 3, y: 4}
     t.display()
-    printf("Sum: %d\n", t.sum())
+    put!("Sum: %d\n", t.sum())
 }

@@ -4,5 +4,5 @@ package main
 import "fmt"  // must not conflict with auto import
 
 func main() {
-	printf("Hello, world!")
+	put!("Hello, world!")
 }

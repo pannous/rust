@@ -6,13 +6,13 @@ import "strconv"
 // Function that returns nothing - should use panic(err)
 def testVoidFunction() {
     try val := strconv.Atoi("invalid")  // Should become: panic(err)
-    printf("Got value: %d", val)
+    put!("Got value: %d", val)
 }
 
 // Function that returns only an error - should use return err
 def testErrorOnlyFunction() error {
     try val := strconv.Atoi("invalid")  // Should become: return err
-    printf("Got value: %d", val)
+    put!("Got value: %d", val)
     return nil
 }
 
@@ -22,25 +22,25 @@ def testMultiReturnFunction() (int, string, error) {
     return val, "success", nil
 }
 
-printf("Testing void function (should panic):\n")
+put!("Testing void function (should panic):\n")
 try {
     testVoidFunction()
 } catch e {
-    printf("Caught panic: %v\n", e)
+    put!("Caught panic: %v\n", e)
 }
 
-printf("Testing error function:\n")
+put!("Testing error function:\n")
 err := testErrorOnlyFunction()
 if err != nil {
-    printf("Got error: %v\n", err)
+    put!("Got error: %v\n", err)
 }
 
-printf("Testing multi-return function:\n")
+put!("Testing multi-return function:\n")
 result, msg, err2 := testMultiReturnFunction()
 if err2 != nil {
-    printf("Got error: %v\n", err2)
+    put!("Got error: %v\n", err2)
 } else {
-    printf("Result: %d, Message: %s\n", result, msg)
+    put!("Result: %d, Message: %s\n", result, msg)
 }
 
-printf("Context-aware try tests completed!\n")
+put!("Context-aware try tests completed!\n")

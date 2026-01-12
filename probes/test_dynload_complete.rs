@@ -108,9 +108,9 @@ fn main() {
 
         let v = new();
         push(v, 1); push(v, 2); push(v, 3);
-        assert_eq!(len(v), 3);
-        assert_eq!(get(v, 0), 1);
-        assert_eq!(get(v, 2), 3);
+        eq!(len(v), 3);
+        eq!(get(v, 0), 1);
+        eq!(get(v, 2), 3);
         drop_fn(v);
         println!("Vec<u8> PASSED");
     }
@@ -126,9 +126,9 @@ fn main() {
 
         let v = new();
         push(v, -1000); push(v, 0); push(v, 1000);
-        assert_eq!(len(v), 3);
-        assert_eq!(get(v, 0), -1000);
-        assert_eq!(get(v, 2), 1000);
+        eq!(len(v), 3);
+        eq!(get(v, 0), -1000);
+        eq!(get(v, 2), 1000);
         drop_fn(v);
         println!("Vec<i32> PASSED");
     }
@@ -146,19 +146,19 @@ fn main() {
 
         let hello = CString::new("Hello").unwrap();
         let s = from_cstr(hello.as_ptr());
-        assert_eq!(str_len(s), 5);
+        eq!(str_len(s), 5);
 
         let world = CString::new(", World!").unwrap();
         push_str(s, world.as_ptr());
-        assert_eq!(str_len(s), 13);
+        eq!(str_len(s), 13);
 
         let s2 = clone(s);
-        assert_eq!(str_len(s2), 13);
+        eq!(str_len(s2), 13);
 
         let cstr = to_cstr(s);
         let result = unsafe { CStr::from_ptr(cstr).to_str().unwrap() };
         println!("String: {}", result);
-        assert_eq!(result, "Hello, World!");
+        eq!(result, "Hello, World!");
         free_cstr(cstr);
 
         drop_fn(s);
@@ -187,14 +187,14 @@ fn main() {
         let v2 = CString::new("dynexport").unwrap();
         insert(m, k2.as_ptr(), v2.as_ptr());
 
-        assert_eq!(map_len(m), 2);
+        eq!(map_len(m), 2);
 
         let val = get(m, k1.as_ptr());
         assert!(!val.is_null());
         let cstr = to_cstr(val);
         let result = unsafe { CStr::from_ptr(cstr).to_str().unwrap() };
         println!("map[\"lang\"] = {}", result);
-        assert_eq!(result, "Rust");
+        eq!(result, "Rust");
         free_cstr(cstr);
         str_drop(val);
 
@@ -216,15 +216,15 @@ fn main() {
         insert(m, 2, 200);
         insert(m, 42, 4200);
 
-        assert_eq!(map_len(m), 3);
+        eq!(map_len(m), 3);
 
         let opt1 = get(m, 1);
         assert!(opt1.is_some);
-        assert_eq!(opt1.value, 100);
+        eq!(opt1.value, 100);
 
         let opt42 = get(m, 42);
         assert!(opt42.is_some);
-        assert_eq!(opt42.value, 4200);
+        eq!(opt42.value, 4200);
         println!("get(42) = Some({})", opt42.value);
 
         let opt_none = get(m, 999);
@@ -244,13 +244,13 @@ fn main() {
 
         let s = some(42);
         assert!(s.is_some);
-        assert_eq!(s.value, 42);
+        eq!(s.value, 42);
 
         let n = none();
         assert!(!n.is_some);
 
-        assert_eq!(unwrap_or(s, 0), 42);
-        assert_eq!(unwrap_or(n, 999), 999);
+        eq!(unwrap_or(s, 0), 42);
+        eq!(unwrap_or(n, 999), 999);
 
         println!("Option<i32> PASSED");
     }
@@ -263,12 +263,12 @@ fn main() {
         let mean = load_fn!(lib, "slice_f64_mean" -> extern "C" fn(*const f64, usize) -> f64);
 
         let nums: [i32; 5] = [1, 2, 3, 4, 5];
-        assert_eq!(sum(nums.as_ptr(), 5), 15);
+        eq!(sum(nums.as_ptr(), 5), 15);
         println!("sum([1,2,3,4,5]) = 15");
 
         let mut unsorted: [i32; 5] = [5, 1, 4, 2, 3];
         sort(unsorted.as_mut_ptr(), 5);
-        assert_eq!(unsorted, [1, 2, 3, 4, 5]);
+        eq!(unsorted, [1, 2, 3, 4, 5]);
         println!("sort([5,1,4,2,3]) = {:?}", unsorted);
 
         let floats: [f64; 4] = [1.0, 2.0, 3.0, 4.0];
@@ -280,7 +280,7 @@ fn main() {
     }
 
     // === Compiler hash consistency ===
-    println!("\n--- Compiler Hash Check ---");
+    println!("\n--- Compiler Hash assert!()---");
     let mut hashes: Vec<(String, u32)> = vec![];
     for sym in &["vec_u8_new", "string_new", "hashmap_ss_new", "option_i32_some"] {
         if let Some(meta) = lib.meta(sym) {

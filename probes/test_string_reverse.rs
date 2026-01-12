@@ -1,3 +1,3 @@
 #!/usr/bin/env rustc
-assert_eq!( "hello".reverse() , "olleh");
-printf("All checks passed!\n")
+eq!( "hello".reverse() , "olleh");
+put!("All checks passed!\n")

@@ -5,22 +5,22 @@ b := []int{1, 2}
 
 // This should trigger the generation of slice equality function
 result := a == b
-printf("Result: %v\n", result)
+put!("Result: %v\n", result)
 
 
 // Test different slices with same content
 c := []int{1, 2}
 d := []int{1, 2}
-printf("Different slices, same content: %v\n", c == d)
+put!("Different slices, same content: %v\n", c == d)
 
 // Test empty slices
 e := []int{}
 f := []int{}
-printf("Empty slices: %v\n", e == f)
+put!("Empty slices: %v\n", e == f)
 
 // Test nil slices
 var g []int
 var h []int
-printf("Nil slices: %v\n", g == h)
+put!("Nil slices: %v\n", g == h)
 
-printf("All tests completed successfully.\n")
+put!("All tests completed successfully.\n")

@@ -6,9 +6,9 @@ import slices
 xs := []int{1, 2, 3}
 ys := xs.apply(x=>x*2) // should return []int{2, 4, 6}
 
-assert_eq!( ys , []int{2, 4, 6});
+eq!( ys , []int{2, 4, 6});
 
 nums := []int{1, 2, 3, 4, 5}
-assert_eq!( nums.filter(x => x%2,1) == []int{1, 3, 5});
-#assert_eq!( nums.reduce((a,b)=>a+b, 0) , 15);
-put("All tests passed")
+eq!( nums.filter(x => x%2,1) == []int{1, 3, 5});
+#eq!( nums.reduce((a,b)=>a+b, 0) , 15);
+put!("All tests passed")

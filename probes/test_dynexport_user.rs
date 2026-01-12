@@ -73,7 +73,7 @@ fn main() {
 
     println!("Loaded: {}\n", LIB_NAME);
 
-    // --- Check metadata ---
+    // --- assert!()metadata ---
     println!("--- Metadata ---");
     for name in &["add", "multiply", "greet", "factorial"] {
         if let Some(meta) = load_meta(handle, name) {
@@ -88,7 +88,7 @@ fn main() {
         unsafe { std::mem::transmute(load_sym(handle, "add")) };
     let result = add(2, 3);
     println!("Result: {}", result);
-    assert_eq!(result, 5);
+    eq!(result, 5);
 
     // --- Use multiply ---
     println!("\n--- multiply(3.14, 2.0) ---");
@@ -109,7 +109,7 @@ fn main() {
     let greeting = greet(name.as_ptr());
     let greeting_str = unsafe { CStr::from_ptr(greeting).to_str().unwrap() };
     println!("Result: {}", greeting_str);
-    assert_eq!(greeting_str, "Hello, Dynamic Rust!");
+    eq!(greeting_str, "Hello, Dynamic Rust!");
     free_string(greeting);
 
     // --- Use factorial ---
@@ -118,7 +118,7 @@ fn main() {
         unsafe { std::mem::transmute(load_sym(handle, "factorial")) };
     let result = factorial(10);
     println!("Result: {}", result);
-    assert_eq!(result, 3628800);
+    eq!(result, 3628800);
 
     // --- Use sum_array ---
     println!("\n--- sum_array([1,2,3,4,5]) ---");
@@ -127,7 +127,7 @@ fn main() {
     let nums = [1i32, 2, 3, 4, 5];
     let result = sum_array(nums.as_ptr(), nums.len());
     println!("Result: {}", result);
-    assert_eq!(result, 15);
+    eq!(result, 15);
 
     // Cleanup
     unsafe { dlclose(handle); }

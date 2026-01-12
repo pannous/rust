@@ -2,6 +2,6 @@
 try {
 	panic("something went wrong")
 } catch err {
-	printf("Caught error: %v\n",err)
+	put!("Caught error: %v\n",err)
 }
-printf("After try-catch")
+put!("After try-catch")

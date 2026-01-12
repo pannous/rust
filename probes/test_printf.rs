@@ -2,39 +2,39 @@
 #!/usr/bin/env goo
 
 import "fmt"
-	// Basic printf functionality - should auto-import fmt if needed
-	printf("Hello World\n")
-	printf("Simple values: %v %v %v\n", 42, true, "test")
+	// Basic put! functionality - should auto-import fmt if needed
+	put!("Hello World\n")
+	put!("Simple values: %v %v %v\n", 42, true, "test")
 	
 	// Format specifiers
-	printf("String: %s\n", "hello")
-	printf("Integer: %d\n", 42)
-	printf("Hex: %x\n", 255)
-	printf("Variable: %v\n", true)
+	put!("String: %s\n", "hello")
+	put!("Integer: %d\n", 42)
+	put!("Hex: %x\n", 255)
+	put!("Variable: %v\n", true)
 	
 	// Without format specifiers (should act like print)
-	printf("No format", 123, "test")
-	printf("\n")
+	put!("No format", 123, "test")
+	put!("\n")
 	
 	// Base types
-	printf("Int: %d, Float: %f, Bool: %t\n", 42, 3.14, true)
-	printf("Char: %c, String: %s\n", 'A', "text")
+	put!("Int: %d, Float: %f, Bool: %t\n", 42, 3.14, true)
+	put!("Char: %c, String: %s\n", 'A', "text")
 	
 	// Complex types
 	m := map{"key": "value"}
-	printf("Map: %v\n", m)
+	put!("Map: %v\n", m)
 	
 	// Multiple arguments
-	printf("Multiple: %v %v %v %v\n", 1, 2, 3, 4)
+	put!("Multiple: %v %v %v %v\n", 1, 2, 3, 4)
 	
-	// Comparison with printf (should behave identically)
-	printf("printf: %s %d\n", "test", 99)
-	printf("printf: %s %d\n", "test", 99)
+	// Comparison with put! (should behave identically)
+	put!("put!: %s %d\n", "test", 99)
+	put!("put!: %s %d\n", "test", 99)
 	
 	// Edge cases
-	printf("") // Empty format
-	printf("%v") // Missing argument - should handle gracefully
-	printf("Too many args: %v\n", 1, 2, 3) // Extra arguments
+	put!("") // Empty format
+	put!("%v") // Missing argument - should handle gracefully
+	put!("Too many args: %v\n", 1, 2, 3) // Extra arguments
 	
-	// Auto-import test - printf should work even without explicit fmt import
+	// Auto-import test - put! should work even without explicit fmt import
 	// (This tests the auto-import functionality)

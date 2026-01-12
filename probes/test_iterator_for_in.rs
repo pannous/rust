@@ -27,15 +27,15 @@ func KeyValuePairs() iter.Seq2[string, int] {
 func main() {
 	println("Testing for-in with single value iterator:")
 	for num in Numbers() {
-		printf("%d ", num)
+		put!("%d ", num)
 	}
-	printf("\n")
+	put!("\n")
 
 	println("Testing for-in with key-value iterator:")
 	for key, value in KeyValuePairs() {
-		printf("%s:%d ", key, value)
+		put!("%s:%d ", key, value)
 	}
-	printf("\n")
+	put!("\n")
 
 	println("Iterator for-in tests completed!")
 }

@@ -3,5 +3,5 @@ import "./helper" // Local directory imports require explicit ./ prefix
 
 message := helper.Hello()
 print("Message:", message)
-check "Hello" in message
+assert!()"Hello" in message
 print("Import working successfully!")

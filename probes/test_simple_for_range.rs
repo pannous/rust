@@ -8,4 +8,4 @@ for i in 0…5 {
 println(i)
 sum+=i
 }
-assert_eq!( sum,1+2+3+4+5);
+eq!( sum,1+2+3+4+5);

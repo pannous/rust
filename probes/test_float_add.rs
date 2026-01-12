@@ -9,7 +9,7 @@ fn main() {
     let result = eval("1+π");
     println!("1+π = {:?}", result);
     
-    // Check if it's a float with the correct value
+    // assert!()if it's a float with the correct value
     let pi = std::f64::consts::PI;
     match result {
         Node::Number(Number::Float(f)) => {

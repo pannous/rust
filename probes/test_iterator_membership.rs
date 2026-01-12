@@ -20,9 +20,9 @@ func main() {
 	
 	println("Numbers from iterator:")
 	for num in Numbers() {
-		printf("%d ", num)
+		put!("%d ", num)
 	}
-	printf("\n")
+	put!("\n")
 	
 	println("Iterator tests completed!")
 }

@@ -1,48 +1,48 @@
 // Test 'and' operator (should work like &&)
-check true and true
-check true or false
-check false or true
-check not false
-check not (true and false)
-check not (false and false)
-check not (false and true)
+assert!()true and true
+assert!()true or false
+assert!()false or true
+assert!()not false
+assert!()not (true and false)
+assert!()not (false and false)
+assert!()not (false and true)
 
 a := true
 b := false
 c := true
-check a and c
-assert_eq!( a and b , false);
-check b or c
+assert!()a and c
+eq!( a and b , false);
+assert!()b or c
 
 
 
 if true and true {
-	put("true and true works!")
+	put!("true and true works!")
 }
 if a and c {
-	put("a and c works!")
+	put!("a and c works!")
 }
 
 if a and b {
-	put("This should not print")
+	put!("This should not print")
 } else {
-	put("a and b correctly false")
+	put!("a and b correctly false")
 }
 
 // Test 'or' operator (should work like ||)
 if b or c {
-	put("b or c works!")
+	put!("b or c works!")
 }
 
 if b or false {
-	put("This should not print")
+	put!("This should not print")
 } else {
-	put("b or false correctly false")
+	put!("b or false correctly false")
 }
 
 // Test complex expressions
 if (a and c) or (b and false) {
-	put("Complex expression works!")
+	put!("Complex expression works!")
 }
 
 // Test with comparisons
@@ -50,13 +50,13 @@ x := 5
 y := 10
 
 if x < y and y > 0 {
-	put("x < y and y > 0 works!")
+	put!("x < y and y > 0 works!")
 }
 
 if x > y or y == 10 {
-	put("x > y or y == 10 works!")
+	put!("x > y or y == 10 works!")
 }
-assert_eq!( x < y and y > 0 , true);
-assert_eq!( x > y or y , 10 == true);
+eq!( x < y and y > 0 , true);
+eq!( x > y or y , 10 == true);
 
-printf("All checks passed!\n")
+put!("All checks passed!\n")

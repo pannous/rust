@@ -1,7 +1,7 @@
 #!/usr/bin/env rustc
-put(42)
+put!(42)
 x := {a: 1, b: 2}
-put(x)
-put("hello")
-put(true)
-put(3.14)
+put!(x)
+put!("hello")
+put!(true)
+put!(3.14)

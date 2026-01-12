@@ -10,9 +10,9 @@ result3 := nums.convert(x => x*2)
 
 expected := []int{2, 4, 6}
 
-assert_eq!( result1 , expected);
-assert_eq!( result2 , expected  );
-assert_eq!( result3 , expected);
+eq!( result1 , expected);
+eq!( result2 , expected  );
+eq!( result3 , expected);
 
 print("✅ apply() works")
 print("✅ transform() works")

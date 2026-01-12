@@ -14,4 +14,4 @@ if user and user.Name {
     result = "Anonymous"
 }
 
-put("First user over 18: ", result)
+put!("First user over 18: ", result)

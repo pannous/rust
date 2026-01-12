@@ -10,8 +10,8 @@ users := []User{{ Name: "Bob", Age: 17 }, { Name: "Charlie", Age: 22 }, { Name: 
 // Option 1: Single expression (current working approach)
 /*
 alice := users.filter(u => u.Age > 18).apply(u => u.Name).sort().first()
-put("First user over 18: ", alice)
-assert_eq!( alice , "Alice");
+put!("First user over 18: ", alice)
+eq!( alice , "Alice");
  🔧 Chained Method Call Challenge:
 
   The complex chained call users.filter(...).apply(...).sort().first() is a sophisticated challenge that
@@ -30,6 +30,6 @@ filtered := users.filter(u => u.Age > 18)        // []User
 names := filtered.apply(u => u.Name)              // []string
 names.sort!()                            // []string
 result := names.first()                          // string
-assert_eq!( result , "Alice");
-printf("First user over 18: %s\n", result)
-put("All tests passed")
+eq!( result , "Alice");
+put!("First user over 18: %s\n", result)
+put!("All tests passed")

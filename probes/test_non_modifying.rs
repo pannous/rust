@@ -3,14 +3,14 @@ import "slices"
 import "fmt"
 
 original := []int{3, 1, 4, 1, 5}
-fmt.Printf("Original: %v\n", original)
+fmt.put!("Original: %v\n", original)
 
 // Test non-modifying sort (should return new slice)
 sorted := original.sorted()  
-fmt.Printf("Sorted (new): %v\n", sorted)
-fmt.Printf("Original after sort(): %v\n", original)
+fmt.put!("Sorted (new): %v\n", sorted)
+fmt.put!("Original after sort(): %v\n", original)
 
 // Test non-modifying reverse (should return new slice)
 reversed := original.reversed()
-fmt.Printf("Reversed (new): %v\n", reversed) 
-fmt.Printf("Original after reverse(): %v\n", original)
+fmt.put!("Reversed (new): %v\n", reversed) 
+fmt.put!("Original after reverse(): %v\n", original)

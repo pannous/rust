@@ -4,4 +4,4 @@
 def modify!(xs []int) { for i, x := range xs { xs[i] = x * 2 } } 
 xs:=[1,2,3]
 modify!(xs)
-assert_eq!( xs , [2,4,6]);
+eq!( xs , [2,4,6]);

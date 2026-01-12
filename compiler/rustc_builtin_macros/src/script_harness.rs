@@ -236,6 +236,54 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
         tokens: None,
     }));
 
+    // macro_rules! __walrus { ($i:ident = $e:expr) => { let $i = $e; }; }
+    // For Go-style short variable declarations: x := expr -> __walrus!(x = expr)
+    let walrus_body = vec![
+        // ($i:ident = $e:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("i"),
+            TokenTree::token_alone(TokenKind::Colon, span),
+            ident("ident"),
+            TokenTree::token_alone(TokenKind::Eq, span),
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Colon, span),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, span),
+        // { let $i = $e; }
+        delim(Delimiter::Brace, vec![
+            ident("let"),
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("i"),
+            TokenTree::token_alone(TokenKind::Eq, span),
+            TokenTree::token_alone(TokenKind::Dollar, span),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Semi, span),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, span),
+    ];
+
+    let walrus_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(span),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(walrus_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: ast::AttrVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__walrus, span), walrus_macro),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    }));
+
     items
 }
 

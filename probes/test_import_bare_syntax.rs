@@ -6,9 +6,9 @@ import strings
 func main() {
     // Test that bare imports work correctly
     result := strings.ToUpper("hello world")
-    fmt.Printf("Result: %s\n", result)
+    fmt.put!("Result: %s\n", result)
     
     // Test multiple bare imports in same file
     lower := strings.ToLower("GOODBYE WORLD")
-    fmt.Printf("Lower: %s\n", lower)
+    fmt.put!("Lower: %s\n", lower)
 }

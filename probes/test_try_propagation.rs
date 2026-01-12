@@ -14,7 +14,7 @@ func failingFunction() error {
 func testFunction() error {
 	try niceFunction()
 	try failingFunction()
-	put("This should not be reached")
+	put!("This should not be reached")
 	return nil  
 }
 

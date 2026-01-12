@@ -5,6 +5,6 @@ import "fmt"
 s := "你"
 c := '你'
 
-printf("String: %s\n", s)
-printf("Char: %c\n", c)
-printf("s == c: %t\n", s == c)
+put!("String: %s\n", s)
+put!("Char: %c\n", c)
+put!("s == c: %t\n", s == c)

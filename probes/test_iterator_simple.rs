@@ -15,13 +15,13 @@ func Numbers() iter.Seq[int] {
 func main() {
 	println("Testing standard Go range with iterator:")
 	for num := range Numbers() {
-		printf("%d ", num)
+		put!("%d ", num)
 	}
-	printf("\n")
+	put!("\n")
 	
 	println("Testing for-in syntax with iterator:")
 	for num in Numbers() {
-		printf("%d ", num)
+		put!("%d ", num)
 	}
-	printf("\n")
+	put!("\n")
 }

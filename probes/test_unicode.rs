@@ -4,7 +4,7 @@ import math
 // Test Unicode identifiers
 var δ = 42
 var 变量 = "Chinese variable 变量"
-#assert_eq!( 变量#-1 , '量');
+#eq!( 变量#-1 , '量');
 var переменная = "Russian variable"
 var π = 3.14159
 
@@ -17,10 +17,10 @@ func αβγ() int {
 }
 
 println("Testing Unicode identifiers:")
-printf("δ = %d\n", δ)
-printf("变量 = %s\n", 变量)
-printf("переменная = %s\n", переменная)
-printf("π = %f\n", π)
-printf("函数() = %s\n", 函数())
-printf("αβγ() = %d\n", αβγ())
-printf("All Unicode identifiers work correctly!\n")
+put!("δ = %d\n", δ)
+put!("变量 = %s\n", 变量)
+put!("переменная = %s\n", переменная)
+put!("π = %f\n", π)
+put!("函数() = %s\n", 函数())
+put!("αβγ() = %d\n", αβγ())
+put!("All Unicode identifiers work correctly!\n")

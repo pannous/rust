@@ -6,38 +6,38 @@ import "strings"
 nums := [1, 2, 3, 4, 5]
 text := "Hello World"
 
-put("🎯 LIST METHOD SYNONYMS:")
+put!("🎯 LIST METHOD SYNONYMS:")
 
 # OK!
 
 // Element access synonyms
-put("first/head/start/begin:", nums.first(), nums.head(), nums.start(), nums.begin())
-put("last/tail/end/final:", nums.last(), nums.tail(), nums.end(), nums.final())
+put!("first/head/start/begin:", nums.first(), nums.head(), nums.start(), nums.begin())
+put!("last/tail/end/final:", nums.last(), nums.tail(), nums.end(), nums.final())
 
 // Search synonyms  
-put("contains/includes/has/holds:", nums.contains(3), nums.includes(3), nums.has(3), nums.holds(3))
-put("find/search/locate:", nums.find(3), nums.search(3), nums.locate(3))
+put!("contains/includes/has/holds:", nums.contains(3), nums.includes(3), nums.has(3), nums.holds(3))
+put!("find/search/locate:", nums.find(3), nums.search(3), nums.locate(3))
 
 // Modification synonyms
-put("append/add/push/concat:", len(nums.append(6)), len(nums.add(6)), len(nums.push(6)), len(nums.concat(6)))
+put!("append/add/push/concat:", len(nums.append(6)), len(nums.add(6)), len(nums.push(6)), len(nums.concat(6)))
 
 // Transform synonyms
-put("apply/transform/convert:", len(nums.apply(x=>x*2)), len(nums.transform(x=>x*2)), len(nums.convert(x=>x*2)))
+put!("apply/transform/convert:", len(nums.apply(x=>x*2)), len(nums.transform(x=>x*2)), len(nums.convert(x=>x*2)))
 
 // Filter synonyms
-put("filter/where/chose/that/which:", len(nums.filter(x=>x>2)), len(nums.where(x=>x>2)), len(nums.chose(x=>x>2)), len(nums.that(x=>x>2)), len(nums.which(x=>x>2)))
+put!("filter/where/chose/that/which:", len(nums.filter(x=>x>2)), len(nums.where(x=>x>2)), len(nums.chose(x=>x>2)), len(nums.that(x=>x>2)), len(nums.which(x=>x>2)))
 
-put("\n🎯 STRING METHOD SYNONYMS:")
+put!("\n🎯 STRING METHOD SYNONYMS:")
 
 // Basic string synonyms
-put("first/head/start:", text.first(), text.head(), text.start())
-put("last/tail/end:", text.last(), text.tail(), text.end())
+put!("first/head/start:", text.first(), text.head(), text.start())
+put!("last/tail/end:", text.last(), text.tail(), text.end())
 
 // Search synonyms
-put("contains/includes/has/holds:", text.contains("World"), text.includes("World"), text.has("World"), text.holds("World"))
-put("find/search/locate:", text.find("World"), text.search("World"), text.locate("World"))
+put!("contains/includes/has/holds:", text.contains("World"), text.includes("World"), text.has("World"), text.holds("World"))
+put!("find/search/locate:", text.find("World"), text.search("World"), text.locate("World"))
 
 // Replace synonyms
-put("replace/substitute/swap:", text.replace("World", "Go"), text.substitute("World", "Go"), text.swap("World", "Go"))
+put!("replace/substitute/swap:", text.replace("World", "Go"), text.substitute("World", "Go"), text.swap("World", "Go"))
 
-put("\n🎉 ALL SYNONYMS WORKING! Natural language coding unlocked!")
+put!("\n🎉 ALL SYNONYMS WORKING! Natural language coding unlocked!")

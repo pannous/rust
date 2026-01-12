@@ -1,44 +1,44 @@
 #!/usr/bin/env rustc
 import "slices"
 
-check 2 in [1,2,3]
-check 'b' in ['a','b','c']
-check "hello" in ["hello", "world"]
-check 3.14 in [3.14, 2.71, 1.618]
-check true in [true, false]
-#check 'a' in "abcde"  // true
+assert!()2 in [1,2,3]
+assert!()'b' in ['a','b','c']
+assert!()"hello" in ["hello", "world"]
+assert!()3.14 in [3.14, 2.71, 1.618]
+assert!()true in [true, false]
+#assert!('a' in "abcde" ) // true
 # now with variables
 x := 2
 y := [1, 2, 3]
-check x in y  // true
+assert!(x in y ) // true
 needle := 'b'
 haystack := ['a', 'b', 'c']
-check needle in haystack  // true
+assert!(needle in haystack ) // true
 pi := 3.14
 ps := [3.14, 2.71, 1.618]
-check pi in ps
+assert!()pi in ps
 ok := true
 bools := [true, false]
-check ok in bools  // true
+assert!(ok in bools ) // true
 
 # counterexamples
-check not (4 in [1, 2, 3] )
-check not ('d' in ['a', 'b', 'c'] )
-check not ("goodbye" in ["hello", "world"] )
-check not (1.618 in [3.14, 2.71] )
-check not (false in [true, true] )
+assert!()not (4 in [1, 2, 3] )
+assert!()not ('d' in ['a', 'b', 'c'] )
+assert!()not ("goodbye" in ["hello", "world"] )
+assert!()not (1.618 in [3.14, 2.71] )
+assert!()not (false in [true, true] )
 // counterexamples with variables
 x2 := 4
 y2 := [1, 2, 3]
-check not (x2 in y2)  // false
+assert!(not (x2 in y2) ) // false
 needle2 := 'd'
 haystack2 := ['a', 'b', 'c']
-check not (needle2 in haystack2)  // false
+assert!(not (needle2 in haystack2) ) // false
 pi2 := 1.618
 ps2 := [3.14, 2.71]
-check not (pi2 in ps2)  // false
+assert!(not (pi2 in ps2) ) // false
 ok2 := false
 bools2 := [true, true]
-check not (ok2 in bools2)  // false
+assert!(not (ok2 in bools2) ) // false
 
-printf("ALL TESTS PASSED\n")
+put!("ALL TESTS PASSED\n")

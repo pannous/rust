@@ -1,13 +1,13 @@
 #!/usr/bin/env rustc
 result2 := "value:" 42 "units"
-printf("Actual result2: '%s'\n", result2)
-assert_eq!( result2 , "value: 42 units");
+put!("Actual result2: '%s'\n", result2)
+eq!( result2 , "value: 42 units");
 
 x := "middle"
 result1 := "left" x "right"
-printf("Actual result1: '%s'\n", result1)
-assert_eq!( result1 , "left middle right");
+put!("Actual result1: '%s'\n", result1)
+eq!( result1 , "left middle right");
 
 result3 := "result:" (2 + 3) "total"
-printf("Actual result3: '%s'\n", result3)
-assert_eq!( result3 , "result: 5 total");
+put!("Actual result3: '%s'\n", result3)
+eq!( result3 , "result: 5 total");

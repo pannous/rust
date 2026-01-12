@@ -15,8 +15,8 @@ pub fn greet(name: &str) -> String {
 
 fn main() {
     // Test that the functions work correctly
-    assert_eq!(add_numbers(2, 3), 5);
-    assert_eq!(MAGIC_NUMBER, 42);
-    assert_eq!(greet("World"), "Hello, World!");
+    eq!(add_numbers(2, 3), 5);
+    eq!(MAGIC_NUMBER, 42);
+    eq!(greet("World"), "Hello, World!");
     println!("All dynexport tests passed!");
 }

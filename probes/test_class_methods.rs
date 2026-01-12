@@ -3,10 +3,10 @@ class Point{
 		x int
 		y int
 		sum() int { return self.x + self.y }
-		display() { printf("x: %d, y: %d\n", self.x, self.y) }
+		display() { put!("x: %d, y: %d\n", self.x, self.y) }
 }
 t := Point{x: 3, y: 4}
 #t := Point(3, 4) // Alternative constructor syntax
 t.display()
-printf("Sum: %d\n", t.sum())
+put!("Sum: %d\n", t.sum())
 

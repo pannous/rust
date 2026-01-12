@@ -28,24 +28,24 @@ fn main() {
 
     // Direct calls - no dlsym needed!
     println!("add(2, 3) = {}", unsafe { add(2, 3) });
-    assert_eq!(unsafe { add(2, 3) }, 5);
+    eq!(unsafe { add(2, 3) }, 5);
 
     println!("multiply(3.14, 2.0) = {:.2}", unsafe { multiply(3.14, 2.0) });
     assert!((unsafe { multiply(3.14, 2.0) } - 6.28).abs() < 0.001);
 
     println!("factorial(10) = {}", unsafe { factorial(10) });
-    assert_eq!(unsafe { factorial(10) }, 3628800);
+    eq!(unsafe { factorial(10) }, 3628800);
 
     let nums = [1i32, 2, 3, 4, 5];
     println!("sum_array([1,2,3,4,5]) = {}", unsafe { sum_array(nums.as_ptr(), nums.len()) });
-    assert_eq!(unsafe { sum_array(nums.as_ptr(), nums.len()) }, 15);
+    eq!(unsafe { sum_array(nums.as_ptr(), nums.len()) }, 15);
 
     // String handling
     let name = CString::new("Linked Rust").unwrap();
     let greeting = unsafe { greet(name.as_ptr()) };
     let greeting_str = unsafe { CStr::from_ptr(greeting).to_str().unwrap() };
     println!("greet(\"Linked Rust\") = {}", greeting_str);
-    assert_eq!(greeting_str, "Hello, Linked Rust!");
+    eq!(greeting_str, "Hello, Linked Rust!");
     unsafe { free_string(greeting) };
 
     println!("\n=== All tests passed! ===");

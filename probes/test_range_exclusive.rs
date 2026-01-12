@@ -5,4 +5,4 @@ for i in 0..5 {
 	println(i)
 	sum += i
 }
-assert_eq!( sum , 0+1+2+3+4  ); // 0..5 excludes 5
+eq!( sum , 0+1+2+3+4  ); // 0..5 excludes 5

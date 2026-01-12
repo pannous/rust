@@ -12,11 +12,11 @@ evens5 := nums.which(x => x%2 == 0)
 
 expected := []int{2, 4, 6}
 
-assert_eq!( evens1 , expected);
-assert_eq!( evens2 , expected);
-assert_eq!( evens3 , expected  );
-assert_eq!( evens4 , expected);
-assert_eq!( evens5 , expected);
+eq!( evens1 , expected);
+eq!( evens2 , expected);
+eq!( evens3 , expected  );
+eq!( evens4 , expected);
+eq!( evens5 , expected);
 
 print("✅ filter() works")
 print("✅ where() works") 
