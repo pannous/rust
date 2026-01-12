@@ -65,7 +65,47 @@ nm -gU libmylib.dylib | grep -E "(add|greet|dynexport_meta)"
 
 ## Using the Library
 
-### From Rust
+### From Rust (Recommended: Linker-based)
+
+The standard way to link against dynamic libraries - same as C/C++:
+
+```rust
+use std::ffi::{c_char, CStr, CString};
+
+// Link against the library (like gcc -lmylib)
+#[link(name = "mylib")]
+extern "C" {
+    fn add(a: i32, b: i32) -> i32;
+    fn greet(name: *const c_char) -> *mut c_char;
+    fn free_string(s: *mut c_char);
+}
+
+fn main() {
+    // Direct calls - clean and simple!
+    println!("add(2, 3) = {}", unsafe { add(2, 3) });
+
+    let name = CString::new("Rust").unwrap();
+    let greeting = unsafe { greet(name.as_ptr()) };
+    println!("{}", unsafe { CStr::from_ptr(greeting).to_str().unwrap() });
+    unsafe { free_string(greeting) };
+}
+```
+
+Compile with library path:
+```bash
+# Compile (like gcc -L. -lmylib)
+rustc --edition 2021 -L . -l mylib main.rs
+
+# Run with library path
+DYLD_LIBRARY_PATH=. ./main   # macOS
+LD_LIBRARY_PATH=. ./main     # Linux
+```
+
+This is standard Rust - the `#[link]` attribute has existed since Rust 1.0 and is how all C library bindings work (libc, openssl, sqlite, etc.).
+
+### From Rust (Alternative: Runtime Loading)
+
+For loading libraries dynamically at runtime (plugin systems, optional dependencies):
 
 ```rust
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
@@ -84,26 +124,12 @@ fn main() {
     assert!(!handle.is_null(), "Failed to load library");
 
     unsafe {
-        // Load the add function
+        // Load and call functions manually
         let sym = CString::new("add").unwrap();
         let add: extern "C" fn(i32, i32) -> i32 =
             std::mem::transmute(dlsym(handle, sym.as_ptr()));
 
-        println!("add(2, 3) = {}", add(2, 3));  // Output: 5
-
-        // Load and call greet
-        let sym = CString::new("greet").unwrap();
-        let greet: extern "C" fn(*const c_char) -> *mut c_char =
-            std::mem::transmute(dlsym(handle, sym.as_ptr()));
-
-        let sym = CString::new("free_string").unwrap();
-        let free_string: extern "C" fn(*mut c_char) =
-            std::mem::transmute(dlsym(handle, sym.as_ptr()));
-
-        let name = CString::new("Rust").unwrap();
-        let greeting = greet(name.as_ptr());
-        println!("{}", CStr::from_ptr(greeting).to_str().unwrap());  // Output: Hello, Rust!
-        free_string(greeting);
+        println!("add(2, 3) = {}", add(2, 3));
 
         dlclose(handle);
     }
@@ -195,11 +221,28 @@ rustc --edition 2021 --crate-type cdylib \
     -o libdynexport_prelude.dylib
 ```
 
+## What's New: `#[dynexport]`
+
+Standard Rust already supports:
+- `extern "C"` + `#[no_mangle]` for C-compatible exports
+- `#[link]` for linking against dynamic libraries
+- `dlopen`/`dlsym` for runtime loading
+
+**What `#[dynexport]` adds:**
+
+Automatic ABI metadata generation for each exported symbol:
+- `type_hash` - Hash of function signature for type checking
+- `compiler_hash` - Detects compiler version mismatches
+- Metadata accessible via `dynexport_meta_<symbol>` symbols
+
+This enables **safe** dynamic linking by detecting ABI incompatibilities at load time rather than crashing at runtime.
+
 ## Working Examples
 
 See the `probes/` directory for working examples:
 - `probes/test_dynexport_lib.rs` - Example library with `#[dynexport]`
-- `probes/test_dynexport_user.rs` - Loads and uses the library
+- `probes/test_dynexport_user.rs` - Runtime loading with dlsym
+- `probes/test_dynexport_linked.rs` - Compile-time linking with `#[link]`
 
 ## Important Notes
 
