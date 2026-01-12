@@ -195,6 +195,12 @@ rustc --edition 2021 --crate-type cdylib \
     -o libdynexport_prelude.dylib
 ```
 
+## Working Examples
+
+See the `probes/` directory for working examples:
+- `probes/test_dynexport_lib.rs` - Example library with `#[dynexport]`
+- `probes/test_dynexport_user.rs` - Loads and uses the library
+
 ## Important Notes
 
 1. **Use `extern "C"`** - All exported functions must use `extern "C"` calling convention

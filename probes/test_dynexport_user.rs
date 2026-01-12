@@ -1,20 +1,20 @@
-//! Example: Load and use the hello library
+//! Test: Load and use a #[dynexport] library
 //!
-//! First compile hello_lib.rs:
-//!   rustc --edition 2021 --crate-type cdylib hello_lib.rs -o libhello.dylib
+//! First compile test_dynexport_lib.rs with forked rustc:
+//!   rustc --edition 2021 --crate-type cdylib test_dynexport_lib.rs -o libdynexport_test.dylib
 //!
 //! Then compile and run this:
-//!   rustc --edition 2021 hello_user.rs -o hello_user && ./hello_user
+//!   rustc --edition 2021 test_dynexport_user.rs && ./test_dynexport_user
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};
 
 // Platform-specific library extension
 #[cfg(target_os = "macos")]
-const LIB_NAME: &str = "./libhello.dylib";
+const LIB_NAME: &str = "./libdynexport_test.dylib";
 #[cfg(target_os = "linux")]
-const LIB_NAME: &str = "./libhello.so";
+const LIB_NAME: &str = "./libdynexport_test.so";
 #[cfg(target_os = "windows")]
-const LIB_NAME: &str = "./hello.dll";
+const LIB_NAME: &str = "./dynexport_test.dll";
 
 const RTLD_NOW: c_int = 0x2;
 
@@ -66,8 +66,8 @@ fn main() {
             unsafe { CStr::from_ptr(err).to_str().unwrap_or("unknown") }
         };
         eprintln!("Failed to load {}: {}", LIB_NAME, msg);
-        eprintln!("\nMake sure to compile hello_lib.rs first:");
-        eprintln!("  rustc --edition 2021 --crate-type cdylib hello_lib.rs -o libhello.dylib");
+        eprintln!("\nMake sure to compile test_dynexport_lib.rs first:");
+        eprintln!("  rustc --edition 2021 --crate-type cdylib test_dynexport_lib.rs -o libdynexport_test.dylib");
         std::process::exit(1);
     }
 
