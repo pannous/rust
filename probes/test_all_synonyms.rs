@@ -1,7 +1,7 @@
 #!/usr/bin/env rustc
-import "fmt"
-import "slices"
-import "strings"
+// import "fmt"
+// import "slices"
+// import "strings"
 
 nums := [1, 2, 3, 4, 5]
 text := "Hello World"

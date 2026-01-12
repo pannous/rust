@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "fmt"
+// import "fmt"
 
 // Test direct literal comparison
 result1 := "你" == '你'

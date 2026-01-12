@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import "strings"
-import "slices"
+// import "strings"
+// import "slices"
 
 nums := [1, 2, 3, 4, 5]
 text := "Hello World"

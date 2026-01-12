@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "strconv" // for string conversion
+// import "strconv" // for string conversion
 //#import "strings" // auto import on demand WORKS!
 //#import "fmt" // auto import on demand WORKS!
 //#import "unicode" // auto import on demand WORKS!

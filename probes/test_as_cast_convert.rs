@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "strconv"
+// import "strconv"
 #
 // see as_cast_transform.go
 

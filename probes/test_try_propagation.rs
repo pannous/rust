@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import "fmt"
-import "errors"
+// import "fmt"
+// import "errors"
 
 func niceFunction() error{
 	return nil

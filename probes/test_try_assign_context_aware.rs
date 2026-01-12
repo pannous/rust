@@ -1,7 +1,7 @@
 #!/usr/bin/env rustc
 // Test context-aware try operator adapting to different function signatures
 
-import "strconv"
+// import "strconv"
 
 // Function that returns nothing - should use panic(err)
 def testVoidFunction() {

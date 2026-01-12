@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "fmt"
+// import "fmt"
 // Test map dot notation (m.key) for maps with string keys
 
 // Test basic map dot notation with map[string]any

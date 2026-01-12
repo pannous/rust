@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import "fmt"
-import "reflect"
+// import "fmt"
+// import "reflect"
 
 var x any = 42
 var y any = 41 + 1

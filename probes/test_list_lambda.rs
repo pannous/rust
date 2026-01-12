@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import fmt
-import slices
+// import fmt
+// import slices
 
 # depends on test_list_typed.goo and map function test_list_map.goo
 xs := []int{1, 2, 3}

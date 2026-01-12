@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "slices"
+// import "slices"
 
 numbers := []int{3, 1, 4, 1, 5}
 println("Original:", numbers)

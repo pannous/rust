@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import "fmt"
-import "units"
+// import "fmt"
+// import "units"
 
 // Test comprehensive units system across all categories
 

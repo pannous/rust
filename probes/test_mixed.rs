@@ -1,8 +1,8 @@
 #!/usr/bin/env rustc
-#!/usr/bin/env goo
+
 package main
 
-import "fmt"
+// import "fmt"
 
 var globalVar = "I'm a global variable"
 

@@ -1,5 +1,5 @@
-package helper
+// package helper
 
-func Hello() string {
+fn Hello() string {
     return "Hello from helper!!"
 }

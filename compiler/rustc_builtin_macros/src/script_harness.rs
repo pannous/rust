@@ -236,10 +236,10 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
         tokens: None,
     }));
 
-    // macro_rules! __walrus { ($i:ident = $e:expr) => { let $i = $e; }; }
-    // For Go-style short variable declarations: x := expr -> __walrus!(x = expr)
+    // macro_rules! __walrus { ($i:ident = $($e:tt)+) => { let $i = $($e)+; }; }
+    // For Go-style short variable declarations: x := expr -> __walrus!(x = expr_tokens)
     let walrus_body = vec![
-        // ($i:ident = $e:expr)
+        // ($i:ident = $($e:tt)+)
         delim(Delimiter::Parenthesis, vec![
             TokenTree::token_alone(TokenKind::Dollar, span),
             ident("i"),
@@ -247,19 +247,27 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
             ident("ident"),
             TokenTree::token_alone(TokenKind::Eq, span),
             TokenTree::token_alone(TokenKind::Dollar, span),
-            ident("e"),
-            TokenTree::token_alone(TokenKind::Colon, span),
-            ident("expr"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, span),
+                ident("e"),
+                TokenTree::token_alone(TokenKind::Colon, span),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Plus, span),
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, span),
-        // { let $i = $e; }
+        // { let $i = $($e)+; }
         delim(Delimiter::Brace, vec![
             ident("let"),
             TokenTree::token_alone(TokenKind::Dollar, span),
             ident("i"),
             TokenTree::token_alone(TokenKind::Eq, span),
             TokenTree::token_alone(TokenKind::Dollar, span),
-            ident("e"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, span),
+                ident("e"),
+            ]),
+            TokenTree::token_alone(TokenKind::Plus, span),
             TokenTree::token_alone(TokenKind::Semi, span),
         ]),
         TokenTree::token_alone(TokenKind::Semi, span),

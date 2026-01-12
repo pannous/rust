@@ -1,6 +1,5 @@
 #!/usr/bin/env rustc
-#!/usr/bin/env goo
-import math
+// import math
 // Test Unicode identifiers
 var δ = 42
 var 变量 = "Chinese variable 变量"

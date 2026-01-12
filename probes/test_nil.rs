@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
 
-import "fmt"
+// import "fmt"
 
 var ptr *int
 if ptr == ø {

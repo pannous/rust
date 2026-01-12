@@ -418,22 +418,41 @@ impl<'a> Parser<'a> {
         use rustc_ast::tokenstream::{DelimSpan, Spacing, TokenStream, TokenTree};
 
         let ident = self.parse_ident()?;
+        let ident_line = self.psess.source_map().lookup_char_pos(ident.span.lo()).line;
         self.bump(); // consume `:`
         self.bump(); // consume `=`
 
-        // Collect all tokens until semicolon or newline/EOF for the expression
+        // Collect expression tokens until we hit a statement boundary
+        // A statement boundary is: semicolon, EOF, or a new line followed by what looks like a new statement
         let expr_lo = self.token.span;
         let mut expr_tokens = Vec::new();
 
-        // Parse tokens until we hit a semicolon or end of statement
-        while !self.check(exp!(Semi)) && !self.check(exp!(Eof)) && self.token != token::CloseBrace {
+        loop {
+            // Check for statement end
+            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
+                break;
+            }
+
+            // Check if we've moved to a new line and the token looks like a new statement start
+            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
+            if token_pos.line > ident_line {
+                // New line - check if this looks like a new statement (identifier, keyword, etc.)
+                if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
+                   || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
+                   || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
+                   || self.token.is_keyword(kw::Use) || self.token.is_keyword(kw::Struct)
+                   || self.token == token::Pound {
+                    break;
+                }
+            }
+
             expr_tokens.push(TokenTree::Token(self.token.clone(), Spacing::Alone));
             self.bump();
         }
 
         let expr_hi = self.prev_token.span;
 
-        // Build __walrus!(ident = expr) macro call
+        // Build __walrus!(ident = expr_tokens) macro call
         let walrus_path = ast::Path {
             span: lo,
             segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__walrus, lo))],

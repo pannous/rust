@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "strings" // for reverse
+// import "strings" // for reverse
 // Test list methods in Goo
 // DON'T REMOVE TESTS even if they fail
 aList:=[1, 2, 3]

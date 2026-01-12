@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "strconv"
+// import "strconv"
 
 func testAssignment() error {
 	try val := strconv.Atoi("42")

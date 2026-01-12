@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
 // Test edge cases for map dot notation transformation
-import "fmt"
+// import "fmt"
 
 // Test 1: Nested map access
 config := map[string]map[string]string{

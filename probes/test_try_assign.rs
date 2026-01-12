@@ -1,7 +1,7 @@
 #!/usr/bin/env rustc
 // Basic try assignment test
 
-import "strconv"
+// import "strconv"
 
 def testBasicTry() error {
     try i := strconv.Atoi("42")

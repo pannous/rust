@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "slices"
+// import "slices"
 
 a := []int{1, 2}
 b := []int{1, 2}

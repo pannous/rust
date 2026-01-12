@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
 // Test τ ≈ 2π equality
-import "math"
+// import "math"
 
 println("τ ≈ 2π:", τ ≈ 2*π)
 println("τ value:", τ)

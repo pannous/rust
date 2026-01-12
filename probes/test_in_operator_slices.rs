@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "slices"
+// import "slices"
 
 assert!()2 in [1,2,3]
 assert!()'b' in ['a','b','c']

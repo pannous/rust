@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "./helper" // Local directory imports require explicit ./ prefix
+// import "./helper" // Local directory imports require explicit ./ prefix
 
 message := helper.Hello()
 print("Message:", message)

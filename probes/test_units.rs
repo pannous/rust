@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import "fmt"
-import "units"
+// import "fmt"
+// import "units"
 
 s := units.S # shorthand for 1 second:
 // s := units.Second(1)

@@ -1,7 +1,7 @@
 #!/usr/bin/env rustc
-#!/usr/bin/env goo
 
-import "fmt"
+
+// import "fmt"
 	// Basic put! functionality - should auto-import fmt if needed
 	put!("Hello World\n")
 	put!("Simple values: %v %v %v\n", 42, true, "test")

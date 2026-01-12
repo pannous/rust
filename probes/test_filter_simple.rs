@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "slices"
+// import "slices"
 
 xs := [1, 2, 3, 4, 5]
 evens := xs.filter(x => x%2 == 0)

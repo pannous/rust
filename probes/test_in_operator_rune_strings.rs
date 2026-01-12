@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "strings"
+// import "strings"
 
 assert!()'b' in "abc"
 assert!()not ('d' in "abc")

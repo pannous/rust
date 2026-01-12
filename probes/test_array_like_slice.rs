@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import os
+// import os
 
 // Test 1-indexed array access
 z := []rune{'a', 'b', 'c'}

@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "iter"
+// import "iter"
 
 // Custom iterator that yields numbers 1-5
 func Numbers() iter.Seq[int] {

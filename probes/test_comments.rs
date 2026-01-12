@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-#!/usr/bin/env goo
+
 # ^^ shebang line for Goo interpreter handled by comment code?
 # Comprehensive Goo test demonstrating all language features
 # This file tests the enhanced IntelliJ plugin capabilities

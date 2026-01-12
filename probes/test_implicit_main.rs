@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-#!/usr/bin/env goo
-#!/usr/bin/env goo
+
+
 // main-less top level code ok via bin/go run goo/test_implicit_main.go but not in GoLang :(
 package main
 print("Hello, ")    // writes to stderr

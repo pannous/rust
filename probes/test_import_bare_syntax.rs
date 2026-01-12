@@ -1,7 +1,7 @@
 #!/usr/bin/env rustc
 // Test bare import syntax: import identifier => import "identifier"
-import fmt
-import strings
+// import fmt
+// import strings
 
 func main() {
     // Test that bare imports work correctly

@@ -1,3 +1,3 @@
 #!/usr/bin/env rustc
-import "os"
+// import "os"
 put!("test")

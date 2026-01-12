@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "fmt"
+// import "fmt"
 
 // Test string to character comparison
 s := "你"

@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
-import "slices"
-import "fmt"
+// import "slices"
+// import "fmt"
 
 original := []int{3, 1, 4, 1, 5}
 fmt.put!("Original: %v\n", original)

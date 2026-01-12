@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "strings"
+// import "strings"
 
 // Complete test of in operator functionality
 text := "hello world"

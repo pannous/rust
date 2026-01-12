@@ -1,6 +1,6 @@
 #!/usr/bin/env rustc
 // Final comprehensive test of slice type inference
-import "slices"
+// import "slices"
 
 // Basic type inference
 ints := [1, 2, 3]

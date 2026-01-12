@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-import "fmt"
+// import "fmt"
 
 func put!(x int) {
 	put!("USER DEFINED: %d\n", x)

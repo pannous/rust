@@ -1,5 +1,5 @@
 #!/usr/bin/env rustc
-#!/usr/bin/env goo
+
 
 // Test string + number concatenation feature
 
