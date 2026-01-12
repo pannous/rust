@@ -41,7 +41,7 @@ LL |     /*! bar */
    = help: doc comments must come before what they document, if a comment was intended use `//`
 
 error: expected one of `.`, `;`, `?`, `}`, or an operator, found doc comment `/** baz */`
-  --> $DIR/doc-comment-in-stmt.rs:17:7
+  --> $DIR/doc-comment-in-stmt.rs:18:7
    |
 LL |     1 /** baz */
    |       ^^^^^^^^^^ expected one of `.`, `;`, `?`, `}`, or an operator
@@ -52,7 +52,7 @@ LL |     1 /* * baz */
    |         +
 
 error: expected one of `.`, `;`, `?`, `}`, or an operator, found doc comment `/// quux`
-  --> $DIR/doc-comment-in-stmt.rs:21:7
+  --> $DIR/doc-comment-in-stmt.rs:23:7
    |
 LL |     2 /// quux
    |       ^^^^^^^^ expected one of `.`, `;`, `?`, `}`, or an operator
@@ -62,11 +62,11 @@ help: add a space before the last `/` to write a regular comment
 LL |     2 // / quux
    |         +
 
-error: expected one of `.`, `;`, `?`, `else`, or an operator, found doc comment `//!foo
-  --> $DIR/doc-comment-in-stmt.rs:27:22
+error: expected one of `.`, `;`, `?`, `else`, or an operator, found doc comment `//!foo`
+  --> $DIR/doc-comment-in-stmt.rs:29:22
    |
 LL |     let y = x.max(1) //!foo
-   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected one of `.`, `;`, `?`, `else`, or an operator
+   |                      ^^^^^^ expected one of `.`, `;`, `?`, `else`, or an operator
    |
 help: add a space before `!` to write a regular comment
    |

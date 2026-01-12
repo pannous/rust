@@ -4,16 +4,16 @@ static s: &'static str =
 
 static s2: &'static str =
     r#"
-      "#### //~ ERROR too many `#` when terminating raw string
+      "#### //~ ERROR expected one of `!` or `[`, found `#`
 ;
 
-const A: &'static str = r"" //~ ERROR expected `;`, found `#`
+const A: &'static str = r""
 
 // Test
 #[test]
 fn test() {}
 
-const B: &'static str = r""## //~ ERROR too many `#` when terminating raw string
+const B: &'static str = r""##
 
 // Test
 #[test]

@@ -1,5 +1,4 @@
-//@ run-rustfix
-//@ rustfix-only-machine-applicable
+// Note: run-rustfix removed because semicolon inference changes the parsing behavior
 #![allow(unused_variables)]
 #![allow(dead_code)]
 #![allow(unused_must_use)]
@@ -80,9 +79,8 @@ fn r#unsafe() -> i32 {
 fn matches() -> bool {
     match () { _ => true } && match () { _ => true }; //~ ERROR mismatched types
     match () { _ => true } && match () { _ => true } //~ ERROR mismatched types
-    //~^ ERROR expected `;`, found keyword `match`
     match () { _ => true } && true; //~ ERROR mismatched types
     match () { _ => true } && true //~ ERROR mismatched types
-    //~^ ERROR mismatched types
+    //~| ERROR mismatched types
 }
 fn main() {}

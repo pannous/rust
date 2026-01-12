@@ -1,5 +1,5 @@
 error: expected expression, found `+`
-  --> $DIR/expr-as-stmt.rs:8:9
+  --> $DIR/expr-as-stmt.rs:7:9
    |
 LL |     {2} + {2}
    |         ^ expected expression
@@ -10,7 +10,7 @@ LL |     ({2}) + {2}
    |     +   +
 
 error: leading `+` is not supported
-  --> $DIR/expr-as-stmt.rs:13:9
+  --> $DIR/expr-as-stmt.rs:12:9
    |
 LL |     {2} + 2
    |         ^ unexpected `+`
@@ -21,7 +21,7 @@ LL |     ({2}) + 2
    |     +   +
 
 error: expected expression, found `+`
-  --> $DIR/expr-as-stmt.rs:19:12
+  --> $DIR/expr-as-stmt.rs:18:12
    |
 LL |     { 42 } + foo;
    |            ^ expected expression
@@ -32,7 +32,7 @@ LL |     ({ 42 }) + foo;
    |     +      +
 
 error: expected expression, found `>`
-  --> $DIR/expr-as-stmt.rs:32:7
+  --> $DIR/expr-as-stmt.rs:31:7
    |
 LL |     } > 0
    |       ^ expected expression
@@ -45,7 +45,7 @@ LL ~     }) > 0
    |
 
 error: expected parameter name, found `{`
-  --> $DIR/expr-as-stmt.rs:41:16
+  --> $DIR/expr-as-stmt.rs:40:16
    |
 LL |     { true } | { true }
    |                ^ expected parameter name
@@ -56,7 +56,7 @@ LL |     ({ true }) | { true }
    |     +        +
 
 error: expected expression, found `+`
-  --> $DIR/expr-as-stmt.rs:69:26
+  --> $DIR/expr-as-stmt.rs:68:26
    |
 LL |     match () { () => 1 } + match () { () => 1 }
    |                          ^ expected expression
@@ -67,7 +67,7 @@ LL |     (match () { () => 1 }) + match () { () => 1 }
    |     +                    +
 
 error: expected expression, found `+`
-  --> $DIR/expr-as-stmt.rs:75:18
+  --> $DIR/expr-as-stmt.rs:74:18
    |
 LL |     unsafe { 1 } + unsafe { 1 }
    |                  ^ expected expression
@@ -78,7 +78,7 @@ LL |     (unsafe { 1 }) + unsafe { 1 }
    |     +            +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:64:7
+  --> $DIR/expr-as-stmt.rs:63:7
    |
 LL |     { foo() } || { true }
    |       ^^^^^- help: consider using a semicolon here: `;`
@@ -86,7 +86,7 @@ LL |     { foo() } || { true }
    |       expected `()`, found `i32`
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:8:6
+  --> $DIR/expr-as-stmt.rs:7:6
    |
 LL |     {2} + {2}
    |      ^ expected `()`, found integer
@@ -97,7 +97,7 @@ LL |     {return 2;} + {2}
    |      ++++++  +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:13:6
+  --> $DIR/expr-as-stmt.rs:12:6
    |
 LL |     {2} + 2
    |      ^ expected `()`, found integer
@@ -108,7 +108,7 @@ LL |     {return 2;} + 2
    |      ++++++  +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:19:7
+  --> $DIR/expr-as-stmt.rs:18:7
    |
 LL |     { 42 } + foo;
    |       ^^ expected `()`, found integer
@@ -119,7 +119,7 @@ LL |     { return 42; } + foo;
    |       ++++++   +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:25:7
+  --> $DIR/expr-as-stmt.rs:24:7
    |
 LL |     { 3 } * 3
    |       ^ expected `()`, found integer
@@ -130,7 +130,7 @@ LL |     { return 3; } * 3
    |       ++++++  +
 
 error[E0614]: type `{integer}` cannot be dereferenced
-  --> $DIR/expr-as-stmt.rs:25:11
+  --> $DIR/expr-as-stmt.rs:24:11
    |
 LL |     { 3 } * 3
    |           ^^^ can't be dereferenced
@@ -141,7 +141,7 @@ LL |     ({ 3 }) * 3
    |     +     +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:36:6
+  --> $DIR/expr-as-stmt.rs:35:6
    |
 LL |     {2} - 2
    |      ^ expected `()`, found integer
@@ -152,7 +152,7 @@ LL |     {return 2;} - 2
    |      ++++++  +
 
 error[E0600]: cannot apply unary operator `-` to type `u32`
-  --> $DIR/expr-as-stmt.rs:36:9
+  --> $DIR/expr-as-stmt.rs:35:9
    |
 LL |     {2} - 2
    |         ^^^ cannot apply unary operator `-`
@@ -163,7 +163,7 @@ LL |     ({2}) - 2
    |     +   +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:41:7
+  --> $DIR/expr-as-stmt.rs:40:7
    |
 LL |     { true } | { true }
    |       ^^^^ expected `()`, found `bool`
@@ -174,7 +174,7 @@ LL |     { return true; } | { true }
    |       ++++++     +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:46:7
+  --> $DIR/expr-as-stmt.rs:45:7
    |
 LL |     { true } && { true }
    |       ^^^^ expected `()`, found `bool`
@@ -185,7 +185,7 @@ LL |     { return true; } && { true }
    |       ++++++     +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:46:14
+  --> $DIR/expr-as-stmt.rs:45:14
    |
 LL | fn revenge_from_mars() -> bool {
    |                           ---- expected `bool` because of return type
@@ -198,7 +198,7 @@ LL |     ({ true }) && { true }
    |     +        +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:51:7
+  --> $DIR/expr-as-stmt.rs:50:7
    |
 LL |     { true } || { true }
    |       ^^^^ expected `()`, found `bool`
@@ -209,7 +209,7 @@ LL |     { return true; } || { true }
    |       ++++++     +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:51:14
+  --> $DIR/expr-as-stmt.rs:50:14
    |
 LL | fn attack_from_mars() -> bool {
    |                          ---- expected `bool` because of return type
@@ -217,14 +217,14 @@ LL |     { true } || { true }
    |              ^^^^^^^^^^^ expected `bool`, found closure
    |
    = note: expected type `bool`
-           found closure `{closure@$DIR/expr-as-stmt.rs:51:14: 51:16}`
+           found closure `{closure@$DIR/expr-as-stmt.rs:50:14: 50:16}`
 help: parentheses are required to parse this as an expression
    |
 LL |     ({ true }) || { true }
    |     +        +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:69:5
+  --> $DIR/expr-as-stmt.rs:68:5
    |
 LL |     match () { () => 1 } + match () { () => 1 }
    |     ^^^^^^^^^^^^^^^^^^^^ expected `()`, found integer
@@ -235,7 +235,7 @@ LL |     (match () { () => 1 }) + match () { () => 1 }
    |     +                    +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:75:14
+  --> $DIR/expr-as-stmt.rs:74:14
    |
 LL |     unsafe { 1 } + unsafe { 1 }
    |              ^ expected `()`, found integer
@@ -246,7 +246,7 @@ LL |     unsafe { return 1; } + unsafe { 1 }
    |              ++++++  +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:81:5
+  --> $DIR/expr-as-stmt.rs:80:5
    |
 LL |     match () { _ => true } && match () { _ => true };
    |     ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `bool`
@@ -257,7 +257,7 @@ LL |     (match () { _ => true }) && match () { _ => true };
    |     +                      +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:82:5
+  --> $DIR/expr-as-stmt.rs:81:5
    |
 LL |     match () { _ => true } && match () { _ => true }
    |     ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `bool`
@@ -268,7 +268,7 @@ LL |     (match () { _ => true }) && match () { _ => true }
    |     +                      +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:84:5
+  --> $DIR/expr-as-stmt.rs:82:5
    |
 LL |     match () { _ => true } && true;
    |     ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `bool`
@@ -279,7 +279,7 @@ LL |     (match () { _ => true }) && true;
    |     +                      +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:85:5
+  --> $DIR/expr-as-stmt.rs:83:5
    |
 LL |     match () { _ => true } && true
    |     ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found `bool`
@@ -290,7 +290,7 @@ LL |     (match () { _ => true }) && true
    |     +                      +
 
 error[E0308]: mismatched types
-  --> $DIR/expr-as-stmt.rs:85:28
+  --> $DIR/expr-as-stmt.rs:83:28
    |
 LL | fn matches() -> bool {
    |                 ---- expected `bool` because of return type
