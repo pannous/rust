@@ -1945,7 +1945,7 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn expect_semi(&mut self) -> PResult<'a, ()> {
-        if self.eat(exp!(Semi)) || self.recover_colon_as_semi() {
+        if self.eat(exp!(Semi)) || self.recover_colon_as_semi() || self.can_infer_semi_from_newline() {
             return Ok(());
         }
         self.expect(exp!(Semi)).map(drop) // Error unconditionally
@@ -1970,6 +1970,24 @@ impl<'a> Parser<'a> {
         }
 
         false
+    }
+
+    /// Checks if a semicolon can be inferred from a newline.
+    /// This is called when a semicolon is expected but not found.
+    /// If the next token is on a different line than the previous token,
+    /// we infer the semicolon (return true).
+    pub(super) fn can_infer_semi_from_newline(&self) -> bool {
+        let line_idx = |span: Span| {
+            self.psess
+                .source_map()
+                .span_to_lines(span)
+                .ok()
+                .and_then(|lines| Some(lines.lines.get(0)?.line_index))
+        };
+
+        // If the current token is on a different line than the previous token,
+        // we can infer a semicolon.
+        line_idx(self.prev_token.span) < line_idx(self.token.span)
     }
 
     /// Consumes alternative await syntaxes like `await!(<expr>)`, `await <expr>`,

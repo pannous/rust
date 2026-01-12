@@ -998,6 +998,12 @@ impl<'a> Parser<'a> {
             StmtKind::Expr(expr)
                 if self.token != token::Eof && classify::expr_requires_semi_to_be_stmt(expr) =>
             {
+                // Check if we can infer semicolon from newline (next token on different line).
+                // Don't infer if next token is `}` since that makes this a tail expression.
+                if self.can_infer_semi_from_newline() && self.token != token::CloseBrace {
+                    add_semi_to_stmt = true;
+                    eat_semi = false;
+                } else {
                 // Just check for errors and recover; do not eat semicolon yet.
 
                 let expect_result =
@@ -1091,6 +1097,7 @@ impl<'a> Parser<'a> {
                     let sp = expr.span.to(self.prev_token.span);
                     *expr = self.mk_expr_err(sp, guar);
                 }
+                } // end else (no newline semicolon inference)
             }
             StmtKind::Expr(_) | StmtKind::MacCall(_) => {}
             StmtKind::Let(local) if let Err(mut e) = self.expect_semi() => {
