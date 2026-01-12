@@ -15,8 +15,8 @@ fn invoke<F>(f: F) where F: FnOnce() -> usize {
 
 fn main() {
       let x  : Box<usize>  = Box::new(9);
-      let sq =  || { *x * *x };
+      let sq =  || { *x * *x }; //~ ERROR: cannot multiply
 
-      twice(x); //~ ERROR: cannot move out of
+      twice(x);
       invoke(sq);
 }

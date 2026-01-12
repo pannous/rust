@@ -1,7 +1,6 @@
-//@ run-rustfix
-
-// Testing that semicolon tokens are printed correctly in errors
+//@ check-pass
+// Testing that semicolons are inferred
 
 fn main() {
-    let _x = 3 //~ ERROR: expected `;`
+    let _x = 3
 }

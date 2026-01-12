@@ -3,25 +3,28 @@
 fn foo() -> bool {
     false
     //!self.allow_ty_infer()
-    //~^ ERROR found doc comment
+    //~^ ERROR expected outer doc comment
+    //~| ERROR found a documentation comment
 }
 
 fn bar() -> bool {
     false
-    /*! bar */ //~ ERROR found doc comment
+    /*! bar */ //~ ERROR expected outer doc comment
+    //~| ERROR found a documentation comment
 }
 
 fn baz() -> i32 {
-    1 /** baz */ //~ ERROR found doc comment
+    1 /** baz */ //~ ERROR found a documentation comment
 }
 
 fn quux() -> i32 {
     2 /// quux
-    //~^ ERROR found doc comment
+    //~^ ERROR found a documentation comment
 }
 
 fn main() {
     let x = 0;
-    let y = x.max(1) //!foo //~ ERROR found doc comment
+    let y = x.max(1) //!foo //~ ERROR expected outer doc comment
+        //~| ERROR found a documentation comment
         .min(2);
 }

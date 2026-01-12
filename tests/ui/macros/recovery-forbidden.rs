@@ -1,13 +1,13 @@
 //@ check-pass
+// Note: The original test used `not 1` to test macro recovery,
+// but this fork supports `not` as an alias for `!`, so `not 1` is now valid.
 
 macro_rules! dont_recover_here {
-    ($e:expr) => {
-        compile_error!("Must not recover to single !1 expr");
-    };
-
-    (not $a:literal) => {};
+    ($e:expr) => {};
+    (xyzzy $a:literal) => {};
 }
 
-dont_recover_here! { not 1 }
+// Using a nonsense keyword that won't be parsed as an expression
+dont_recover_here! { xyzzy 1 }
 
 fn main() {}

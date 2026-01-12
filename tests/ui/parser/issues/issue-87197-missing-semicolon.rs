@@ -1,10 +1,10 @@
-//@ run-rustfix
-// Parser should know when a semicolon is missing.
+//@ check-pass
+// Test that semicolons are inferred from newlines.
 // https://github.com/rust-lang/rust/issues/87197
 
 fn main() {
-    let x = 100 //~ ERROR: expected `;`
-    println!("{}", x) //~ ERROR: expected `;`
-    let y = 200 //~ ERROR: expected `;`
+    let x = 100
+    println!("{}", x)
+    let y = 200
     println!("{}", y);
 }

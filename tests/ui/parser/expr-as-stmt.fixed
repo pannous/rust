@@ -79,7 +79,7 @@ fn r#unsafe() -> i32 {
 // https://github.com/rust-lang/rust/issues/88727
 fn matches() -> bool {
     (match () { _ => true }) && match () { _ => true }; //~ ERROR mismatched types
-    (match () { _ => true }) && match () { _ => true }; //~ ERROR mismatched types
+    (match () { _ => true }) && match () { _ => true } //~ ERROR mismatched types
     //~^ ERROR expected `;`, found keyword `match`
     (match () { _ => true }) && true; //~ ERROR mismatched types
     (match () { _ => true }) && true //~ ERROR mismatched types

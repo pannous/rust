@@ -77,15 +77,6 @@ help: parentheses are required to parse this as an expression
 LL |     (unsafe { 1 }) + unsafe { 1 }
    |     +            +
 
-error: expected `;`, found keyword `match`
-  --> $DIR/expr-as-stmt.rs:82:53
-   |
-LL |     match () { _ => true } && match () { _ => true }
-   |                                                     ^ help: add `;` here
-LL |
-LL |     match () { _ => true } && true;
-   |     ----- unexpected token
-
 error[E0308]: mismatched types
   --> $DIR/expr-as-stmt.rs:64:7
    |
@@ -312,7 +303,7 @@ help: parentheses are required to parse this as an expression
 LL |     (match () { _ => true }) && true
    |     +                      +
 
-error: aborting due to 28 previous errors
+error: aborting due to 27 previous errors
 
 Some errors have detailed explanations: E0308, E0600, E0614.
 For more information about an error, try `rustc --explain E0308`.

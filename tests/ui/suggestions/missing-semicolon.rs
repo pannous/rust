@@ -3,7 +3,7 @@
 fn a() {
     let x = 5;
     let y = x //~ ERROR expected function
-    () //~ ERROR expected `;`, found `}`
+    ()
 }
 
 fn b() {
@@ -29,7 +29,7 @@ fn e() { // ok
 fn f()
  {
     let y = 5 //~ ERROR expected function
-    () //~ ERROR expected `;`, found `}`
+    ()
 }
 fn g() {
     5 //~ ERROR expected function
