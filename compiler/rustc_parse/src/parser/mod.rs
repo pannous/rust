@@ -1409,7 +1409,12 @@ impl<'a> Parser<'a> {
         if self.token.kind.open_delim().is_some() {
             // Clone the `TokenTree::Delimited` that we are currently
             // within. That's what we are going to return.
-            let tree = self.token_cursor.stack.last().unwrap().curr().unwrap().clone();
+            let frame = self.token_cursor.stack.last().expect("stack should not be empty when parsing delimited token tree");
+            let tree = match frame.curr() {
+                Some(tree) => tree.clone(),
+                None => panic!("parser bug: no current token tree in stack frame when token is open delimiter {:?} at {:?}",
+                    self.token.kind, self.token.span),
+            };
             debug_assert_matches!(tree, TokenTree::Delimited(..));
 
             // Advance the token cursor through the entire delimited
