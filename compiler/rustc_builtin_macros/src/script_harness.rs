@@ -112,6 +112,48 @@ fn wrap_in_main(krate: &mut ast::Crate) {
     krate.items.push(main_fn);
 }
 
+/// Create #[allow(unused_macros)] attribute for suppressing warnings on auto-generated macros
+fn create_allow_unused_attr(span: Span) -> ast::Attribute {
+    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+
+    let path = Path {
+        span,
+        segments: vec![
+            PathSegment::from_ident(Ident::new(sym::allow, span)),
+        ]
+        .into(),
+        tokens: None,
+    };
+
+    let args = AttrArgs::Delimited(ast::DelimArgs {
+        dspan: rustc_ast::tokenstream::DelimSpan::from_single(span),
+        delim: rustc_ast::token::Delimiter::Parenthesis,
+        tokens: {
+            use rustc_ast::token::{IdentIsRaw, TokenKind};
+            use rustc_ast::tokenstream::{TokenStream, TokenTree};
+            TokenStream::new(vec![TokenTree::token_alone(
+                TokenKind::Ident(sym::unused_macros, IdentIsRaw::No),
+                span,
+            )])
+        },
+    });
+
+    ast::Attribute {
+        kind: AttrKind::Normal(Box::new(NormalAttr {
+            item: ast::AttrItem {
+                unsafety: Safety::Default,
+                path,
+                args: AttrItemKind::Unparsed(args),
+                tokens: None
+            },
+            tokens: None
+        })),
+        id: ast::AttrId::from_u32(0),
+        style: AttrStyle::Outer,
+        span,
+    }
+}
+
 /// Inject convenience macros for script mode: put! and eq!
 fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     use rustc_ast::token::{self, Delimiter, Lit, LitKind, TokenKind};
@@ -119,6 +161,9 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     use rustc_span::Symbol;
 
     let mut items = ThinVec::new();
+
+    // Create #[allow(unused_macros)] attribute for auto-generated macros
+    let allow_unused = create_allow_unused_attr(span);
 
     // Helper to create a delimited group
     let delim = |d: Delimiter, inner: Vec<TokenTree>| -> TokenTree {
@@ -179,7 +224,7 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     };
 
     items.push(Box::new(ast::Item {
-        attrs: ast::AttrVec::new(),
+        attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::put, span), put_macro),
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
@@ -228,7 +273,7 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     };
 
     items.push(Box::new(ast::Item {
-        attrs: ast::AttrVec::new(),
+        attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::eq, span), eq_macro),
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
@@ -284,7 +329,7 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     };
 
     items.push(Box::new(ast::Item {
-        attrs: ast::AttrVec::new(),
+        attrs: vec![allow_unused].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__walrus, span), walrus_macro),
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
