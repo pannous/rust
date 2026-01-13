@@ -1409,11 +1409,23 @@ impl<'a> Parser<'a> {
         if self.token.kind.open_delim().is_some() {
             // Clone the `TokenTree::Delimited` that we are currently
             // within. That's what we are going to return.
-            let frame = self.token_cursor.stack.last().expect("stack should not be empty when parsing delimited token tree");
+            let Some(frame) = self.token_cursor.stack.last() else {
+                // Stack is empty but we have an open delimiter. This can happen during
+                // error recovery when the token stream is malformed. Treat it as a
+                // regular token instead of trying to parse a delimited sequence.
+                let prev_spacing = self.token_spacing;
+                self.bump();
+                return TokenTree::Token(self.prev_token, prev_spacing);
+            };
             let tree = match frame.curr() {
                 Some(tree) => tree.clone(),
-                None => panic!("parser bug: no current token tree in stack frame when token is open delimiter {:?} at {:?}",
-                    self.token.kind, self.token.span),
+                None => {
+                    // Current frame has no token tree. This can happen during error
+                    // recovery. Treat the delimiter as a regular token.
+                    let prev_spacing = self.token_spacing;
+                    self.bump();
+                    return TokenTree::Token(self.prev_token, prev_spacing);
+                }
             };
             debug_assert_matches!(tree, TokenTree::Delimited(..));
 
