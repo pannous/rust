@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test only basic methods that don't need imports
 eq!( "a"+"1" , "a1");
 eq!( "a"+1 , "a1" ); // invalid operation: "a" + 1 (mismatched types untyped string and untyped int)

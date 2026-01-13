@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "slices"
 
 assert!()2 in [1,2,3]

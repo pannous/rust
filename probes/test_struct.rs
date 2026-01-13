@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 // needs main()
 type Tee struct {

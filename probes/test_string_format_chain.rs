@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 name := "Alice"
 age := 25
 greeting := "Hello %s, you are %d years old" % name % age

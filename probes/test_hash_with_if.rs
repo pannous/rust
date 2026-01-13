@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 // Test 1-indexed array access with if statements
 z := []rune{'a', 'b', 'c'}

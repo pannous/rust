@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test bare import syntax: import identifier => import "identifier"
 // import fmt
 // import strings

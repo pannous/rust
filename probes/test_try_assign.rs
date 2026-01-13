@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Basic try assignment test
 
 // import "strconv"

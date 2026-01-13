@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "strconv"
 
 func testAssignment() error {

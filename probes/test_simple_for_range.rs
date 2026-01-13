@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 var sum = 0
 // for i in 0...5 {
 // println(i)

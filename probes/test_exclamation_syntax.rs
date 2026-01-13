@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "slices"
 
 numbers := []int{3, 1, 4, 1, 5}

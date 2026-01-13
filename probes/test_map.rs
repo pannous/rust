@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // #import "fmt"  not needed 3398e71181
 // Test different map syntax forms
 

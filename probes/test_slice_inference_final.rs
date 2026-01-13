@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Final comprehensive test of slice type inference
 // import "slices"
 

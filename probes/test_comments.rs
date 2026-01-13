@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 # ^^ shebang line for Goo interpreter handled by comment code?
 # Comprehensive Goo test demonstrating all language features

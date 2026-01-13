@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // #import "strings" // auto import on demand WORKS!
 // #import "fmt" // auto import on demand WORKS!
 // #import "unicode" // auto import on demand WORKS!

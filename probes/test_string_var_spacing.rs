@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test string variable interpolation with spacing
 name := "world"
 result := "hello" name "!"

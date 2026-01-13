@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "iter"
 
 // Custom iterator that yields numbers 1-5

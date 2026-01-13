@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 result2 := "value:" 42 "units"
 put!("Actual result2: '%s'\n", result2)
 eq!( result2 , "value: 42 units");

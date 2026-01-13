@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 // Using fmt package functions
 fmt.Print("fmt.Print:", "hello", 42, true)

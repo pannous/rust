@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 
 // main-less top level code ok via bin/go run goo/test_implicit_main.go but not in GoLang :(

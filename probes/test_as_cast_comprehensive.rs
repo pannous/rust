@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Comprehensive as cast test
 val1 := 1 as string
 put!("1 as string: %q\n", val1) 

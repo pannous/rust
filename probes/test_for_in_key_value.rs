@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test for-in with both single and double variable patterns
 myMap := map[string]int{
 	"apple":  1,

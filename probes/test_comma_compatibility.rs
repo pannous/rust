@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 // Test all existing syntaxes still work
 fmt.Println("=== Testing all syntax variations ===")

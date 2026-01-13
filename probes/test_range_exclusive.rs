@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test exclusive range operator (..)
 var sum = 0
 for i in 0..5 {

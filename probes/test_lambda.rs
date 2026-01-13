@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test lambda expressions
 func testBasicLambda() {
     double := x => x * 2

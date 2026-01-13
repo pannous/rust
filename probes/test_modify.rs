@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // allow modify in place enforced by "!" !
 
 def modify!(xs []int) { for i, x := range xs { xs[i] = x * 2 } } 

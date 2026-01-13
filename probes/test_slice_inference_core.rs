@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Core slice type inference test without method calls
 
 // Basic type inference

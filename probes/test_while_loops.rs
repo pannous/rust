@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test while loops as synonym for for loops
 
 put!("Testing while loops:\n")

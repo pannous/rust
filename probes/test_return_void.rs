@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 def ignore() {
 	if 1 {
 		return println("OK")  //  (no value) used as value

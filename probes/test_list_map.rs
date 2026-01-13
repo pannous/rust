@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "slices"
 
 # eq!( [1,2,3].apply(x=>x*2) , [2,4,6]  ); // (type []any) TODO: []int auto

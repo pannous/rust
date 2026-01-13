@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // #import "reflect"
 
 // Simple typeMatches function for IS operator

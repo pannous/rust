@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 aList:=[2, 1, 3]
 
 # TODOs

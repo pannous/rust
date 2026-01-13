@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 enum State { OK, ERROR, PENDING }
 
 println("Testing enum String() method:")

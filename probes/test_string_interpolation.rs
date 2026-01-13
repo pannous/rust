@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test string interpolation feature: "a" x "b" => "a" + x + "b"
 
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 # TODO hash vs comment FAILS:
 #put!("OK") # syntax error: unexpected name is after top level declaration

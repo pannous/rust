@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test map type inference: {math: 95, english: 87} == map[string]int{"math": 95, "english": 87}
 
 // Test 1: Integer values infer to map[string]int

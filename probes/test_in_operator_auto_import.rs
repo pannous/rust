@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // FAILS:
 // #import "strings"  // auto import TOO HARD for in operator! Claude spent 4 hours on this :(
 

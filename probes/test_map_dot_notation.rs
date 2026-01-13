@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "fmt"
 // Test map dot notation (m.key) for maps with string keys
 

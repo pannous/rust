@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 myMap := { "hello": 1, "world": 2, "test":  3 }
 
 // Test key existence using assignment like string tests

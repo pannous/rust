@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 #untyped := {"name": "Alice", "age": 30}
 untyped := {name: "Alice", age: 30}
 put!("Name: %v, Age: %v\n", untyped.name, untyped.age)

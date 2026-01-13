@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test different map types with dot notation
 user := map[string]string{"name": "John", "city": "NYC"}
 scores := map[string]int{"math": 95, "english": 87}

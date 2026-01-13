@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "./helper" // Local directory imports require explicit ./ prefix
 
 message := helper.Hello()

@@ -1,2 +1,2 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 put!("just put!, no imports")

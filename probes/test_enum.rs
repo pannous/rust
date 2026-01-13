@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 enum Status { OK, BAD }
 put!("OK = %v\n", OK)
 put!("OK = %d\n", OK)

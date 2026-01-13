@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 eq!( ("a" , 'a')  ); // ✅ Now works! Transformed to "a" == string('a')
 eq!( ("a" , 'a') ); // ✅ String/rune comparison now supported!
 

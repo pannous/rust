@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 put!(42)
 x := {a: 1, b: 2}
 put!(x)

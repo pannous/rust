@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test context-aware try operator adapting to different function signatures
 
 // import "strconv"

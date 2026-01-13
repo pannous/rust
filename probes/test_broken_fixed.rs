@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 aList := [1, 2, 3]
 eq!( aList[1] , 2);
 eq!( aList.first() , 1);

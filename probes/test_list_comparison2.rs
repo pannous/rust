@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 a := []int{1, 2}
 b := []int{1, 2}

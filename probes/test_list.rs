@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test [1,2,3] slice literal syntax
 z := [1, 2, 3]
 put!("Slice z: %v\n", z)

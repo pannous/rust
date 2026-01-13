@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "strconv" // for string conversion
 //#import "strings" // auto import on demand WORKS!
 //#import "fmt" // auto import on demand WORKS!

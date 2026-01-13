@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test put! and eq! macros for script mode
 
 put!(42)

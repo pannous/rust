@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 #def meaning() int {return 42}
 def meaning() int {42} // ^^ easy
 #def meaning(){return 42} // harder but doable? OR BUG?

@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test edge cases for map dot notation transformation
 // import "fmt"
 

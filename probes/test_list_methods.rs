@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // import "strings" // for reverse
 // Test list methods in Goo
 // DON'T REMOVE TESTS even if they fail

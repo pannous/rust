@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 // Test hash with both if and assert!() 
 z := []rune{'a', 'b', 'c'}

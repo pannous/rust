@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // dangerous cast x as T panics if x is not T
 // safe cast x as? T returns nil if x is not T
 // x as T   =>  x.(T) // panics if x is not T

@@ -11,7 +11,7 @@ Features working:
 • shebang support:
 • run rust as scripts with implicit main
 • ./probes/test_main.rs
-• dynamic linking via dlsym C-ABI (rust ABI dependent on build!)
+• dynamic linking via  dlsym C-ABI (rust ABI dependent on build!)
 
 Future:
 • Optionals via '?' as in other sane languages

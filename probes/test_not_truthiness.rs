@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test not operator with truthiness evaluation
 eq!( not 0 , true);
 eq!( not "" , true);

@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 
 for i := 0; i < 5; i++ {
 	if i == 2 {

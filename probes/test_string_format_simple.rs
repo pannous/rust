@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 result := "my %v modulo" % "cool"
 put!("Result: %s\n", result)
 eq!( result , "my cool modulo");
