@@ -16,7 +16,7 @@ The custom Rust compiler at `/opt/other/rust` has syntax extensions that standar
 |---------|----------------|---------------------|
 | `and`/`or`/`xor` operators | Implemented | **Done** |
 | `not` prefix operator | Implemented | **Done** |
-| Unicode operators (`≤`,`≥`,`≠`,`…`,`¬`) | Implemented | Pending |
+| Unicode operators (`≤`,`≥`,`≠`,`…`,`¬`) | Implemented | **Done** |
 | Power operator `**` | Parser only (no codegen) | Pending |
 | Semicolon inference from newlines | Implemented | Pending |
 
@@ -108,22 +108,55 @@ Self-hosting test passes (parses rust-analyzer source code)
 
 ---
 
+## Completed: Unicode Operators
+
+**Commit:** `2b3fd9b` on 2026-01-14
+
+### What Was Changed
+
+```
+crates/parser/src/lexed_str.rs
+└── extend_token(): Intercept Unknown tokens and map Unicode chars
+
+crates/syntax/src/verify_custom_ops.rs
+└── Added 6 tests for Unicode operators
+```
+
+### How It Works
+
+1. `rustc_lexer` returns `Unknown` for Unicode operators
+2. Check first character of unknown token
+3. For compound operators (`≤`,`≥`,`≠`,`…`): emit two joint tokens
+4. For single operators (`¬`): emit one token
+5. Jointness handled automatically by `to_input()`
+
+### Mappings
+
+| Unicode | Name | Maps To |
+|---------|------|---------|
+| `≤` (U+2264) | Less-than or equal | `< =` → `<=` |
+| `≥` (U+2265) | Greater-than or equal | `> =` → `>=` |
+| `≠` (U+2260) | Not equal | `! =` → `!=` |
+| `…` (U+2026) | Horizontal ellipsis | `. .` → `..` |
+| `¬` (U+00AC) | Not sign | `!` |
+
+### Test Results
+
+```
+All 300 parser tests pass
+All 69 syntax tests pass (including 16 custom operator tests)
+Self-hosting test passes
+```
+
+---
+
 ## Pending: Implementation Plan
 
-### 1. Unicode Operators (Medium)
-
-Modify `lexed_str.rs` `extend_token()` to intercept `Unknown` tokens and map Unicode characters to existing tokens:
-- `≤` → `T![<=]`
-- `≥` → `T![>=]`
-- `≠` → `T![!=]`
-- `…` → `T![..]`
-- `¬` → `T![!]`
-
-### 3. Power Operator `**` (Medium)
+### 1. Power Operator `**` (Medium)
 
 Add to `current_op()` checking for two adjacent `*` tokens. May need new `STAR2` syntax kind or handle specially. Note: rustc fork has parser support but no MIR codegen.
 
-### 4. Semicolon Inference (Complex)
+### 2. Semicolon Inference (Complex)
 
 Requires tracking newline positions through the parser:
 1. Add `preceded_by_newline` bit vector to `Input` struct
