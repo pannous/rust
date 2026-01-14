@@ -15,7 +15,7 @@ The custom Rust compiler at `/opt/other/rust` has syntax extensions that standar
 | Feature | Compiler Status | rust-analyzer Status |
 |---------|----------------|---------------------|
 | `and`/`or`/`xor` operators | Implemented | **Done** |
-| `not` prefix operator | Implemented | Pending |
+| `not` prefix operator | Implemented | **Done** |
 | Unicode operators (`≤`,`≥`,`≠`,`…`,`¬`) | Implemented | Pending |
 | Power operator `**` | Parser only (no codegen) | Pending |
 | Semicolon inference from newlines | Implemented | Pending |
@@ -63,13 +63,54 @@ All 5 custom operator tests pass
 
 ---
 
+## Completed: `not` Prefix Operator
+
+**Commit:** `7dc5eb4` on 2026-01-14
+
+### What Was Changed
+
+```
+crates/parser/src/grammar/expressions.rs
+├── lhs(): Added context-aware 'not' prefix operator detection
+└── Proper postfix handling when 'not' is used as identifier
+
+crates/syntax/src/verify_custom_ops.rs
+└── Added 5 more tests for 'not' operator
+```
+
+### How It Works
+
+1. In `lhs()`, check if current token is IDENT with contextual keyword `not`
+2. Look at the next token to determine if it's a prefix operator context:
+   - **IS prefix**: followed by IDENT, literal, `!`, `-`, `*`, `&`, `(`, `true`, `false`
+   - **NOT prefix**: followed by `.`, `{`, `[`, `:`, `,`, `;`, `)`, `}`, `]`
+3. If prefix: `bump_remap(T![!])` to convert to negation operator
+4. If not prefix: call `atom::atom_expr` + `postfix_expr` for normal identifier handling
+
+### Context Awareness
+
+```rust
+not true        // → PREFIX_EXPR (negation)
+not not false   // → nested PREFIX_EXPR
+not a and b     // → (not a) and b
+not.method()    // → identifier with method call
+match not { }   // → identifier as match scrutinee
+let x = not;    // → identifier assignment
+```
+
+### Test Results
+
+```
+All 300 parser tests pass
+All 63 syntax tests pass (including 10 custom operator tests)
+Self-hosting test passes (parses rust-analyzer source code)
+```
+
+---
+
 ## Pending: Implementation Plan
 
-### 1. `not` Prefix Operator (Easy)
-
-Modify `lhs()` in `expressions.rs` to check for `not` identifier followed by expression-starting token (but not `.` to allow `not.method()`).
-
-### 2. Unicode Operators (Medium)
+### 1. Unicode Operators (Medium)
 
 Modify `lexed_str.rs` `extend_token()` to intercept `Unknown` tokens and map Unicode characters to existing tokens:
 - `≤` → `T![<=]`
