@@ -18,7 +18,7 @@ The custom Rust compiler at `/opt/other/rust` has syntax extensions that standar
 | `not` prefix operator | Implemented | **Done** |
 | Unicode operators (`≤`,`≥`,`≠`,`…`,`¬`) | Implemented | **Done** |
 | Power operator `**` | Parser only (no codegen) | **Done** |
-| Semicolon inference from newlines | Implemented | Pending |
+| Semicolon inference from newlines | Implemented | **Done** |
 
 ---
 
@@ -191,15 +191,68 @@ Self-hosting test passes
 
 ---
 
-## Pending: Implementation Plan
+## Completed: Semicolon Inference
 
-### 1. Semicolon Inference (Complex)
+**Commit:** `dbf04c5` on 2026-01-14
 
-Requires tracking newline positions through the parser:
-1. Add `preceded_by_newline` bit vector to `Input` struct
-2. Set flag in `to_input()` when trivia contains `\n`
-3. Add `preceded_by_newline()` method to `Parser`
-4. Modify `stmt()` to skip semicolon requirement when newline present
+### What Was Changed
+
+```
+crates/parser/src/input.rs
+├── Add newline_before bit vector to Input struct
+├── Add had_newline() setter method
+└── Add is_preceded_by_newline() getter method
+
+crates/parser/src/shortcuts.rs
+└── to_input(): Track newlines in whitespace trivia
+
+crates/parser/src/parser.rs
+└── Add preceded_by_newline() method
+
+crates/parser/src/grammar/expressions.rs
+├── stmt(): Allow missing semicolon when preceded by newline
+└── let_stmt(): Allow missing semicolon when preceded by newline
+
+crates/syntax/src/verify_custom_ops.rs
+└── Added 5 tests for semicolon inference
+```
+
+### How It Works
+
+1. During lexing, track if whitespace trivia contains `\n`
+2. Mark next non-trivia token as "preceded by newline"
+3. When semicolon expected but missing, check newline flag
+4. If preceded by newline, accept without error
+
+### Behavior
+
+```rust
+// Works - newline before next statement
+let x = 1
+let y = 2
+
+// Error - no newline, semicolon required
+let x = 1 let y = 2
+
+// Mixed works fine
+let x = 1;
+let y = 2
+let z = 3;
+```
+
+### Test Results
+
+```
+All 300 parser tests pass
+All 78 syntax tests pass (including 25 custom operator tests)
+Self-hosting test passes
+```
+
+---
+
+## All Features Complete!
+
+All custom Rust syntax features now have IDE support in the rust-analyzer fork.
 
 ---
 
