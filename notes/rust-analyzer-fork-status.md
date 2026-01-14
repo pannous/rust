@@ -17,7 +17,7 @@ The custom Rust compiler at `/opt/other/rust` has syntax extensions that standar
 | `and`/`or`/`xor` operators | Implemented | **Done** |
 | `not` prefix operator | Implemented | **Done** |
 | Unicode operators (`≤`,`≥`,`≠`,`…`,`¬`) | Implemented | **Done** |
-| Power operator `**` | Parser only (no codegen) | Pending |
+| Power operator `**` | Parser only (no codegen) | **Done** |
 | Semicolon inference from newlines | Implemented | Pending |
 
 ---
@@ -150,13 +150,50 @@ Self-hosting test passes
 
 ---
 
+## Completed: Power Operator `**`
+
+**Commit:** `4b606df` on 2026-01-14
+
+### What Was Changed
+
+```
+crates/parser/src/syntax_kind/generated.rs
+├── Add STAR2 SyntaxKind
+├── Add text representation "**"
+├── Add to is_punct()
+└── Add T![**] macro
+
+crates/parser/src/parser.rs
+├── nth_at(): Add ** detection via at_composite2(*, *)
+└── eat(): Add ** to 2-token consumption list
+
+crates/parser/src/grammar/expressions.rs
+└── current_op(): Add ** with precedence 13, right-associative
+
+crates/syntax/src/verify_custom_ops.rs
+└── Added 4 tests for power operator
+```
+
+### How It Works
+
+1. `**` is two joint `*` tokens
+2. `at_composite2` checks for adjacent `*` `*` with jointness
+3. Precedence 13 (higher than `*` at 11, `as` at 12)
+4. Right-associative: `2**3**4` = `2**(3**4)`
+
+### Test Results
+
+```
+All 300 parser tests pass
+All 73 syntax tests pass (including 20 custom operator tests)
+Self-hosting test passes
+```
+
+---
+
 ## Pending: Implementation Plan
 
-### 1. Power Operator `**` (Medium)
-
-Add to `current_op()` checking for two adjacent `*` tokens. May need new `STAR2` syntax kind or handle specially. Note: rustc fork has parser support but no MIR codegen.
-
-### 2. Semicolon Inference (Complex)
+### 1. Semicolon Inference (Complex)
 
 Requires tracking newline positions through the parser:
 1. Add `preceded_by_newline` bit vector to `Input` struct
