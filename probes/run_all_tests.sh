@@ -50,7 +50,9 @@ mkdir -p "$TEMP_DIR"
 
 # Known-working files (compile AND run successfully)
 WORKING_FILES=(
+    test_add.rs
     test_and_or.rs
+    test_comments.rs
     test_const_pow.rs
     test_debug_imports.rs
     test_main.rs
