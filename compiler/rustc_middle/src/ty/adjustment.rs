@@ -106,6 +106,9 @@ pub enum Adjust {
 
     /// Take a pinned reference and reborrow as a `Pin<&mut T>` or `Pin<&T>`.
     ReborrowPin(hir::Mutability),
+
+    /// Wrap a value in `Some(_)` to coerce `T` to `Option<T>`.
+    WrapInSome,
 }
 
 /// An overloaded autoderef step, representing a `Deref(Mut)::deref(_mut)`

@@ -727,8 +727,10 @@ impl<'tcx, Cx: TypeInformationCtxt<'tcx>, D: Delegate<'tcx>> ExprUseVisitor<'tcx
         for adjustment in adjustments {
             debug!("walk_adjustment expr={:?} adj={:?}", expr, adjustment);
             match adjustment.kind {
-                adjustment::Adjust::NeverToAny | adjustment::Adjust::Pointer(_) => {
-                    // Creating a closure/fn-pointer or unsizing consumes
+                adjustment::Adjust::NeverToAny
+                | adjustment::Adjust::Pointer(_)
+                | adjustment::Adjust::WrapInSome => {
+                    // Creating a closure/fn-pointer, unsizing, or wrapping in Some consumes
                     // the input and stores it into the resulting rvalue.
                     self.consume_or_copy(&place_with_id, place_with_id.hir_id);
                 }
@@ -1291,7 +1293,8 @@ impl<'tcx, Cx: TypeInformationCtxt<'tcx>, D: Delegate<'tcx>> ExprUseVisitor<'tcx
             adjustment::Adjust::NeverToAny
             | adjustment::Adjust::Pointer(_)
             | adjustment::Adjust::Borrow(_)
-            | adjustment::Adjust::ReborrowPin(..) => {
+            | adjustment::Adjust::ReborrowPin(..)
+            | adjustment::Adjust::WrapInSome => {
                 // Result is an rvalue.
                 Ok(self.cat_rvalue(expr.hir_id, target))
             }

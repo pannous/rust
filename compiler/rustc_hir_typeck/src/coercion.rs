@@ -279,6 +279,17 @@ impl<'f, 'tcx> Coerce<'f, 'tcx> {
                     return pin_coerce;
                 }
             }
+            // Coerce T to Option<T> by wrapping in Some
+            ty::Adt(option_def, args)
+                if self.tcx.is_lang_item(option_def.did(), LangItem::Option) =>
+            {
+                let inner_ty = args.type_at(0);
+                // Try to coerce source type to the inner type of Option
+                let option_coerce = self.commit_if_ok(|_| self.coerce_to_option(a, b, inner_ty));
+                if option_coerce.is_ok() {
+                    return option_coerce;
+                }
+            }
             _ => {}
         }
 
@@ -497,6 +508,34 @@ impl<'f, 'tcx> Coerce<'f, 'tcx> {
         debug!("coerce_to_ref: succeeded coerced_a={:?} adjustments={:?}", coerced_a, adjustments);
 
         success(adjustments, coerced_a, obligations)
+    }
+
+    /// Coerce `T` to `Option<T>` by wrapping in `Some`.
+    /// This allows `let x: i32? = 5` to work as `let x: Option<i32> = Some(5)`.
+    fn coerce_to_option(
+        &self,
+        a: Ty<'tcx>,
+        b: Ty<'tcx>,
+        inner_ty: Ty<'tcx>,
+    ) -> CoerceResult<'tcx> {
+        debug!("coerce_to_option(a={:?}, b={:?}, inner_ty={:?})", a, b, inner_ty);
+
+        // Don't coerce if source is already Option<_> (avoid double-wrapping)
+        if let ty::Adt(def, _) = *a.kind() {
+            if self.tcx.is_lang_item(def.did(), LangItem::Option) {
+                return Err(TypeError::Mismatch);
+            }
+        }
+
+        // Try to unify source with the inner type of Option
+        match self.unify_raw(a, inner_ty, ForceLeakCheck::No) {
+            Ok(InferOk { value: _, obligations }) => {
+                // Successful: source coerces to inner type, wrap in Some
+                let adjustment = Adjustment { kind: Adjust::WrapInSome, target: b };
+                success(vec![adjustment], b, obligations)
+            }
+            Err(_) => Err(TypeError::Mismatch),
+        }
     }
 
     /// Performs [unsized coercion] by emulating a fulfillment loop on a

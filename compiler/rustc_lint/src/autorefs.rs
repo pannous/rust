@@ -171,6 +171,7 @@ fn has_implicit_borrow(Adjustment { kind, .. }: &Adjustment<'_>) -> Option<(Muta
         | Adjust::Pointer(..)
         | Adjust::ReborrowPin(..)
         | Adjust::Deref(None)
-        | Adjust::Borrow(AutoBorrow::RawPtr(..)) => None,
+        | Adjust::Borrow(AutoBorrow::RawPtr(..))
+        | Adjust::WrapInSome => None,
     }
 }

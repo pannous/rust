@@ -240,6 +240,24 @@ impl<'tcx> ThirBuildCx<'tcx> {
                 debug!(?kind);
                 kind
             }
+            Adjust::WrapInSome => {
+                // Wrap value in Some(_) to coerce T to Option<T>
+                let option_did = self.tcx.require_lang_item(LangItem::Option, span);
+                let some_did = self.tcx.require_lang_item(LangItem::OptionSome, span);
+                let adt_def = self.tcx.adt_def(option_did);
+                let variant_index = adt_def.variant_index_with_id(some_did);
+                let args = self.tcx.mk_args(&[expr.ty.into()]);
+                let source_expr = self.thir.exprs.push(expr);
+
+                ExprKind::Adt(Box::new(AdtExpr {
+                    adt_def,
+                    variant_index,
+                    args,
+                    fields: Box::new([FieldExpr { name: FieldIdx::ZERO, expr: source_expr }]),
+                    user_ty: None,
+                    base: AdtExprBase::None,
+                }))
+            }
         };
 
         Expr { temp_scope_id, ty: adjustment.target, span, kind }
