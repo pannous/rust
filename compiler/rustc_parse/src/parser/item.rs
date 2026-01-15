@@ -2436,7 +2436,11 @@ impl<'a> Parser<'a> {
     }
 
     fn eat_semi_for_macro_if_needed(&mut self, args: &DelimArgs) {
-        if args.need_semicolon() && !self.eat(exp!(Semi)) {
+        if args.need_semicolon()
+            && !self.eat(exp!(Semi))
+            && self.token != token::Eof
+            && !self.can_infer_semi_from_newline()
+        {
             self.report_invalid_macro_expansion_item(args);
         }
     }
