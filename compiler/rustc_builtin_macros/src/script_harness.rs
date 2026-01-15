@@ -196,18 +196,40 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), def_site)
     };
 
-    // Helper to create a string literal token (currently unused but kept for future macros)
-    let _str_lit = |s: &str| -> TokenTree {
+
+    // Helper to create a string literal token
+    let str_lit = |s: &str| -> TokenTree {
         TokenTree::token_alone(
             TokenKind::Literal(Lit { kind: LitKind::Str, symbol: Symbol::intern(s), suffix: None }),
             def_site,
         )
     };
 
-    // macro_rules! put { ($($arg:tt)*) => { println!($($arg)*) }; }
-    // This passes all arguments directly to println!, supporting format strings
+    // macro_rules! put {
+    //     ($e:expr) => { println!("{}", $e) };           // put!(42) -> print with debug
+    //     ($($arg:tt)*) => { println!($($arg)*) };       // put!("fmt", args) -> format string
+    // }
     let put_body = vec![
-        // ($($arg:tt)*)
+        // First arm: ($e:expr) => { println!("{}", $e) };
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            ident("println"),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                str_lit("{}"),
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("e"),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+        // Second arm: ($($arg:tt)*) => { println!($($arg)*) };
         delim(Delimiter::Parenthesis, vec![
             TokenTree::token_alone(TokenKind::Dollar, def_site),
             delim(Delimiter::Parenthesis, vec![
@@ -219,7 +241,6 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
             TokenTree::token_alone(TokenKind::Star, def_site),
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
-        // { println!($($arg)*) }
         delim(Delimiter::Brace, vec![
             ident("println"),
             TokenTree::token_alone(TokenKind::Bang, def_site),

@@ -412,7 +412,7 @@ impl Cursor<'_> {
     pub fn advance_token(&mut self) -> Token {
         // Capture state before consuming character
         let was_at_line_start = self.at_line_start;
-        let prev_was_builtin = self.prev_was_builtin;
+        let _prev_was_builtin = self.prev_was_builtin;
         let input_before = self.as_str();
 
         let Some(first_char) = self.bump() else {
@@ -456,13 +456,15 @@ impl Cursor<'_> {
                 _ => Slash,
             },
 
-            // Hash comment (Python-style):
-            // - At line start (not followed by special chars), OR
-            // - Followed by space/EOF and NOT after `builtin` keyword
-            //   (to allow `builtin # offset_of` but support `x := 42 # comment`)
-            '#' if !matches!(self.first(), '"' | '#' | '!' | '[')
-                && (was_at_line_start
-                    || ((self.first().is_whitespace() || self.is_eof()) && !prev_was_builtin)) =>
+            // Hash comment (Python-style): ONLY at line start, followed by space
+            // This avoids conflicts with:
+            // - #[attr], #!inner, #"raw", ##double
+            // - #ident macro interpolation in quote!
+            // - `# $var` patterns in macro_rules!
+            // - `builtin # name` syntax
+            '#' if was_at_line_start
+                && !matches!(self.first(), '"' | '#' | '!' | '[')
+                && (self.first().is_whitespace() || self.is_eof()) =>
             {
                 self.hash_comment()
             }
