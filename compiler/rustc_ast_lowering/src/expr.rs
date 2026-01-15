@@ -384,6 +384,13 @@ impl<'hir> LoweringContext<'_, 'hir> {
 
                 ExprKind::Try(sub_expr) => self.lower_expr_try(e.span, sub_expr),
 
+                ExprKind::OptionalField(receiver, ident) => {
+                    self.lower_expr_optional_field(e.span, receiver, *ident)
+                }
+                ExprKind::OptionalMethodCall(box MethodCall { seg, receiver, args, span: method_span }) => {
+                    self.lower_expr_optional_method_call(e.span, receiver, seg, args, *method_span)
+                }
+
                 ExprKind::Paren(_) | ExprKind::ForLoop { .. } => {
                     unreachable!("already handled")
                 }
@@ -2048,6 +2055,127 @@ impl<'hir> LoweringContext<'_, 'hir> {
             scrutinee,
             arena_vec![self; break_arm, continue_arm],
             hir::MatchSource::TryDesugar(scrutinee.hir_id),
+        )
+    }
+
+    /// Desugar `expr?.field` into:
+    /// ```ignore (pseudo-rust)
+    /// match expr {
+    ///     Some(__optional_chain) => Some(__optional_chain.field),
+    ///     None => None,
+    /// }
+    /// ```
+    fn lower_expr_optional_field(
+        &mut self,
+        span: Span,
+        receiver: &Expr,
+        field: Ident,
+    ) -> hir::ExprKind<'hir> {
+        let desugar_span =
+            self.mark_span_with_reason(DesugaringKind::QuestionMark, span, None);
+
+        let receiver_expr = self.lower_expr(receiver);
+
+        let val_ident = Ident::with_dummy_span(sym::__optional_chain);
+        let (val_pat, val_pat_nid) = self.pat_ident(desugar_span, val_ident);
+
+        let val_expr = self.expr_ident(desugar_span, val_ident, val_pat_nid);
+        let field_expr = self.arena.alloc(self.expr(
+            desugar_span,
+            hir::ExprKind::Field(val_expr, self.lower_ident(field)),
+        ));
+
+        let some_result = self.arena.alloc(self.expr_enum_variant_lang_item(
+            desugar_span,
+            hir::LangItem::OptionSome,
+            std::slice::from_ref(field_expr),
+        ));
+
+        let some_pat = self.pat_some(desugar_span, val_pat);
+        let some_arm = self.arm(some_pat, some_result);
+
+        let none_pat = self.pat_none(desugar_span);
+        let none_result = self.arena.alloc(self.expr_enum_variant_lang_item(
+            desugar_span,
+            hir::LangItem::OptionNone,
+            &[],
+        ));
+        let none_arm = self.arm(none_pat, none_result);
+
+        hir::ExprKind::Match(
+            receiver_expr,
+            arena_vec![self; some_arm, none_arm],
+            hir::MatchSource::Normal,
+        )
+    }
+
+    /// Desugar `expr?.method(args)` into:
+    /// ```ignore (pseudo-rust)
+    /// match expr {
+    ///     Some(__optional_chain) => Some(__optional_chain.method(args)),
+    ///     None => None,
+    /// }
+    /// ```
+    fn lower_expr_optional_method_call(
+        &mut self,
+        span: Span,
+        receiver: &Expr,
+        seg: &PathSegment,
+        args: &[Box<Expr>],
+        method_span: Span,
+    ) -> hir::ExprKind<'hir> {
+        let desugar_span =
+            self.mark_span_with_reason(DesugaringKind::QuestionMark, span, None);
+
+        let receiver_expr = self.lower_expr(receiver);
+
+        let val_ident = Ident::with_dummy_span(sym::__optional_chain);
+        let (val_pat, val_pat_nid) = self.pat_ident(desugar_span, val_ident);
+
+        let val_expr = self.expr_ident(desugar_span, val_ident, val_pat_nid);
+
+        let hir_seg = self.arena.alloc(self.lower_path_segment(
+            span,
+            seg,
+            ParamMode::Optional,
+            GenericArgsMode::Err,
+            ImplTraitContext::Disallowed(super::ImplTraitPosition::Path),
+            None,
+        ));
+        let lowered_args =
+            self.arena.alloc_from_iter(args.iter().map(|x| self.lower_expr_mut(x)));
+
+        let method_expr = self.arena.alloc(self.expr(
+            desugar_span,
+            hir::ExprKind::MethodCall(
+                hir_seg,
+                val_expr,
+                lowered_args,
+                self.lower_span(method_span),
+            ),
+        ));
+
+        let some_result = self.arena.alloc(self.expr_enum_variant_lang_item(
+            desugar_span,
+            hir::LangItem::OptionSome,
+            std::slice::from_ref(method_expr),
+        ));
+
+        let some_pat = self.pat_some(desugar_span, val_pat);
+        let some_arm = self.arm(some_pat, some_result);
+
+        let none_pat = self.pat_none(desugar_span);
+        let none_result = self.arena.alloc(self.expr_enum_variant_lang_item(
+            desugar_span,
+            hir::LangItem::OptionNone,
+            &[],
+        ));
+        let none_arm = self.arm(none_pat, none_result);
+
+        hir::ExprKind::Match(
+            receiver_expr,
+            arena_vec![self; some_arm, none_arm],
+            hir::MatchSource::Normal,
         )
     }
 

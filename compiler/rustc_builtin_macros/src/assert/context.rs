@@ -312,6 +312,8 @@ impl<'cx, 'a> Context<'cx, 'a> {
             | ExprKind::Loop(_, _, _)
             | ExprKind::MacCall(_)
             | ExprKind::OffsetOf(_, _)
+            | ExprKind::OptionalField(_, _)
+            | ExprKind::OptionalMethodCall(_)
             | ExprKind::Path(_, _)
             | ExprKind::Ret(_)
             | ExprKind::Try(_)

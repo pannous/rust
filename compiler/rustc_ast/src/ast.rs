@@ -1613,6 +1613,7 @@ impl Expr {
             | ExprKind::ConstBlock(_)
             | ExprKind::Continue(..)
             | ExprKind::Field(..)
+            | ExprKind::OptionalField(..)
             | ExprKind::ForLoop { .. }
             | ExprKind::FormatArgs(..)
             | ExprKind::Gen(..)
@@ -1625,6 +1626,7 @@ impl Expr {
             | ExprKind::MacCall(..)
             | ExprKind::Match(..)
             | ExprKind::MethodCall(..)
+            | ExprKind::OptionalMethodCall(..)
             | ExprKind::OffsetOf(..)
             | ExprKind::Paren(..)
             | ExprKind::Path(..)
@@ -1841,6 +1843,11 @@ pub enum ExprKind {
     AssignOp(AssignOp, Box<Expr>, Box<Expr>),
     /// Access of a named (e.g., `obj.foo`) or unnamed (e.g., `obj.0`) struct field.
     Field(Box<Expr>, Ident),
+    /// Optional chaining field access (e.g., `obj?.foo`).
+    /// If obj is None, returns None; otherwise returns Some(obj.unwrap().foo).
+    OptionalField(Box<Expr>, Ident),
+    /// Optional chaining method call (e.g., `obj?.method()`).
+    OptionalMethodCall(Box<MethodCall>),
     /// An indexing operation (e.g., `foo[2]`).
     /// The span represents the span of the `[2]`, including brackets.
     Index(Box<Expr>, Box<Expr>, Span),

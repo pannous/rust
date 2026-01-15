@@ -975,7 +975,7 @@ macro_rules! common_visitor_and_walkers {
                     visit_visitable!($($mut)? vis, exprs),
                 ExprKind::Call(callee_expression, arguments) =>
                     visit_visitable!($($mut)? vis, callee_expression, arguments),
-                ExprKind::MethodCall(mc) =>
+                ExprKind::MethodCall(mc) | ExprKind::OptionalMethodCall(mc) =>
                     visit_visitable!($($mut)? vis, mc),
                 ExprKind::Binary(op, lhs, rhs) =>
                     visit_visitable!($($mut)? vis, op, lhs, rhs),
@@ -1023,7 +1023,7 @@ macro_rules! common_visitor_and_walkers {
                     visit_visitable!($($mut)? vis, lhs, rhs, span),
                 ExprKind::AssignOp(op, lhs, rhs) =>
                     visit_visitable!($($mut)? vis, op, lhs, rhs),
-                ExprKind::Field(subexpression, ident) =>
+                ExprKind::Field(subexpression, ident) | ExprKind::OptionalField(subexpression, ident) =>
                     visit_visitable!($($mut)? vis, subexpression, ident),
                 ExprKind::Index(main_expression, index_expression, span) =>
                     visit_visitable!($($mut)? vis, main_expression, index_expression, span),

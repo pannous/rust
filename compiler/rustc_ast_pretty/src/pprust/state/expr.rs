@@ -274,6 +274,27 @@ impl<'a> State<'a> {
         self.print_call_post(base_args)
     }
 
+    fn print_optional_method_call(
+        &mut self,
+        segment: &ast::PathSegment,
+        receiver: &ast::Expr,
+        base_args: &[Box<ast::Expr>],
+        fixup: FixupContext,
+    ) {
+        self.print_expr_cond_paren(
+            receiver,
+            receiver.precedence() < ExprPrecedence::Unambiguous,
+            fixup.leftmost_subexpression_with_dot(),
+        );
+
+        self.word(".?");
+        self.print_ident(segment.ident);
+        if let Some(args) = &segment.args {
+            self.print_generic_args(args, true);
+        }
+        self.print_call_post(base_args)
+    }
+
     fn print_expr_binary(
         &mut self,
         op: ast::BinOpKind,
@@ -455,6 +476,9 @@ impl<'a> State<'a> {
             }
             ast::ExprKind::MethodCall(box ast::MethodCall { seg, receiver, args, .. }) => {
                 self.print_expr_method_call(seg, receiver, args, fixup);
+            }
+            ast::ExprKind::OptionalMethodCall(box ast::MethodCall { seg, receiver, args, .. }) => {
+                self.print_optional_method_call(seg, receiver, args, fixup);
             }
             ast::ExprKind::Binary(op, lhs, rhs) => {
                 self.print_expr_binary(op.node, lhs, rhs, fixup);
@@ -664,6 +688,15 @@ impl<'a> State<'a> {
                     fixup.leftmost_subexpression_with_dot(),
                 );
                 self.word(".");
+                self.print_ident(*ident);
+            }
+            ast::ExprKind::OptionalField(expr, ident) => {
+                self.print_expr_cond_paren(
+                    expr,
+                    expr.precedence() < ExprPrecedence::Unambiguous,
+                    fixup.leftmost_subexpression_with_dot(),
+                );
+                self.word(".?");
                 self.print_ident(*ident);
             }
             ast::ExprKind::Index(expr, index, _) => {

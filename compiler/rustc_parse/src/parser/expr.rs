@@ -885,7 +885,7 @@ impl<'a> Parser<'a> {
                         self.eat(exp!(Question))
                     };
                 if has_question {
-                    // `expr?`
+                    // `expr?` - try operator
                     e = self.mk_expr(lo.to(self.prev_token.span), ExprKind::Try(e));
                     continue;
                 }
@@ -903,6 +903,11 @@ impl<'a> Parser<'a> {
                     self.eat(exp!(Dot))
                 };
                 if has_dot {
+                    // Check for optional chaining: `expr.?suffix`
+                    if self.eat(exp!(Question)) {
+                        e = self.parse_optional_chain_suffix(lo, e)?;
+                        continue;
+                    }
                     // expr.f
                     e = self.parse_dot_suffix_expr(lo, e)?;
                     continue;
@@ -1387,6 +1392,63 @@ impl<'a> Parser<'a> {
             }
 
             Ok(self.mk_expr(span, ExprKind::Field(self_arg, seg.ident)))
+        }
+    }
+
+    /// Parse optional chaining suffix after `?.` (e.g., `foo?.bar` or `foo?.method()`).
+    fn parse_optional_chain_suffix(
+        &mut self,
+        lo: Span,
+        base: Box<Expr>,
+    ) -> PResult<'a, Box<Expr>> {
+        // Similar to parse_dot_suffix but creates Optional variants
+        match self.token.uninterpolate().kind {
+            token::Ident(..) => {
+                let fn_span_lo = self.token.span;
+                let mut seg = self.parse_path_segment(PathStyle::Expr, None)?;
+                self.check_trailing_angle_brackets(&seg, &[exp!(OpenParen)]);
+                self.check_turbofish_missing_angle_brackets(&mut seg);
+
+                if self.check(exp!(OpenParen)) {
+                    // Optional method call `expr?.f()`
+                    let args = self.parse_expr_paren_seq()?;
+                    let fn_span = fn_span_lo.to(self.prev_token.span);
+                    let span = lo.to(self.prev_token.span);
+                    Ok(self.mk_expr(
+                        span,
+                        ExprKind::OptionalMethodCall(Box::new(ast::MethodCall {
+                            seg,
+                            receiver: base,
+                            args,
+                            span: fn_span,
+                        })),
+                    ))
+                } else {
+                    // Optional field access `expr?.f`
+                    let span = lo.to(self.prev_token.span);
+                    if let Some(args) = seg.args {
+                        self.dcx()
+                            .create_err(errors::FieldExpressionWithGeneric(args.span()))
+                            .stash(seg.ident.span, StashKey::GenericInFieldExpr);
+                    }
+                    Ok(self.mk_expr(span, ExprKind::OptionalField(base, seg.ident)))
+                }
+            }
+            token::Literal(token::Lit { kind: token::Integer, symbol, suffix }) => {
+                // Optional tuple field access `expr?.0`
+                let ident_span = self.token.span;
+                self.bump();
+                let span = lo.to(self.prev_token.span);
+                if let Some(suffix) = suffix {
+                    self.dcx()
+                        .emit_err(errors::InvalidLiteralSuffixOnTupleIndex { span: ident_span, suffix });
+                }
+                Ok(self.mk_expr(span, ExprKind::OptionalField(base, Ident::new(symbol, ident_span))))
+            }
+            _ => {
+                let guar = self.expected_ident_found_err().emit();
+                Ok(self.mk_expr(lo.to(self.prev_token.span), ExprKind::Err(guar)))
+            }
         }
     }
 
@@ -4236,9 +4298,11 @@ impl MutVisitor for CondChecker<'_> {
             | ExprKind::AddrOf(_, _, _)
             | ExprKind::Binary(_, _, _)
             | ExprKind::Field(_, _)
+            | ExprKind::OptionalField(_, _)
             | ExprKind::Index(_, _, _)
             | ExprKind::Call(_, _)
             | ExprKind::MethodCall(_)
+            | ExprKind::OptionalMethodCall(_)
             | ExprKind::Tup(_)
             | ExprKind::Paren(_) => {
                 let forbid_let_reason = self.forbid_let_reason;

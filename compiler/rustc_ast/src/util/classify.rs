@@ -113,13 +113,14 @@ pub fn leading_labeled_expr(mut expr: &ast::Expr) -> bool {
             | Call(e, _)
             | Cast(e, _)
             | Field(e, _)
+            | OptionalField(e, _)
             | Index(e, _, _)
             | Match(e, _, MatchKind::Postfix)
             | Range(Some(e), _, _)
             | Try(e) => {
                 expr = e;
             }
-            MethodCall(method_call) => {
+            MethodCall(method_call) | OptionalMethodCall(method_call) => {
                 expr = &method_call.receiver;
             }
 
@@ -223,12 +224,14 @@ pub fn expr_trailing_brace(mut expr: &ast::Expr) -> Option<TrailingBrace<'_>> {
             | Array(_)
             | Call(_, _)
             | MethodCall(_)
+            | OptionalMethodCall(_)
             | Tup(_)
             | Lit(_)
             | Type(_, _)
             | Await(_, _)
             | Use(_, _)
             | Field(_, _)
+            | OptionalField(_, _)
             | Index(_, _, _)
             | Underscore
             | Path(_, _)

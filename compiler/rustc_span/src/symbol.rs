@@ -402,6 +402,7 @@ symbols! {
         __S,
         __T,
         __awaitee,
+        __optional_chain,
         __try_var,
         _t,
         _task_context,
