@@ -14,6 +14,10 @@ pub struct Cursor<'a> {
     /// Iterator over chars. Slightly faster than a &str.
     chars: Chars<'a>,
     pub(crate) frontmatter_allowed: FrontmatterAllowed,
+    /// Tracks if we're at start of a line (for # comments)
+    pub(crate) at_line_start: bool,
+    /// Tracks if previous non-whitespace token was `builtin` (for `builtin # name` syntax)
+    pub(crate) prev_was_builtin: bool,
     #[cfg(debug_assertions)]
     prev: char,
 }
@@ -26,6 +30,8 @@ impl<'a> Cursor<'a> {
             len_remaining: input.len(),
             chars: input.chars(),
             frontmatter_allowed,
+            at_line_start: true,     // Start of input counts as line start
+            prev_was_builtin: false, // No previous token
             #[cfg(debug_assertions)]
             prev: EOF_CHAR,
         }

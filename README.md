@@ -23,3 +23,6 @@ Future:
 See [Goo](https://github.com/pannous/goo) the Go++ language extensions for a list of some planned features. 
 
 🐓 roost ? .roo 🦘 ?
+      <!-- 28 +            extensions="rx;roo;🦀;🐓;🦘"/>     🍠 roast rost 
+🐀 󳥫 󳩉 󳩊   RAT  rodents 🐁 🐭 🖱
+      -->

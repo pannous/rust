@@ -196,34 +196,40 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), def_site)
     };
 
-    // Helper to create a string literal token
-    let str_lit = |s: &str| -> TokenTree {
+    // Helper to create a string literal token (currently unused but kept for future macros)
+    let _str_lit = |s: &str| -> TokenTree {
         TokenTree::token_alone(
             TokenKind::Literal(Lit { kind: LitKind::Str, symbol: Symbol::intern(s), suffix: None }),
             def_site,
         )
     };
 
-    // macro_rules! put { ($e:expr) => { println!("{}", $e) }; }
-    // Body: ($e:expr) => { println!("{}", $e) };
+    // macro_rules! put { ($($arg:tt)*) => { println!($($arg)*) }; }
+    // This passes all arguments directly to println!, supporting format strings
     let put_body = vec![
-        // ($e:expr)
+        // ($($arg:tt)*)
         delim(Delimiter::Parenthesis, vec![
             TokenTree::token_alone(TokenKind::Dollar, def_site),
-            ident("e"),
-            TokenTree::token_alone(TokenKind::Colon, def_site),
-            ident("expr"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("arg"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
-        // { println!("{}", $e) }
+        // { println!($($arg)*) }
         delim(Delimiter::Brace, vec![
             ident("println"),
             TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
-                str_lit("{}"),
-                TokenTree::token_alone(TokenKind::Comma, def_site),
                 TokenTree::token_alone(TokenKind::Dollar, def_site),
-                ident("e"),
+                delim(Delimiter::Parenthesis, vec![
+                    TokenTree::token_alone(TokenKind::Dollar, def_site),
+                    ident("arg"),
+                ]),
+                TokenTree::token_alone(TokenKind::Star, def_site),
             ]),
         ]),
         TokenTree::token_alone(TokenKind::Semi, def_site),

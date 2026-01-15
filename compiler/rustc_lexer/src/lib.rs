@@ -410,6 +410,11 @@ pub fn is_ident(string: &str) -> bool {
 impl Cursor<'_> {
     /// Parses a token from the input string.
     pub fn advance_token(&mut self) -> Token {
+        // Capture state before consuming character
+        let was_at_line_start = self.at_line_start;
+        let prev_was_builtin = self.prev_was_builtin;
+        let input_before = self.as_str();
+
         let Some(first_char) = self.bump() else {
             return Token::new(TokenKind::Eof, 0);
         };
@@ -430,8 +435,10 @@ impl Cursor<'_> {
                 // error later.
                 if last != '\n' && self.as_str().starts_with("---") {
                     self.bump();
+                    self.at_line_start = false;
                     self.frontmatter(true)
                 } else {
+                    self.at_line_start = true;
                     Whitespace
                 }
             }
@@ -439,6 +446,7 @@ impl Cursor<'_> {
                 && self.as_str().starts_with("--") =>
             {
                 // happy path
+                self.at_line_start = false;
                 self.frontmatter(false)
             }
             // Slash, comment or block comment.
@@ -448,8 +456,19 @@ impl Cursor<'_> {
                 _ => Slash,
             },
 
+            // Hash comment (Python-style):
+            // - At line start (not followed by special chars), OR
+            // - Followed by space/EOF and NOT after `builtin` keyword
+            //   (to allow `builtin # offset_of` but support `x := 42 # comment`)
+            '#' if !matches!(self.first(), '"' | '#' | '!' | '[')
+                && (was_at_line_start
+                    || ((self.first().is_whitespace() || self.is_eof()) && !prev_was_builtin)) =>
+            {
+                self.hash_comment()
+            }
+
             // Whitespace sequence.
-            c if is_whitespace(c) => self.whitespace(),
+            c if is_whitespace(c) => self.whitespace(c),
 
             // Raw identifier, raw string literal or identifier.
             'r' => match (self.first(), self.second()) {
@@ -543,6 +562,18 @@ impl Cursor<'_> {
             c if !c.is_ascii() && c.is_emoji_char() => self.invalid_ident(),
             _ => Unknown,
         };
+
+        // Reset state tracking for non-whitespace, non-comment tokens
+        // (whitespace and comment handlers set these themselves)
+        if !matches!(token_kind, Whitespace | LineComment { .. } | BlockComment { .. }) {
+            self.at_line_start = false;
+            // Track if this is the `builtin` keyword (for `builtin # name` syntax)
+            let token_len = self.pos_within_token() as usize;
+            self.prev_was_builtin = matches!(token_kind, Ident)
+                && token_len == 7
+                && input_before.starts_with("builtin");
+        }
+
         if matches!(self.frontmatter_allowed, FrontmatterAllowed::Yes)
             && !matches!(token_kind, Whitespace)
         {
@@ -656,6 +687,7 @@ impl Cursor<'_> {
         };
 
         self.eat_until(b'\n');
+        self.at_line_start = false;
         LineComment { doc_style }
     }
 
@@ -693,13 +725,37 @@ impl Cursor<'_> {
             }
         }
 
+        self.at_line_start = false;
         BlockComment { doc_style, terminated: depth == 0 }
     }
 
-    fn whitespace(&mut self) -> TokenKind {
+    fn whitespace(&mut self, first_char: char) -> TokenKind {
         debug_assert!(is_whitespace(self.prev()));
-        self.eat_while(is_whitespace);
+        // Track if we've seen a newline
+        let mut has_newline = first_char == '\n';
+        while is_whitespace(self.first()) {
+            if self.first() == '\n' {
+                has_newline = true;
+            }
+            if self.bump().is_none() {
+                break;
+            }
+        }
+        self.at_line_start = has_newline;
+        // Reset prev_was_builtin on newline (new line = fresh context)
+        if has_newline {
+            self.prev_was_builtin = false;
+        }
         Whitespace
+    }
+
+    /// Hash comment (Python/shell style): # comment until end of line
+    fn hash_comment(&mut self) -> TokenKind {
+        debug_assert!(self.prev() == '#');
+        self.eat_until(b'\n');
+        // Doesn't consume the newline, so next whitespace token will set at_line_start
+        self.at_line_start = false;
+        LineComment { doc_style: None }
     }
 
     fn raw_ident(&mut self) -> TokenKind {

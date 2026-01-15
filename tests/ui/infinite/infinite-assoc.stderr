@@ -1,26 +1,29 @@
-error: invalid `?` in type
-  --> $DIR/infinite-assoc.rs:12:39
+error[E0425]: cannot find type `NOT_EXIST` in this scope
+  --> $DIR/infinite-assoc.rs:12:30
    |
 LL | struct A((A, <S as Trait>::T<NOT_EXIST?>));
-   |                                       ^ `?` is only allowed on expressions, not types
+   |                              ^^^^^^^^^ not found in this scope
    |
-help: if you meant to express that the type might not contain a value, use the `Option` wrapper type
+help: you might be missing a type parameter
    |
-LL - struct A((A, <S as Trait>::T<NOT_EXIST?>));
-LL + struct A((A, <S as Trait>::T<Option<NOT_EXIST>>));
-   |
+LL | struct A<NOT_EXIST>((A, <S as Trait>::T<NOT_EXIST?>));
+   |         +++++++++++
 
-error[E0072]: recursive type `A` has infinite size
-  --> $DIR/infinite-assoc.rs:12:1
+error[E0107]: associated type takes 0 generic arguments but 1 generic argument was supplied
+  --> $DIR/infinite-assoc.rs:12:28
    |
 LL | struct A((A, <S as Trait>::T<NOT_EXIST?>));
-   | ^^^^^^^^  - recursive without indirection
+   |                            ^------------ help: remove the unnecessary generics
+   |                            |
+   |                            expected 0 generic arguments
    |
-help: insert some indirection (e.g., a `Box`, `Rc`, or `&`) to break the cycle
+note: associated type defined here, with 0 generic parameters
+  --> $DIR/auxiliary/alias.rs:4:10
    |
-LL | struct A((Box<A>, <S as Trait>::T<NOT_EXIST?>));
-   |           ++++ +
+LL |     type T;
+   |          ^
 
 error: aborting due to 2 previous errors
 
-For more information about this error, try `rustc --explain E0072`.
+Some errors have detailed explanations: E0107, E0425.
+For more information about an error, try `rustc --explain E0107`.
