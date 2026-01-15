@@ -35,7 +35,7 @@ use crate::errors::{
     ExpectedIdentifier, ExpectedSemi, ExpectedSemiSugg, GenericParamsWithoutAngleBrackets,
     GenericParamsWithoutAngleBracketsSugg, HelpIdentifierStartsWithNumber, HelpUseLatestEdition,
     InInTypo, IncorrectAwait, IncorrectSemicolon, IncorrectUseOfAwait, IncorrectUseOfUse,
-    PatternMethodParamWithoutBody, QuestionMarkInType, QuestionMarkInTypeSugg, SelfParamNotFirst,
+    PatternMethodParamWithoutBody, SelfParamNotFirst,
     StructLiteralBodyWithoutPath, StructLiteralBodyWithoutPathSugg, SuggAddMissingLetStmt,
     SuggEscapeIdentifier, SuggRemoveComma, TernaryOperator, TernaryOperatorSuggestion,
     UnexpectedConstInGenericParam, UnexpectedConstParamDeclaration,
@@ -1599,18 +1599,24 @@ impl<'a> Parser<'a> {
         }
     }
 
-    /// Swift lets users write `Ty?` to mean `Option<Ty>`. Parse the construct and recover from it.
+    /// Parse `Ty?` as `Option<Ty>` (Swift/Kotlin style optional syntax).
     pub(super) fn maybe_recover_from_question_mark(&mut self, ty: Box<Ty>) -> Box<Ty> {
         if self.token == token::Question {
             self.bump();
-            let guar = self.dcx().emit_err(QuestionMarkInType {
-                span: self.prev_token.span,
-                sugg: QuestionMarkInTypeSugg {
-                    left: ty.span.shrink_to_lo(),
-                    right: self.prev_token.span,
-                },
-            });
-            self.mk_ty(ty.span.to(self.prev_token.span), TyKind::Err(guar))
+            let span = ty.span.to(self.prev_token.span);
+            // Build Option<T> path: Option with angle-bracketed type argument
+            let args = AngleBracketedArgs {
+                span,
+                args: thin_vec![AngleBracketedArg::Arg(GenericArg::Type(ty))],
+            };
+            let segment = PathSegment {
+                ident: Ident::new(sym::Option, span),
+                id: ast::DUMMY_NODE_ID,
+                args: Some(Box::new(ast::GenericArgs::AngleBracketed(args))),
+            };
+            let path = Path { span, segments: thin_vec![segment], tokens: None };
+            // Recursively handle nested `??` -> Option<Option<T>>
+            self.maybe_recover_from_question_mark(self.mk_ty(span, TyKind::Path(None, path)))
         } else {
             ty
         }
