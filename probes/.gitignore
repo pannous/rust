@@ -1,0 +1,8 @@
+# Compiled binary outputs from test runs
+test_*
+!test_*.rs
+!test_*.sh
+!test_*.goo
+
+# Temp files
+*.tmp
