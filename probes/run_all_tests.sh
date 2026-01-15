@@ -62,6 +62,7 @@ WORKING_FILES=(
     test_pow3.rs
     test_power.rs
     test_precedence.rs
+    test_put.rs
     test_script_complex.rs
     test_simple.rs
     test_string_replace.rs
