@@ -11,6 +11,7 @@ use rustc_expand::base::ResolverExpand;
 use rustc_feature::Features;
 use rustc_session::Session;
 use rustc_session::config::Input;
+use rustc_span::hygiene::AstPass;
 use rustc_span::{DUMMY_SP, Ident, Span, sym};
 use std::fs;
 use thin_vec::ThinVec;
@@ -20,7 +21,7 @@ pub fn inject(
     krate: &mut ast::Crate,
     sess: &Session,
     _features: &Features,
-    _resolver: &mut dyn ResolverExpand,
+    resolver: &mut dyn ResolverExpand,
 ) {
     // Activate if -Z script is enabled OR file has a shebang
     let script_mode = sess.opts.unstable_opts.script || has_shebang(&sess.io.input);
@@ -38,7 +39,17 @@ pub fn inject(
         return;
     }
 
-    wrap_in_main(krate);
+    // Set up expansion context for proper hygiene (like standard_library_imports does)
+    let expn_id = resolver.expansion_for_ast_pass(
+        DUMMY_SP,
+        AstPass::ScriptMain,
+        &[],
+        None,
+    );
+    let def_site = DUMMY_SP.with_def_site_ctxt(expn_id.to_expn_id());
+    let call_site = DUMMY_SP.with_call_site_ctxt(expn_id.to_expn_id());
+
+    wrap_in_main(krate, def_site, call_site);
 }
 
 /// Check if the input source starts with a shebang (`#!`).
@@ -97,17 +108,20 @@ fn has_executable_content(krate: &ast::Crate) -> bool {
 }
 
 /// Wrap executable items in a generated main function.
-fn wrap_in_main(krate: &mut ast::Crate) {
+fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     // Partition items: module-level items stay, macro calls go into main
     let (module_items, main_stmts) = partition_items(&krate.items);
 
-    // Build the main function with the original span from the first macro call
-    // This helps with error messages pointing to the right location
-    let span = main_stmts.first().map(|s| s.span).unwrap_or(DUMMY_SP);
-    let main_fn = build_main(span, main_stmts);
+    // Build items with proper hygiene contexts:
+    // - def_site: for internal macro implementation (invisible to user)
+    // - call_site: for macro names (visible to user code)
+    // Don't call fully_expand_fragment - let normal expansion handle node IDs
+    // (This follows the pattern from standard_library_imports.rs)
+    let script_macros = build_script_macros(def_site, call_site);
+    let main_fn = build_main(def_site, main_stmts);
 
     // Rebuild crate with script macros + module items + main function
-    krate.items = inject_script_macros(span);
+    krate.items = script_macros;
     krate.items.extend(module_items);
     krate.items.push(main_fn);
 }
@@ -154,8 +168,10 @@ fn create_allow_unused_attr(span: Span) -> ast::Attribute {
     }
 }
 
-/// Inject convenience macros for script mode: put! and eq!
-fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
+/// Build convenience macros for script mode: put! and eq!
+/// - def_site: span for internal implementation (invisible to user)
+/// - call_site: span for macro names (visible to user code)
+fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     use rustc_ast::token::{self, Delimiter, Lit, LitKind, TokenKind};
     use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
     use rustc_span::Symbol;
@@ -163,28 +179,28 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(unused_macros)] attribute for auto-generated macros
-    let allow_unused = create_allow_unused_attr(span);
+    let allow_unused = create_allow_unused_attr(def_site);
 
-    // Helper to create a delimited group
+    // Helper to create a delimited group (uses def_site for internal implementation)
     let delim = |d: Delimiter, inner: Vec<TokenTree>| -> TokenTree {
         TokenTree::Delimited(
-            DelimSpan::from_single(span),
+            DelimSpan::from_single(def_site),
             DelimSpacing::new(Spacing::Alone, Spacing::Alone),
             d,
             TokenStream::new(inner),
         )
     };
 
-    // Helper to create an identifier token
+    // Helper to create an identifier token (uses def_site for internal implementation)
     let ident = |s: &str| -> TokenTree {
-        TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), span)
+        TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), def_site)
     };
 
     // Helper to create a string literal token
     let str_lit = |s: &str| -> TokenTree {
         TokenTree::token_alone(
             TokenKind::Literal(Lit { kind: LitKind::Str, symbol: Symbol::intern(s), suffix: None }),
-            span,
+            def_site,
         )
     };
 
@@ -193,29 +209,29 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     let put_body = vec![
         // ($e:expr)
         delim(Delimiter::Parenthesis, vec![
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("e"),
-            TokenTree::token_alone(TokenKind::Colon, span),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
             ident("expr"),
         ]),
-        TokenTree::token_alone(TokenKind::FatArrow, span),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
         // { println!("{}", $e) }
         delim(Delimiter::Brace, vec![
             ident("println"),
-            TokenTree::token_alone(TokenKind::Bang, span),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
                 str_lit("{}"),
-                TokenTree::token_alone(TokenKind::Comma, span),
-                TokenTree::token_alone(TokenKind::Dollar, span),
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
                 ident("e"),
             ]),
         ]),
-        TokenTree::token_alone(TokenKind::Semi, span),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
     ];
 
     let put_macro = ast::MacroDef {
         body: Box::new(ast::DelimArgs {
-            dspan: DelimSpan::from_single(span),
+            dspan: DelimSpan::from_single(def_site),
             delim: Delimiter::Brace,
             tokens: TokenStream::new(put_body),
         }),
@@ -226,9 +242,10 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     items.push(Box::new(ast::Item {
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
-        kind: ast::ItemKind::MacroDef(Ident::new(sym::put, span), put_macro),
-        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
-        span,
+        // Use call_site for the macro name so it's visible to user code
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::put, call_site), put_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
         tokens: None,
     }));
 
@@ -236,35 +253,35 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     let eq_body = vec![
         // ($left:expr, $right:expr)
         delim(Delimiter::Parenthesis, vec![
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("left"),
-            TokenTree::token_alone(TokenKind::Colon, span),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
             ident("expr"),
-            TokenTree::token_alone(TokenKind::Comma, span),
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Comma, def_site),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("right"),
-            TokenTree::token_alone(TokenKind::Colon, span),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
             ident("expr"),
         ]),
-        TokenTree::token_alone(TokenKind::FatArrow, span),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
         // { assert_eq!($left, $right) }
         delim(Delimiter::Brace, vec![
             ident("assert_eq"),
-            TokenTree::token_alone(TokenKind::Bang, span),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
-                TokenTree::token_alone(TokenKind::Dollar, span),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
                 ident("left"),
-                TokenTree::token_alone(TokenKind::Comma, span),
-                TokenTree::token_alone(TokenKind::Dollar, span),
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
                 ident("right"),
             ]),
         ]),
-        TokenTree::token_alone(TokenKind::Semi, span),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
     ];
 
     let eq_macro = ast::MacroDef {
         body: Box::new(ast::DelimArgs {
-            dspan: DelimSpan::from_single(span),
+            dspan: DelimSpan::from_single(def_site),
             delim: Delimiter::Brace,
             tokens: TokenStream::new(eq_body),
         }),
@@ -275,9 +292,10 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     items.push(Box::new(ast::Item {
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
-        kind: ast::ItemKind::MacroDef(Ident::new(sym::eq, span), eq_macro),
-        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
-        span,
+        // Use call_site for the macro name so it's visible to user code
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::eq, call_site), eq_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
         tokens: None,
     }));
 
@@ -286,41 +304,41 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     let walrus_body = vec![
         // ($i:ident = $($e:tt)+)
         delim(Delimiter::Parenthesis, vec![
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("i"),
-            TokenTree::token_alone(TokenKind::Colon, span),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
             ident("ident"),
-            TokenTree::token_alone(TokenKind::Eq, span),
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Eq, def_site),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             delim(Delimiter::Parenthesis, vec![
-                TokenTree::token_alone(TokenKind::Dollar, span),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
                 ident("e"),
-                TokenTree::token_alone(TokenKind::Colon, span),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
                 ident("tt"),
             ]),
-            TokenTree::token_alone(TokenKind::Plus, span),
+            TokenTree::token_alone(TokenKind::Plus, def_site),
         ]),
-        TokenTree::token_alone(TokenKind::FatArrow, span),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
         // { let $i = $($e)+; }
         delim(Delimiter::Brace, vec![
             ident("let"),
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("i"),
-            TokenTree::token_alone(TokenKind::Eq, span),
-            TokenTree::token_alone(TokenKind::Dollar, span),
+            TokenTree::token_alone(TokenKind::Eq, def_site),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
             delim(Delimiter::Parenthesis, vec![
-                TokenTree::token_alone(TokenKind::Dollar, span),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
                 ident("e"),
             ]),
-            TokenTree::token_alone(TokenKind::Plus, span),
-            TokenTree::token_alone(TokenKind::Semi, span),
+            TokenTree::token_alone(TokenKind::Plus, def_site),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
         ]),
-        TokenTree::token_alone(TokenKind::Semi, span),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
     ];
 
     let walrus_macro = ast::MacroDef {
         body: Box::new(ast::DelimArgs {
-            dspan: DelimSpan::from_single(span),
+            dspan: DelimSpan::from_single(def_site),
             delim: Delimiter::Brace,
             tokens: TokenStream::new(walrus_body),
         }),
@@ -331,9 +349,10 @@ fn inject_script_macros(span: Span) -> ThinVec<Box<ast::Item>> {
     items.push(Box::new(ast::Item {
         attrs: vec![allow_unused].into(),
         id: ast::DUMMY_NODE_ID,
-        kind: ast::ItemKind::MacroDef(Ident::new(sym::__walrus, span), walrus_macro),
-        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
-        span,
+        // Use call_site for the macro name so it's visible to user code
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__walrus, call_site), walrus_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
         tokens: None,
     }));
 
@@ -393,7 +412,9 @@ fn partition_items(
 
 /// Build a `fn main() { <stmts> }` function.
 fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
-    let main_ident = Ident::new(sym::main, span);
+    use rustc_span::hygiene::SyntaxContext;
+    // Use SyntaxContext::root() for the main name so entry point detection finds it
+    let main_ident = Ident::new(sym::main, span.with_ctxt(SyntaxContext::root()));
 
     // Build empty return type ()
     let ret_ty = Box::new(ast::Ty {

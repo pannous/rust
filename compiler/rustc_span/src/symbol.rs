@@ -2041,6 +2041,7 @@ symbols! {
         saturating_add,
         saturating_div,
         saturating_sub,
+        script,
         sdylib,
         search_unbox,
         select_unpredictable,
