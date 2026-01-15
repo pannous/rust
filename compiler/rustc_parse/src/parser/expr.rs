@@ -195,6 +195,10 @@ impl<'a> Parser<'a> {
             if op.node == AssocOp::Binary(BinOpKind::Pow) {
                 self.bump();
             }
+            // Null coalescing operator `??` consumes two tokens
+            if op.node == AssocOp::NullCoalesce {
+                self.bump();
+            }
             if op.node.is_comparison() {
                 if let Some(expr) = self.check_no_chained_comparison(&lhs, &op)? {
                     return Ok((expr, parsed_something));
@@ -309,6 +313,9 @@ impl<'a> Parser<'a> {
                     let aopexpr = self.mk_assign_op(source_map::respan(cur_op_span, aop), lhs, rhs);
                     self.mk_expr(span, aopexpr)
                 }
+                AssocOp::NullCoalesce => {
+                    self.mk_expr(span, ExprKind::NullCoalesce(lhs, rhs))
+                }
                 AssocOp::Cast | AssocOp::Range(_) => {
                     self.dcx().span_bug(span, "AssocOp should have been handled by special case")
                 }
@@ -398,6 +405,15 @@ impl<'a> Parser<'a> {
                 if self.look_ahead(1, |t| t.kind == token::Star) =>
             {
                 (AssocOp::Binary(BinOpKind::Pow), self.token.span.to(self.look_ahead(1, |t| t.span)))
+            }
+            // Null coalescing operator: `??`
+            // Only match when followed by an expression (to distinguish from `foo??` = two try operators)
+            (None, _)
+                if self.token.kind == token::Question
+                    && self.look_ahead(1, |t| t.kind == token::Question)
+                    && self.look_ahead(2, |t| t.can_begin_expr()) =>
+            {
+                (AssocOp::NullCoalesce, self.token.span.to(self.look_ahead(1, |t| t.span)))
             }
             (Some(op), _) => (op, self.token.span),
             // C++ style: `and` as alias for `&&`
@@ -876,14 +892,23 @@ impl<'a> Parser<'a> {
     ) -> PResult<'a, Box<Expr>> {
         let mut res = ensure_sufficient_stack(|| {
             loop {
-                let has_question =
-                    if self.prev_token == TokenKind::Ident(kw::Return, IdentIsRaw::No) {
-                        // We are using noexpect here because we don't expect a `?` directly after
-                        // a `return` which could be suggested otherwise.
-                        self.eat_noexpect(&token::Question)
-                    } else {
-                        self.eat(exp!(Question))
-                    };
+                // Check for `?` - try operator, but NOT `??` - null coalescing
+                // `??` is an infix operator parsed in parse_expr_assoc_rest_with
+                // Only treat `??` as null coalescing when followed by an expression
+                let has_question = if self.token.kind == token::Question
+                    && self.look_ahead(1, |t| t.kind == token::Question)
+                    && self.look_ahead(2, |t| t.can_begin_expr())
+                {
+                    // This is `?? expr` - null coalescing operator
+                    // Don't consume the `?`, let associative expression parser handle it
+                    false
+                } else if self.prev_token == TokenKind::Ident(kw::Return, IdentIsRaw::No) {
+                    // We are using noexpect here because we don't expect a `?` directly after
+                    // a `return` which could be suggested otherwise.
+                    self.eat_noexpect(&token::Question)
+                } else {
+                    self.eat(exp!(Question))
+                };
                 if has_question {
                     // `expr?` - try operator
                     e = self.mk_expr(lo.to(self.prev_token.span), ExprKind::Try(e));
@@ -4297,6 +4322,7 @@ impl MutVisitor for CondChecker<'_> {
             | ExprKind::Try(_)
             | ExprKind::AddrOf(_, _, _)
             | ExprKind::Binary(_, _, _)
+            | ExprKind::NullCoalesce(_, _)
             | ExprKind::Field(_, _)
             | ExprKind::OptionalField(_, _)
             | ExprKind::Index(_, _, _)

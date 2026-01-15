@@ -1591,6 +1591,7 @@ impl Expr {
             // Binop-like expr kinds, handled by `AssocOp`.
             ExprKind::Binary(op, ..) => op.node.precedence(),
             ExprKind::Cast(..) => ExprPrecedence::Cast,
+            ExprKind::NullCoalesce(..) => ExprPrecedence::NullCoalesce,
 
             ExprKind::Assign(..) |
             ExprKind::AssignOp(..) => ExprPrecedence::Assign,
@@ -1848,6 +1849,9 @@ pub enum ExprKind {
     OptionalField(Box<Expr>, Ident),
     /// Optional chaining method call (e.g., `obj?.method()`).
     OptionalMethodCall(Box<MethodCall>),
+    /// Null coalescing operator (e.g., `opt ?? default`).
+    /// Returns the inner value if Some, otherwise evaluates and returns the default.
+    NullCoalesce(Box<Expr>, Box<Expr>),
     /// An indexing operation (e.g., `foo[2]`).
     /// The span represents the span of the `[2]`, including brackets.
     Index(Box<Expr>, Box<Expr>, Span),

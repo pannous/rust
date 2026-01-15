@@ -483,6 +483,20 @@ impl<'a> State<'a> {
             ast::ExprKind::Binary(op, lhs, rhs) => {
                 self.print_expr_binary(op.node, lhs, rhs, fixup);
             }
+            ast::ExprKind::NullCoalesce(lhs, rhs) => {
+                self.print_expr_cond_paren(
+                    lhs,
+                    lhs.precedence() < ExprPrecedence::NullCoalesce,
+                    fixup.leftmost_subexpression(),
+                );
+                self.space();
+                self.word_space("??");
+                self.print_expr_cond_paren(
+                    rhs,
+                    rhs.precedence() <= ExprPrecedence::NullCoalesce,
+                    FixupContext::default(),
+                );
+            }
             ast::ExprKind::Unary(op, expr) => {
                 self.print_expr_unary(*op, expr, fixup);
             }

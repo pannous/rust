@@ -1032,6 +1032,7 @@ pub trait PrintState<'a>: std::ops::Deref<Target = pp::Printer> + std::ops::Dere
             token::Pound => "#".into(),
             token::Dollar => "$".into(),
             token::Question => "?".into(),
+            token::QuestionQuestion => "??".into(),
             token::SingleQuote => "'".into(),
 
             /* Literals */

@@ -1062,6 +1062,8 @@ macro_rules! common_visitor_and_walkers {
                     visit_visitable!($($mut)? vis, bytes),
                 ExprKind::UnsafeBinderCast(kind, expr, ty) =>
                     visit_visitable!($($mut)? vis, kind, expr, ty),
+                ExprKind::NullCoalesce(lhs, rhs) =>
+                    visit_visitable!($($mut)? vis, lhs, rhs),
                 ExprKind::Err(_guar) => {}
                 ExprKind::Dummy => {}
             }

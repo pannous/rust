@@ -248,6 +248,7 @@ impl FromInternal<(TokenStream, &mut Rustc<'_, '_>)> for Vec<TokenTree<TokenStre
                 Pound => op("#"),
                 Dollar => op("$"),
                 Question => op("?"),
+                QuestionQuestion => op("??"),
                 SingleQuote => op("'"),
 
                 Ident(sym, is_raw) => trees.push(TokenTree::Ident(Ident {

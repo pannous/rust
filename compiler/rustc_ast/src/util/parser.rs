@@ -16,6 +16,8 @@ pub enum AssocOp {
     Cast,
     /// `..` or `..=` range
     Range(RangeLimits),
+    /// `??` null coalescing
+    NullCoalesce,
 }
 
 #[derive(PartialEq, Debug)]
@@ -67,6 +69,7 @@ impl AssocOp {
             token::DotDotEq | token::DotDotDot => Some(Range(RangeLimits::Closed)),
             // `<-` should probably be `< -`
             token::LArrow => Some(Binary(BinOpKind::Lt)),
+            token::QuestionQuestion => Some(NullCoalesce),
             _ if t.is_keyword(kw::As) => Some(Cast),
             _ => None,
         }
@@ -79,6 +82,7 @@ impl AssocOp {
             Cast => ExprPrecedence::Cast,
             Binary(bin_op) => bin_op.precedence(),
             Range(_) => ExprPrecedence::Range,
+            NullCoalesce => ExprPrecedence::NullCoalesce,
             Assign | AssignOp(_) => ExprPrecedence::Assign,
         }
     }
@@ -92,6 +96,7 @@ impl AssocOp {
             Binary(binop) => binop.fixity(),
             Cast => Fixity::Left,
             Range(_) => Fixity::None,
+            NullCoalesce => Fixity::Right, // a ?? b ?? c == a ?? (b ?? c)
         }
     }
 
@@ -99,7 +104,7 @@ impl AssocOp {
         use AssocOp::*;
         match *self {
             Binary(binop) => binop.is_comparison(),
-            Assign | AssignOp(_) | Cast | Range(_) => false,
+            Assign | AssignOp(_) | Cast | Range(_) | NullCoalesce => false,
         }
     }
 
@@ -107,7 +112,7 @@ impl AssocOp {
         use AssocOp::*;
         match *self {
             Assign | AssignOp(_) => true,
-            Cast | Binary(_) | Range(_) => false,
+            Cast | Binary(_) | Range(_) | NullCoalesce => false,
         }
     }
 
@@ -146,6 +151,8 @@ pub enum ExprPrecedence {
     Assign,
     // .. ..=
     Range,
+    // ??
+    NullCoalesce,
     // ||
     LOr,
     // &&

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S cargo +stage1 run --release --manifest-path /opt/other/rust/probes/Cargo.toml --
+#!/usr/bin/env rustc
 // Test: T? syntax for Option<T>
 
 fn get_value(flag: bool) -> i32? {

@@ -391,6 +391,10 @@ impl<'hir> LoweringContext<'_, 'hir> {
                     self.lower_expr_optional_method_call(e.span, receiver, seg, args, *method_span)
                 }
 
+                ExprKind::NullCoalesce(lhs, rhs) => {
+                    self.lower_expr_null_coalesce(e.span, lhs, rhs)
+                }
+
                 ExprKind::Paren(_) | ExprKind::ForLoop { .. } => {
                     unreachable!("already handled")
                 }
@@ -2174,6 +2178,43 @@ impl<'hir> LoweringContext<'_, 'hir> {
 
         hir::ExprKind::Match(
             receiver_expr,
+            arena_vec![self; some_arm, none_arm],
+            hir::MatchSource::Normal,
+        )
+    }
+
+    /// Desugar `expr ?? default` into:
+    /// ```ignore (pseudo-rust)
+    /// match expr {
+    ///     Some(__null_coalesce) => __null_coalesce,
+    ///     None => default,
+    /// }
+    /// ```
+    fn lower_expr_null_coalesce(
+        &mut self,
+        span: Span,
+        lhs: &Expr,
+        rhs: &Expr,
+    ) -> hir::ExprKind<'hir> {
+        let desugar_span =
+            self.mark_span_with_reason(DesugaringKind::QuestionMark, span, None);
+
+        let lhs_expr = self.lower_expr(lhs);
+        let rhs_expr = self.lower_expr(rhs);
+
+        let val_ident = Ident::with_dummy_span(sym::__null_coalesce);
+        let (val_pat, val_pat_nid) = self.pat_ident(desugar_span, val_ident);
+
+        let val_expr = self.expr_ident(desugar_span, val_ident, val_pat_nid);
+
+        let some_pat = self.pat_some(desugar_span, val_pat);
+        let some_arm = self.arm(some_pat, val_expr);
+
+        let none_pat = self.pat_none(desugar_span);
+        let none_arm = self.arm(none_pat, rhs_expr);
+
+        hir::ExprKind::Match(
+            lhs_expr,
             arena_vec![self; some_arm, none_arm],
             hir::MatchSource::Normal,
         )
