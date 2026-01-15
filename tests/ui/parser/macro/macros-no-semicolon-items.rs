@@ -1,11 +1,10 @@
-macro_rules! foo()  //~ ERROR semicolon
-                    //~| ERROR macros must contain at least one rule
+macro_rules! foo()  //~ ERROR macros must contain at least one rule
 
 macro_rules! bar {
     ($($tokens:tt)*) => {}
 }
 
-bar!( //~ ERROR semicolon
+bar!(
     blah
     blah
     blah

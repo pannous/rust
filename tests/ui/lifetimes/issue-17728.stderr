@@ -1,20 +1,23 @@
-error[E0308]: `match` arms have incompatible types
-  --> $DIR/issue-17728.rs:108:14
+error[E0308]: mismatched types
+  --> $DIR/issue-17728.rs:99:5
    |
+LL |   fn str_to_direction(to_parse: &str) -> RoomDirection {
+   |                                          ------------- expected `RoomDirection` because of return type
 LL | /     match to_parse {
+LL | |
 LL | |         "w" | "west" => RoomDirection::West,
 LL | |         "e" | "east" => RoomDirection::East,
-LL | |         "n" | "north" => RoomDirection::North,
 ...  |
-LL | |         "down" => RoomDirection::Down,
-   | |                   ------------------- this and all prior arms are found to be of type `RoomDirection`
 LL | |         _ => None
-   | |              ^^^^ expected `RoomDirection`, found `Option<_>`
 LL | |     }
-   | |_____- `match` arms have incompatible types
+   | |_____^ expected `RoomDirection`, found `Option<RoomDirection>`
    |
    = note: expected enum `RoomDirection`
-              found enum `Option<_>`
+              found enum `Option<RoomDirection>`
+help: consider using `Option::expect` to unwrap the `Option<RoomDirection>` value, panicking if the value is an `Option::None`
+   |
+LL |     }.expect("REASON")
+   |      +++++++++++++++++
 
 error: lifetime may not live long enough
   --> $DIR/issue-17728.rs:15:28

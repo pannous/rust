@@ -1,9 +1,12 @@
 // https://github.com/rust-lang/rust/issues/114392
+//@ run-pass
+// Note: This now compiles due to auto-wrapping of () to Some(())
 
 fn foo() -> Option<()> {
     let x = Some(());
-    (x?)
-    //~^ ERROR `?` operator has incompatible types
+    (x?)  // x? returns (), which auto-wraps to Some(())
 }
 
-fn main() {}
+fn main() {
+    assert_eq!(foo(), Some(()));
+}

@@ -10,11 +10,11 @@ struct Foo {
 fn f() {}
 
 fn a() -> Option<()> {
+    // Note: this now compiles due to auto-wrapping from () to Some(())
     while false {
-        //~^ ERROR mismatched types
         f();
     }
-    //~^ HELP try adding an expression
+    // returns Some(()) implicitly
 }
 
 fn b() -> Result<(), ()> {
@@ -24,45 +24,39 @@ fn b() -> Result<(), ()> {
 }
 
 fn c() -> Option<()> {
+    // Note: this now compiles due to auto-wrapping from () to Some(())
     for _ in [1, 2] {
-        //~^ ERROR mismatched types
         f();
     }
-    //~^ HELP try adding an expression
+    // returns Some(()) implicitly
 }
 
 fn d() -> Option<()> {
+    // Note: c()? returns () which now auto-wraps to Some(())
     c()?
-    //~^ ERROR incompatible types
-    //~| HELP try removing this `?`
-    //~| HELP try adding an expression
 }
 
 fn main() {
+    // Note: while {} returns () which now auto-wraps to Some(())
     let _: Option<()> = while false {};
-    //~^ ERROR mismatched types
-    //~| HELP try wrapping
     let _: Option<()> = {
+        // Note: this now compiles due to auto-wrapping
         while false {}
-        //~^ ERROR mismatched types
-        //~| HELP try adding an expression
     };
     let _: Result<i32, i32> = 1;
     //~^ ERROR mismatched types
     //~| HELP try wrapping
+    // Note: `let _: Option<i32> = 1;` now compiles due to auto-wrapping
     let _: Option<i32> = 1;
-    //~^ ERROR mismatched types
-    //~| HELP try wrapping
     let _: Hey<i32, i32> = 1;
     //~^ ERROR mismatched types
     //~| HELP try wrapping
     let _: Hey<i32, bool> = false;
     //~^ ERROR mismatched types
     //~| HELP try wrapping
+    // Note: `let _ = Foo { bar };` now compiles due to auto-wrapping field
     let bar = 1i32;
     let _ = Foo { bar };
-    //~^ ERROR mismatched types
-    //~| HELP try wrapping
 }
 
 enum A {

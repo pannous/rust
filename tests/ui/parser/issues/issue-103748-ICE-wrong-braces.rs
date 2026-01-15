@@ -1,5 +1,5 @@
 #![crate_type = "lib"]
 
 struct Apple((Apple, Option(Banana ? Citron)));
-//~^ ERROR invalid `?` in type
-//~| ERROR unexpected token: `Citron`
+// Note: `Banana ?` is now parsed as Option<Banana> in type position
+//~^^ ERROR unexpected token: `Citron`

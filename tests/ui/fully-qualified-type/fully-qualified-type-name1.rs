@@ -1,10 +1,9 @@
 // Test that we use fully-qualified type names in error messages.
+//@ run-pass
+// Note: `x = 5` now works due to auto-wrapping to Some(5)
 
 fn main() {
-    let x: //~ NOTE expected due to the type of this binding
-        Option<usize>; //~ NOTE expected due to this type
-    x = 5;
-    //~^ ERROR mismatched types
-    //~| NOTE expected enum `Option<usize>`
-    //~| NOTE expected `Option<usize>`, found integer
+    let x: Option<usize>;
+    x = 5;  // auto-wraps to Some(5)
+    assert_eq!(x, Some(5));
 }

@@ -21,7 +21,8 @@ fn a2() -> Foo {
 }
 
 fn b() -> Option<Foo> {
-    Foo { bar: 1 } //~ ERROR mismatched types
+    // Note: this now compiles due to auto-wrapping to Some(Foo { bar: 1 })
+    Foo { bar: 1 }
 }
 
 fn c() -> Result<Foo, Bar> {

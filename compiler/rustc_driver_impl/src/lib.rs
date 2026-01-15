@@ -430,9 +430,11 @@ pub fn run_compiler(at_args: &[String], callbacks: &mut (dyn Callbacks + Send)) 
             // 1. The source has a shebang line (script mode)
             // 2. No explicit output file was specified (user wants script behavior)
             // 3. No compilation errors
+            // 4. We're actually producing an executable (not just metadata, etc.)
             let is_shebang_script = has_shebang(&sess.io.input)
                 && sess.io.output_file.is_none()
-                && sess.dcx().has_errors().is_none();
+                && sess.dcx().has_errors().is_none()
+                && sess.opts.output_types.contains_key(&OutputType::Exe);
 
             if is_shebang_script {
                 if let Some(exe_path) = get_script_output_path(&sess.io.input) {

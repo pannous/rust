@@ -3,9 +3,9 @@
 
 fn main() {
     // We want to point at the `Option<u8>`.
+    // Note: 42u8 now auto-wraps to Some(42u8), so only pattern mismatch
     let Ok(0): Option<u8> = 42u8;
     //~^ ERROR mismatched types
-    //~| ERROR mismatched types
 
     // We want to point at the `Option<u8>`.
     let Ok(0): Option<u8>;

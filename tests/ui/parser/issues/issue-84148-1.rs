@@ -1,3 +1,3 @@
 fn f(t:for<>t?)
 //~^ ERROR: expected one of
-//~| ERROR: invalid `?` in type
+// Note: `t?` is now parsed as Option<t> in type position

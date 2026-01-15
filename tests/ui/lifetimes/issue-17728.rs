@@ -97,6 +97,7 @@ impl Debug for Player {
 
 fn str_to_direction(to_parse: &str) -> RoomDirection {
     match to_parse {
+    //~^ ERROR mismatched types
         "w" | "west" => RoomDirection::West,
         "e" | "east" => RoomDirection::East,
         "n" | "north" => RoomDirection::North,
@@ -107,7 +108,6 @@ fn str_to_direction(to_parse: &str) -> RoomDirection {
         "down" => RoomDirection::Down,
         _ => None
     }
-        //~^^ ERROR `match` arms have incompatible types
 }
 
 fn main() {
