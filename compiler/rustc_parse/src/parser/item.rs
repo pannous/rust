@@ -404,6 +404,65 @@ impl<'a> Parser<'a> {
         self.check_ident() && self.look_ahead(1, |t| *t != token::Bang && *t != token::PathSep)
     }
 
+    /// Collect a delimited group of tokens (handles nested delimiters).
+    fn collect_delimited(&mut self, delim: Delimiter) -> Vec<TokenTree> {
+        use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
+
+        let mut tokens = Vec::new();
+
+        while self.token != token::Eof && self.token.kind.close_delim() != Some(delim) {
+            if let Some(inner_delim) = self.token.kind.open_delim() {
+                let open_span = self.token.span;
+                self.bump();
+                let inner = self.collect_delimited(inner_delim);
+                let close_span = self.token.span;
+                if self.token.kind.close_delim() == Some(inner_delim) {
+                    self.bump();
+                }
+                tokens.push(TokenTree::Delimited(
+                    DelimSpan::from_pair(open_span, close_span),
+                    DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+                    inner_delim,
+                    TokenStream::new(inner),
+                ));
+            } else {
+                tokens.push(TokenTree::Token(self.token.clone(), Spacing::Alone));
+                self.bump();
+            }
+        }
+
+        tokens
+    }
+
+    /// Collect a single token or delimited group.
+    fn collect_token_tree(&mut self) -> Option<TokenTree> {
+        use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
+
+        if self.token == token::Eof {
+            return None;
+        }
+
+        if let Some(delim) = self.token.kind.open_delim() {
+            let open_span = self.token.span;
+            self.bump();
+            let inner = self.collect_delimited(delim);
+            let close_span = self.token.span;
+            if self.token.kind.close_delim() == Some(delim) {
+                self.bump();
+            }
+            Some(TokenTree::Delimited(
+                DelimSpan::from_pair(open_span, close_span),
+                DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+                delim,
+                TokenStream::new(inner),
+            ))
+        } else {
+            let tt = TokenTree::Token(self.token.clone(), Spacing::Alone);
+            self.bump();
+            Some(tt)
+        }
+    }
+
     /// Check for Go-style short variable declaration: `x :=`
     fn is_walrus_assignment(&self) -> bool {
         self.token.is_ident()
@@ -425,21 +484,18 @@ impl<'a> Parser<'a> {
         self.bump(); // consume `:`
         self.bump(); // consume `=`
 
-        // Collect expression tokens until we hit a statement boundary
-        // A statement boundary is: semicolon, EOF, or a new line followed by what looks like a new statement
         let expr_lo = self.token.span;
         let mut expr_tokens = Vec::new();
 
+        // Collect expression tokens until statement boundary, handling delimiters properly
         loop {
-            // Check for statement end
             if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
                 break;
             }
 
-            // Check if we've moved to a new line and the token looks like a new statement start
+            // Check for new statement on next line
             let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
             if token_pos.line > ident_line {
-                // New line - check if this looks like a new statement (identifier, keyword, etc.)
                 if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
                    || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
                    || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
@@ -449,8 +505,11 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            expr_tokens.push(TokenTree::Token(self.token.clone(), Spacing::Alone));
-            self.bump();
+            if let Some(tt) = self.collect_token_tree() {
+                expr_tokens.push(tt);
+            } else {
+                break;
+            }
         }
 
         let expr_hi = self.prev_token.span;
@@ -483,41 +542,36 @@ impl<'a> Parser<'a> {
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
 
-    /// Check for script-mode let statement: `let x =`
-    /// This allows `let` at item level in script mode by converting to __walrus! macro
+    /// Check for script-mode let statement at item level
+    /// Any `let` at item level is invalid in normal Rust, so in script mode we convert it
     fn is_script_let_statement(&self) -> bool {
         self.token.is_keyword(kw::Let)
-            && self.look_ahead(1, |t| t.is_ident())
-            && self.look_ahead(2, |t| *t == token::Eq)
     }
 
-    /// Parse script-mode let statement: `let x = expr;`
-    /// Transforms to `__walrus!(x = expr)` macro call
+    /// Parse script-mode let statement: `let pattern = expr;` or `let pattern: Type = expr;`
+    /// Transforms to `__let!(pattern = expr)` or `__let!(pattern: Type = expr)` macro call
     fn parse_script_let_statement(
         &mut self,
         lo: Span,
         _attrs: &mut AttrVec,
     ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, Spacing, TokenStream, TokenTree};
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
 
+        let let_line = self.psess.source_map().lookup_char_pos(self.token.span.lo()).line;
         self.bump(); // consume `let`
-        let ident = self.parse_ident()?;
-        let ident_line = self.psess.source_map().lookup_char_pos(ident.span.lo()).line;
-        self.bump(); // consume `=`
 
-        // Collect expression tokens until we hit a statement boundary
-        let expr_lo = self.token.span;
-        let mut expr_tokens = Vec::new();
+        let stmt_lo = self.token.span;
+        let mut stmt_tokens = Vec::new();
 
+        // Collect all tokens until statement end, handling delimiters properly
         loop {
-            // Check for statement end
             if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
                 break;
             }
 
-            // Check if we've moved to a new line and the token looks like a new statement start
+            // Check for new statement on next line
             let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
-            if token_pos.line > ident_line {
+            if token_pos.line > let_line {
                 if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
                    || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
                    || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
@@ -527,38 +581,32 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            expr_tokens.push(TokenTree::Token(self.token.clone(), Spacing::Alone));
-            self.bump();
+            if let Some(tt) = self.collect_token_tree() {
+                stmt_tokens.push(tt);
+            } else {
+                break;
+            }
         }
 
         // Consume optional semicolon
         let _ = self.eat(exp!(Semi));
 
-        let expr_hi = self.prev_token.span;
+        let stmt_hi = self.prev_token.span;
 
-        // Build __walrus!(ident = expr_tokens) macro call
-        let walrus_path = ast::Path {
+        // Build __let!(stmt_tokens) macro call
+        let let_path = ast::Path {
             span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__walrus, lo))],
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__let, lo))],
             tokens: None,
         };
 
-        let mut args_tokens = vec![
-            TokenTree::Token(
-                token::Token::new(token::Ident(ident.name, IdentIsRaw::No), ident.span),
-                Spacing::Alone,
-            ),
-            TokenTree::Token(token::Token::new(token::Eq, ident.span), Spacing::Alone),
-        ];
-        args_tokens.extend(expr_tokens);
-
         let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(expr_lo, expr_hi),
+            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
             delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(args_tokens),
+            tokens: TokenStream::new(stmt_tokens),
         };
 
-        let mac = MacCall { path: walrus_path, args: Box::new(args) };
+        let mac = MacCall { path: let_path, args: Box::new(args) };
 
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }

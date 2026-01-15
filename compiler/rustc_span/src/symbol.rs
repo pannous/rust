@@ -1807,6 +1807,7 @@ symbols! {
         put,
         pushpop_unsafe,
         __walrus,
+        __let,
         qreg,
         qreg_low4,
         qreg_low8,

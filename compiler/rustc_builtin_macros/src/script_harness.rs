@@ -374,10 +374,58 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     };
 
     items.push(Box::new(ast::Item {
-        attrs: vec![allow_unused].into(),
+        attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         // Use call_site for the macro name so it's visible to user code
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__walrus, call_site), walrus_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! __let { ($($t:tt)*) => { let $($t)*; }; }
+    // For script-mode let statements with type annotations: `let x: Type = expr;`
+    let let_body = vec![
+        // ($($t:tt)*)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { let $($t)*; }
+        delim(Delimiter::Brace, vec![
+            ident("let"),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let let_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(let_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__let, call_site), let_macro),
         vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
         span: def_site,
         tokens: None,
