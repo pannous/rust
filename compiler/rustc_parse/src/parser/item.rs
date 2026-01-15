@@ -302,6 +302,9 @@ impl<'a> Parser<'a> {
         } else if self.is_walrus_assignment() {
             // Go-style short variable declaration: x := expr -> __walrus!(x = expr)
             return self.parse_walrus_assignment(lo, attrs);
+        } else if self.is_script_let_statement() {
+            // Script mode: let x = expr; -> __walrus!(x = expr)
+            return self.parse_script_let_statement(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -460,6 +463,86 @@ impl<'a> Parser<'a> {
         };
 
         // Build the macro arguments: ident = expr_tokens
+        let mut args_tokens = vec![
+            TokenTree::Token(
+                token::Token::new(token::Ident(ident.name, IdentIsRaw::No), ident.span),
+                Spacing::Alone,
+            ),
+            TokenTree::Token(token::Token::new(token::Eq, ident.span), Spacing::Alone),
+        ];
+        args_tokens.extend(expr_tokens);
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(expr_lo, expr_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(args_tokens),
+        };
+
+        let mac = MacCall { path: walrus_path, args: Box::new(args) };
+
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
+    }
+
+    /// Check for script-mode let statement: `let x =`
+    /// This allows `let` at item level in script mode by converting to __walrus! macro
+    fn is_script_let_statement(&self) -> bool {
+        self.token.is_keyword(kw::Let)
+            && self.look_ahead(1, |t| t.is_ident())
+            && self.look_ahead(2, |t| *t == token::Eq)
+    }
+
+    /// Parse script-mode let statement: `let x = expr;`
+    /// Transforms to `__walrus!(x = expr)` macro call
+    fn parse_script_let_statement(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, Spacing, TokenStream, TokenTree};
+
+        self.bump(); // consume `let`
+        let ident = self.parse_ident()?;
+        let ident_line = self.psess.source_map().lookup_char_pos(ident.span.lo()).line;
+        self.bump(); // consume `=`
+
+        // Collect expression tokens until we hit a statement boundary
+        let expr_lo = self.token.span;
+        let mut expr_tokens = Vec::new();
+
+        loop {
+            // Check for statement end
+            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
+                break;
+            }
+
+            // Check if we've moved to a new line and the token looks like a new statement start
+            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
+            if token_pos.line > ident_line {
+                if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
+                   || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
+                   || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
+                   || self.token.is_keyword(kw::Use) || self.token.is_keyword(kw::Struct)
+                   || self.token == token::Pound {
+                    break;
+                }
+            }
+
+            expr_tokens.push(TokenTree::Token(self.token.clone(), Spacing::Alone));
+            self.bump();
+        }
+
+        // Consume optional semicolon
+        let _ = self.eat(exp!(Semi));
+
+        let expr_hi = self.prev_token.span;
+
+        // Build __walrus!(ident = expr_tokens) macro call
+        let walrus_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__walrus, lo))],
+            tokens: None,
+        };
+
         let mut args_tokens = vec![
             TokenTree::Token(
                 token::Token::new(token::Ident(ident.name, IdentIsRaw::No), ident.span),
