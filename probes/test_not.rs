@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 fn main() {
     let t = true;
     let f = false;

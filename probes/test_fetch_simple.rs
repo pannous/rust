@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 use warp::{is, eq};
 use warp::wasm_gc_emitter::eval;
 

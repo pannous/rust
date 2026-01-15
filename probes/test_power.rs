@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 // Test power operator **
 
 fn main() {

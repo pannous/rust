@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 //! Test dynload with dynexport_prelude
 //!
 //! Compile and run with:

@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 use warp::wasp_parser::WaspParser;
 fn main() {
     let cases = [

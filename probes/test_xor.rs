@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 fn main() {
     // Test xor as ^
     assert!(true xor false);    // true ^ false = true

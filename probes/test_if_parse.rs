@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 use warp::parse;
 
 fn main() {

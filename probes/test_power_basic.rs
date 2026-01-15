@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 fn main() {
     // Test power operator
     let result = 3 ** 2;

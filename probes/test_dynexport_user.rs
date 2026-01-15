@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 //! Test: Load and use a #[dynexport] library
 //!
 //! First compile test_dynexport_lib.rs with forked rustc:

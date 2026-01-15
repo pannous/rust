@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 use wasp::is;
 
 #[test]

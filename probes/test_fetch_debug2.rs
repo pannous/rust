@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 use warp::wasp_parser::parse;
 use warp::wasm_gc_emitter::WasmGcEmitter;
 use warp::wasm_gc_reader::read_bytes_with_host;

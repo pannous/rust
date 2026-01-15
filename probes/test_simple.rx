@@ -1,2 +1,5 @@
 #!/usr/bin/env rust
+x:=4
+put!(x^x)
+put!(2**3)
 put!("Hello, world!")

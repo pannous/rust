@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 //! Example: Hello World dynamic library
 //!
 //! Compile with:

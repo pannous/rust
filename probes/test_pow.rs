@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 use warp::*;
 fn main() {
     // Test basic power

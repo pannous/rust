@@ -1,6 +1,2 @@
-#!/usr/bin/env rustc
-package main
-
-func main() {
-	put!("Hello, world!")
-}
+#!/usr/bin/env rust
+put!("Hello, world!")

@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 //! Library with embedded WIT type metadata
 //!
 //! Compile with:

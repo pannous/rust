@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 fn test() -> bool {
     let a = true;
     let b = false;

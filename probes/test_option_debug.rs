@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 //! Debug OptionI32 layout
 
 use std::ffi::{c_char, c_int, c_void, CString};

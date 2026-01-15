@@ -1,3 +1,4 @@
+#!/usr/bin/env rustc
 #![no_std]
 #![feature(lang_items, start)]
 
