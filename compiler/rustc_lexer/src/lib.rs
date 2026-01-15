@@ -462,9 +462,11 @@ impl Cursor<'_> {
             // - #ident macro interpolation in quote!
             // - `# $var` patterns in macro_rules!
             // - `builtin # name` syntax
+            // - Standalone `#` tokens (e.g., stringify!(#).parse())
             '#' if was_at_line_start
                 && !matches!(self.first(), '"' | '#' | '!' | '[')
-                && (self.first().is_whitespace() || self.is_eof()) =>
+                && self.first().is_whitespace()
+                && !self.is_eof() =>
             {
                 self.hash_comment()
             }

@@ -500,8 +500,15 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
     /// Detect usages of Unicode codepoints changing the direction of the text on screen and loudly
     /// complain about it.
     fn lint_unicode_text_flow(&self, start: BytePos) {
-        // Opening delimiter of the length 2 is not included into the comment text.
-        let content_start = start + BytePos(2);
+        // Opening delimiter is not included into the comment text.
+        // For // comments: 2 bytes, for # comments: 1 byte
+        let first_char = self.src.as_bytes().get(self.src_index(start)).copied();
+        let delimiter_len = if first_char == Some(b'#') { 1 } else { 2 };
+        let content_start = start + BytePos(delimiter_len);
+        // Guard against comments at EOF or very short comments
+        if self.src_index(content_start) > self.src.len() {
+            return;
+        }
         let content = self.str_from(content_start);
         if contains_text_flow_control_chars(content) {
             let span = self.mk_sp(start, self.pos);
