@@ -264,6 +264,7 @@ symbols! {
         Input,
         Instant,
         Into,
+        into,
         IntoFuture,
         IntoIterator,
         IoBufRead,

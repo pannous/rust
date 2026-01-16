@@ -68,6 +68,7 @@ WORKING_FILES=(
     test_put_eq.rs
     test_script_complex.rs
     test_simple.rs
+    test_string_macro.rs
     test_string_replace.rs
     test_unicode_ops.rs
     test_with_main.rs

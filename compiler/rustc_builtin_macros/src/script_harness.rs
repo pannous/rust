@@ -326,8 +326,10 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         tokens: None,
     }));
 
-    // macro_rules! s { ($e:expr) => { $e.to_string() }; }
-    // For converting string literals to String: s!("abc") -> "abc".to_string()
+    // macro_rules! s { ($e:expr) => { { let __s: String = $e.into(); __s } }; }
+    // For converting string literals to String: s!("abc") -> "abc".into()
+    // Uses .into() with type annotation for reliable conversion
+    // Note: String and into use call_site so they resolve in user's scope (where prelude is available)
     let s_body = vec![
         // ($e:expr)
         delim(Delimiter::Parenthesis, vec![
@@ -337,13 +339,24 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
             ident("expr"),
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
-        // { $e.to_string() }
+        // { { let __s: String = $e.into(); __s } }
         delim(Delimiter::Brace, vec![
-            TokenTree::token_alone(TokenKind::Dollar, def_site),
-            ident("e"),
-            TokenTree::token_alone(TokenKind::Dot, def_site),
-            ident("to_string"),
-            delim(Delimiter::Parenthesis, vec![]),
+            delim(Delimiter::Brace, vec![
+                ident("let"),
+                ident("__s"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                // String with call_site hygiene to resolve in user's namespace
+                TokenTree::token_alone(TokenKind::Ident(sym::String, token::IdentIsRaw::No), call_site),
+                TokenTree::token_alone(TokenKind::Eq, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("e"),
+                TokenTree::token_alone(TokenKind::Dot, call_site),
+                // into with call_site to resolve in user's namespace
+                TokenTree::token_alone(TokenKind::Ident(sym::into, token::IdentIsRaw::No), call_site),
+                delim(Delimiter::Parenthesis, vec![]),
+                TokenTree::token_alone(TokenKind::Semi, def_site),
+                ident("__s"),
+            ]),
         ]),
         TokenTree::token_alone(TokenKind::Semi, def_site),
     ];
