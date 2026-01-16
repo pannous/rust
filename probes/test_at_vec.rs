@@ -1,0 +1,9 @@
+#!/usr/bin/env rust
+let v = @[1, 2, 3];
+println!("v: {:?}", v);
+let empty: Vec<i32> = @[];
+let empty_len = empty.len();
+println!("empty_len: {}", empty_len);
+// Nested @[] requires recursive expansion - use vec![] for now
+let nested = @[vec![1], vec![2, 3]];
+println!("nested: {:?}", nested);

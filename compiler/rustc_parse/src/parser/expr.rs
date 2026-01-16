@@ -1556,6 +1556,10 @@ impl<'a> Parser<'a> {
                     }
                     err
                 })
+            } else if this.token == token::At
+                && this.look_ahead(1, |t| *t == token::OpenBracket)
+            {
+                this.parse_expr_at_vec()
             } else if this.check(exp!(OpenBracket)) {
                 this.parse_expr_array_or_repeat(exp!(CloseBracket))
             } else if this.is_builtin() {
@@ -1686,6 +1690,20 @@ impl<'a> Parser<'a> {
         };
         let expr = self.mk_expr(lo.to(self.prev_token.span), kind);
         self.maybe_recover_from_bad_qpath(expr)
+    }
+
+    /// Parse `@[...]` as `vec![...]`
+    fn parse_expr_at_vec(&mut self) -> PResult<'a, Box<Expr>> {
+        let lo = self.token.span;
+        self.bump(); // consume @
+
+        let args = self.parse_delim_args()?;
+        let hi = self.prev_token.span;
+
+        let path = Path::from_ident(Ident::new(sym::vec, lo));
+        let mac = Box::new(MacCall { path, args });
+
+        Ok(self.mk_expr(lo.to(hi), ExprKind::MacCall(mac)))
     }
 
     fn parse_expr_array_or_repeat(&mut self, close: ExpTokenPair) -> PResult<'a, Box<Expr>> {
