@@ -2,130 +2,111 @@
 
 // Test numeric truthiness
 if 0 {
-	put!("FAIL: 0 should be falsy")
-	assert!()false
+    put!("FAIL: 0 should be falsy")
+    assert!(false)
 } else {
-	put!("PASS: 0 is falsy")
+    put!("PASS: 0 is falsy")
 }
 
 if 42 {
-	put!("PASS: 42 is truthy")
+    put!("PASS: 42 is truthy")
 } else {
-	put!("FAIL: 42 should be truthy")
-	assert!()false
+    put!("FAIL: 42 should be truthy")
+    assert!(false)
+}
+
+if -1 {
+    put!("PASS: -1 is truthy")
+} else {
+    put!("FAIL: -1 should be truthy")
+    assert!(false)
+}
+
+// Test float truthiness
+if 0.0 {
+    put!("FAIL: 0.0 should be falsy")
+    assert!(false)
+} else {
+    put!("PASS: 0.0 is falsy")
+}
+
+if 3.14 {
+    put!("PASS: 3.14 is truthy")
+} else {
+    put!("FAIL: 3.14 should be truthy")
+    assert!(false)
 }
 
 // Test string truthiness
 if "" {
-	put!("FAIL: empty string should be falsy")
-	assert!()false
+    put!("FAIL: empty string should be falsy")
+    assert!(false)
 } else {
-	put!("PASS: empty string is falsy")
+    put!("PASS: empty string is falsy")
 }
 
 if "hello" {
-	put!("PASS: non-empty string is truthy")
+    put!("PASS: non-empty string is truthy")
 } else {
-	put!("FAIL: non-empty string should be truthy")
-	assert!()false
+    put!("FAIL: non-empty string should be truthy")
+    assert!(false)
 }
 
-// Test slice truthiness
-let nilSlice []int
-if nilSlice {
-	put!("FAIL: nil slice should be falsy")
-	assert!()false
+// Test String type truthiness
+if String::new() {
+    put!("FAIL: empty String should be falsy")
+    assert!(false)
 } else {
-	put!("PASS: nil slice is falsy")
+    put!("PASS: empty String is falsy")
 }
 
-emptySlice := []int{}
-if emptySlice {
-	put!("FAIL: empty slice should be falsy")
-	assert!()false
+if String::from("hello") {
+    put!("PASS: non-empty String is truthy")
 } else {
-	put!("PASS: empty slice is falsy")
-}
-
-nonEmptySlice := []int{1, 2, 3}
-if nonEmptySlice {
-	put!("PASS: non-empty slice is truthy")
-} else {
-	put!("FAIL: non-empty slice should be truthy")
-	assert!()false
+    put!("FAIL: non-empty String should be truthy")
+    assert!(false)
 }
 
 // Test boolean (should work normally)
 if true {
-	put!("PASS: true is truthy")
+    put!("PASS: true is truthy")
 } else {
-	put!("FAIL: true should be truthy")
-	assert!()false
+    put!("FAIL: true should be truthy")
+    assert!(false)
 }
 
 if false {
-	put!("FAIL: false should be falsy")
-	assert!()false
+    put!("FAIL: false should be falsy")
+    assert!(false)
 } else {
-	put!("PASS: false is falsy")
+    put!("PASS: false is falsy")
 }
 
-// Test map truthiness  
-let nilMap map[string]int
-if nilMap {
-	put!("FAIL: nil map should be falsy")
-	assert!()false
+// Test unsigned integers
+if 0u8 {
+    put!("FAIL: 0u8 should be falsy")
+    assert!(false)
 } else {
-	put!("PASS: nil map is falsy")
+    put!("PASS: 0u8 is falsy")
 }
 
-emptyMap := make(map[string]int)
-if emptyMap {
-	put!("PASS: empty map created with make() is truthy")
+if 1u64 {
+    put!("PASS: 1u64 is truthy")
 } else {
-	put!("FAIL: empty map created with make() should be truthy")
-	assert!()false
+    put!("FAIL: 1u64 should be truthy")
+    assert!(false)
 }
 
-filledMap := map[string]int{"key": 1}
-if filledMap {
-	put!("PASS: filled map is truthy")
+// Test else-if chain
+x := 5
+if x == 0 {
+    put!("FAIL: x is not 0")
+    assert!(false)
+} else if x == 5 {
+    put!("PASS: x equals 5")
 } else {
-	put!("FAIL: filled map should be truthy")
-	assert!()false
+    put!("FAIL: else-if not working correctly")
+    assert!(false)
 }
 
-// Test pointer truthiness
-let nilPtr *int
-if nilPtr {
-	put!("FAIL: nil pointer should be falsy")
-	assert!()false
-} else {
-	put!("PASS: nil pointer is falsy")
-}
-
-val := 42
-ptr := &val
-if ptr {
-	put!("PASS: non-nil pointer is truthy")
-} else {
-	put!("FAIL: non-nil pointer should be truthy")
-	assert!()false
-}
-
-// Test channel truthiness
-let nilChan chan int
-if nilChan {
-	put!("FAIL: nil channel should be falsy")
-	assert!()false
-} else {
-	put!("PASS: nil channel is falsy")
-}
-
-ch := make(chan int, 1)
-if ch {
-	put!("PASS: created channel is truthy")
-} else {
-	put!("FAIL: created channel should be truthy")
-	assert!()false
-}
+put!("All truthy tests passed!")

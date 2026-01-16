@@ -316,6 +316,10 @@ impl<'a> Parser<'a> {
             // Script mode: while cond { } -> __while!(cond { })
             // Only at module level (Free context), not inside impl/trait/blocks
             return self.parse_script_while_statement(lo, attrs);
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_if_statement() {
+            // Script mode: if cond { } [else { }] -> __if!(cond { } [else { }])
+            // Only at module level (Free context), not inside impl/trait/blocks
+            return self.parse_script_if_statement(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -816,6 +820,96 @@ impl<'a> Parser<'a> {
         };
 
         let mac = MacCall { path: while_path, args: Box::new(args) };
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
+    }
+
+    /// Check for script-mode if statement at item level
+    fn is_script_if_statement(&self) -> bool {
+        self.token.is_keyword(kw::If)
+    }
+
+    /// Parse script-mode if statement: `if cond { } [else { }]` -> `__if!(cond ; { } [else { }])`
+    /// Note: We insert a semicolon after the condition to work with macro_rules patterns
+    fn parse_script_if_statement(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream, TokenTree};
+
+        self.bump(); // consume `if`
+
+        let stmt_lo = self.token.span;
+        let mut cond_tokens = Vec::new();
+        let mut body_tokens = Vec::new();
+
+        // First, collect condition tokens (everything before the first `{`)
+        while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
+            if let Some(tt) = self.collect_token_tree() {
+                cond_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        // Collect the body block (collect_token_tree handles the balanced braces)
+        if self.token == token::OpenBrace {
+            if let Some(tt) = self.collect_token_tree() {
+                body_tokens.push(tt);
+            }
+        }
+
+        // Handle else clauses
+        while self.token.is_keyword(kw::Else) {
+            // Collect the `else` keyword
+            body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
+            self.bump();
+
+            // Check for else-if
+            if self.token.is_keyword(kw::If) {
+                // Collect the `if` keyword
+                body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
+                self.bump();
+
+                // Collect the condition for else-if
+                while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
+                    if let Some(tt) = self.collect_token_tree() {
+                        body_tokens.push(tt);
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Collect the else body block
+            if self.token == token::OpenBrace {
+                if let Some(tt) = self.collect_token_tree() {
+                    body_tokens.push(tt);
+                }
+            }
+        }
+
+        let stmt_hi = self.prev_token.span;
+
+        // Build: __if!(cond ; { body } [else { body2 }])
+        // The semicolon separates condition from body for macro pattern matching
+        let mut all_tokens = cond_tokens;
+        all_tokens.push(TokenTree::token_alone(token::TokenKind::Semi, lo));
+        all_tokens.extend(body_tokens);
+
+        let if_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__if, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(all_tokens),
+        };
+
+        let mac = MacCall { path: if_path, args: Box::new(args) };
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
 
