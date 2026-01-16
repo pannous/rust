@@ -198,6 +198,11 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), def_site)
     };
 
+    // Helper to create an identifier that resolves in user's scope (for prelude macros)
+    let ident_user = |s: &str| -> TokenTree {
+        TokenTree::token_alone(TokenKind::Ident(Symbol::intern(s), token::IdentIsRaw::No), call_site)
+    };
+
 
     // Helper to create a string literal token
     let str_lit = |s: &str| -> TokenTree {
@@ -221,7 +226,7 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
         delim(Delimiter::Brace, vec![
-            ident("println"),
+            ident_user("println"),
             TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
                 str_lit("{}"),
@@ -244,7 +249,7 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
         delim(Delimiter::Brace, vec![
-            ident("println"),
+            ident_user("println"),
             TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
                 TokenTree::token_alone(TokenKind::Dollar, def_site),
@@ -295,7 +300,7 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
         // { assert_eq!($left, $right) }
         delim(Delimiter::Brace, vec![
-            ident("assert_eq"),
+            ident_user("assert_eq"),
             TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
                 TokenTree::token_alone(TokenKind::Dollar, def_site),

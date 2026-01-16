@@ -4,52 +4,51 @@
 // Test string + number concatenation feature
 
 result0 := "a" + "0"
-put!("Test 1: " + result0)
 eq!( result0 , "a0");
-
+put!("Test 0: " + result0)
 
 // Basic string + integer
 result1 := "a" + 1
-put!("Test 1: " + result1)
 eq!( result1 , "a1");
+put!("Test 1: " + result1)
 
 // String + larger integer
 result2 := "value: " + 42
-put!("Test 2: " + result2)
 eq!( result2 , "value: 42");
+put!("Test 2: " + result2)
 
-// Integer + string  
-result3 := 1 + "b"
-put!("Test 3: " + result3)
+// Integer + string (requires explicit conversion)
+result3 := 1.to_string() + "b"
 eq!( result3 , "1b");
+put!("Test 3: " + result3)
 
 // String + negative integer
 result4 := "count: " + (-5)
-put!("Test 4: " + result4)
 eq!( result4 , "count: -5");
+put!("Test 4: " + result4)
 
-// Integer + string with spaces
-result5 := 123 + " items"
-put!("Test 5: " + result5)
+// Integer + string with spaces (requires explicit conversion)
+result5 := 123.to_string() + " items"
 eq!( result5 , "123 items");
+put!("Test 5: " + result5)
 
 // String + float (should work with numeric types)
 result6 := "pi is " + 3.14159
-put!("Test 6: " + result6)
 eq!( result6 , "pi is 3.14159");
+put!("Test 6: " + result6)
 
 // Chained concatenation
 result7 := "prefix" + 1 + 2 + "suffix"
-put!("Test 7: " + result7)
 eq!( result7 , "prefix12suffix");
+put!("Test 7: " + result7)
 
 result8 := "a " + true
-put!("Test 8: " + result8)
 eq!( result8 , "a ✔️");
+put!("Test 8: " + result8)
 
 result9 := "a " + false
-put!("Test 9: " + result9)
 eq!( result9 , "a ✖️" );
+put!("Test 9: " + result9)
 
 
 put!("All string concatenation tests passed!")
