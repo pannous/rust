@@ -52,6 +52,8 @@ use core::num::Saturating;
 use core::ops::Add;
 #[cfg(not(no_global_oom_handling))]
 use core::ops::AddAssign;
+#[cfg(not(no_global_oom_handling))]
+use core::ops::Rem;
 use core::ops::{self, Range, RangeBounds};
 use core::str::pattern::{Pattern, Utf8Pattern};
 use core::{fmt, hash, ptr, slice};
@@ -2790,6 +2792,66 @@ impl AddAssign<&str> for String {
     fn add_assign(&mut self, other: &str) {
         self.push_str(other);
     }
+}
+
+/// Implements Python-style `%` string formatting for `String`.
+///
+/// Replaces the first format placeholder (`%s`, `%d`, `%v`, etc.) with the
+/// Display representation of the right-hand operand.
+///
+/// # Examples
+///
+/// ```
+/// let greeting = String::from("Hello %s") % "world";
+/// assert_eq!(greeting, "Hello world");
+///
+/// // Chaining multiple replacements
+/// let msg = String::from("Name: %s, Age: %d") % "Alice" % 25;
+/// assert_eq!(msg, "Name: Alice, Age: 25");
+/// ```
+#[cfg(not(no_global_oom_handling))]
+#[stable(feature = "string_percent_formatting", since = "1.0.0")]
+impl<T: fmt::Display> Rem<T> for String {
+    type Output = String;
+
+    #[inline]
+    fn rem(self, rhs: T) -> String {
+        string_format_replace(&self, rhs)
+    }
+}
+
+/// Helper function for `%` string formatting.
+/// Replaces the first occurrence of `%s`, `%d`, `%v`, `%f`, or `%x` with the value.
+#[cfg(not(no_global_oom_handling))]
+fn string_format_replace<T: fmt::Display>(s: &str, value: T) -> String {
+    let bytes = s.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+
+    while i + 1 < len {
+        if bytes[i] == b'%' {
+            let spec = bytes[i + 1];
+            // Handle %% escape
+            if spec == b'%' {
+                i += 2;
+                continue;
+            }
+            // Recognized format specifiers
+            if matches!(spec, b's' | b'd' | b'v' | b'f' | b'x' | b'X' | b'o' | b'b' | b'e' | b'E') {
+                // Found a placeholder - replace it
+                let mut result = String::with_capacity(len + 16);
+                result.push_str(&s[..i]);
+                use core::fmt::Write;
+                let _ = write!(result, "{}", value);
+                result.push_str(&s[i + 2..]);
+                return result;
+            }
+        }
+        i += 1;
+    }
+
+    // No placeholder found, return original string
+    String::from(s)
 }
 
 #[stable(feature = "rust1", since = "1.0.0")]

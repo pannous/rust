@@ -4116,6 +4116,29 @@ impl<'a> Parser<'a> {
     }
 
     fn mk_binary(&self, binop: BinOp, lhs: Box<Expr>, rhs: Box<Expr>) -> ExprKind {
+        // Transform string literal % value -> String::from(literal) % value
+        // This enables Python-style string formatting with the % operator
+        if binop.node == BinOpKind::Rem {
+            if let ExprKind::Lit(token_lit) = &lhs.kind {
+                if matches!(token_lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_)) {
+                    // Build String::from(lhs) call
+                    let string_from_path = Path {
+                        span: lhs.span,
+                        segments: thin_vec![
+                            PathSegment::from_ident(Ident::new(sym::String, lhs.span)),
+                            PathSegment::from_ident(Ident::new(sym::from, lhs.span)),
+                        ],
+                        tokens: None,
+                    };
+                    let path_expr = self.mk_expr(lhs.span, ExprKind::Path(None, string_from_path));
+                    let call_expr = self.mk_expr(
+                        lhs.span,
+                        ExprKind::Call(path_expr, thin_vec![lhs]),
+                    );
+                    return ExprKind::Binary(binop, call_expr, rhs);
+                }
+            }
+        }
         ExprKind::Binary(binop, lhs, rhs)
     }
 
