@@ -442,6 +442,28 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                         _ => None,
                     } {
                         tok
+                    // Curly quotes as string/char delimiters in script mode
+                    // U+201C/D (double) and U+2018/9 (single)
+                    } else if self.psess.script_mode()
+                        && matches!(c, '\u{201C}' | '\u{201D}' | '\u{2018}' | '\u{2019}')
+                    {
+                        if let Some((kind, sym, bytes_consumed)) = self.try_curly_quoted_literal(start, c) {
+                            // Advance position past the consumed bytes (minus the first char already consumed)
+                            let extra = bytes_consumed - c.len_utf8();
+                            self.pos = self.pos + BytePos(extra as u32);
+                            token::Literal(token::Lit { kind, symbol: sym, suffix: None })
+                        } else {
+                            // Unterminated - emit error and continue
+                            self.dcx().emit_err(errors::UnknownTokenStart {
+                                span: self.mk_sp(start, self.pos),
+                                escaped: escaped_char(c),
+                                sugg: None,
+                                null: None,
+                                repeat: None,
+                            });
+                            preceded_by_whitespace = true;
+                            continue;
+                        }
                     } else {
                     if c == '\u{00a0}' {
                         // If an error has already been reported on non-breaking
@@ -1178,6 +1200,57 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
             self.symbol_from_to(start, end)
         };
         (kind, sym)
+    }
+
+    /// Try to parse a curly-quoted string or char literal.
+    /// Returns (LitKind, Symbol, total_bytes_consumed) on success.
+    fn try_curly_quoted_literal(
+        &self,
+        start: BytePos,
+        open_quote: char,
+    ) -> Option<(token::LitKind, Symbol, usize)> {
+        let text = self.str_from_to_end(start);
+        let mut chars = text.chars();
+        chars.next(); // skip opening quote
+
+        // Determine the closing quote based on opening
+        // U+201C LEFT DOUBLE QUOTATION MARK, U+201D RIGHT DOUBLE QUOTATION MARK
+        // U+2018 LEFT SINGLE QUOTATION MARK, U+2019 RIGHT SINGLE QUOTATION MARK
+        // In script mode, all curly quotes produce String (not char)
+        let close_quote = match open_quote {
+            '\u{201C}' | '\u{201D}' => '\u{201D}',  // curly double quotes
+            '\u{2018}' | '\u{2019}' => '\u{2019}',  // curly single quotes
+            _ => return None,
+        };
+
+        let mut content = String::new();
+        let mut total_bytes = open_quote.len_utf8();
+        let mut found_close = false;
+
+        for c in chars {
+            total_bytes += c.len_utf8();
+            // Accept the closing quote (right variant closes both left and right openers)
+            if c == close_quote {
+                found_close = true;
+                break;
+            }
+            // Handle escape sequences
+            if c == '\\' {
+                content.push(c);
+                // The actual escape will be processed by cook_quoted later
+                // For now just include the backslash
+            } else {
+                content.push(c);
+            }
+        }
+
+        if !found_close {
+            return None;
+        }
+
+        let sym = Symbol::intern(&content);
+        // All curly quotes produce strings in script mode
+        Some((token::Str, sym, total_bytes))
     }
 }
 
