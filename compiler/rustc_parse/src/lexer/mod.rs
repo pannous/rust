@@ -448,9 +448,12 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                         && matches!(c, '\u{201C}' | '\u{201D}' | '\u{2018}' | '\u{2019}')
                     {
                         if let Some((kind, sym, bytes_consumed)) = self.try_curly_quoted_literal(start, c) {
-                            // Advance position past the consumed bytes (minus the first char already consumed)
-                            let extra = bytes_consumed - c.len_utf8();
-                            self.pos = self.pos + BytePos(extra as u32);
+                            // Update position to end of curly-quoted string
+                            let new_pos = start + BytePos(bytes_consumed as u32);
+                            self.pos = new_pos;
+                            // Recreate cursor at the new position (cursor was only advanced past first char)
+                            let remaining = &self.src[self.src_index(new_pos)..];
+                            self.cursor = Cursor::new(remaining, FrontmatterAllowed::No);
                             token::Literal(token::Lit { kind, symbol: sym, suffix: None })
                         } else {
                             // Unterminated - emit error and continue
