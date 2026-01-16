@@ -326,8 +326,50 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         tokens: None,
     }));
 
-    // macro_rules! __walrus { ($i:ident = $($e:tt)+) => { let $i = $($e)+; }; }
+    // macro_rules! s { ($e:expr) => { $e.to_string() }; }
+    // For converting string literals to String: s!("abc") -> "abc".to_string()
+    let s_body = vec![
+        // ($e:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { $e.to_string() }
+        delim(Delimiter::Brace, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Dot, def_site),
+            ident("to_string"),
+            delim(Delimiter::Parenthesis, vec![]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let s_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(s_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::s, call_site), s_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! __walrus { ($i:ident = $($e:tt)+) => { let mut $i = $($e)+; }; }
     // For Go-style short variable declarations: x := expr -> __walrus!(x = expr_tokens)
+    // Uses `let mut` so variables are mutable by default (like Go/Python)
     let walrus_body = vec![
         // ($i:ident = $($e:tt)+)
         delim(Delimiter::Parenthesis, vec![
@@ -346,9 +388,10 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
             TokenTree::token_alone(TokenKind::Plus, def_site),
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
-        // { let $i = $($e)+; }
+        // { let mut $i = $($e)+; }
         delim(Delimiter::Brace, vec![
             ident("let"),
+            ident("mut"),
             TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("i"),
             TokenTree::token_alone(TokenKind::Eq, def_site),
