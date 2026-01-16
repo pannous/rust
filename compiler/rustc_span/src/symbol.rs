@@ -1808,6 +1808,8 @@ symbols! {
         pushpop_unsafe,
         __walrus,
         __let,
+        __for,
+        __while,
         qreg,
         qreg_low4,
         qreg_low8,

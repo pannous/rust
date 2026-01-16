@@ -423,9 +423,97 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     };
 
     items.push(Box::new(ast::Item {
-        attrs: vec![allow_unused].into(),
+        attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__let, call_site), let_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! __for { ($($t:tt)*) => { for $($t)* }; }
+    let for_body = vec![
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            ident("for"),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let for_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(for_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__for, call_site), for_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! __while { ($($t:tt)*) => { while $($t)* }; }
+    let while_body = vec![
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            ident("while"),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let while_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(while_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__while, call_site), while_macro),
         vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
         span: def_site,
         tokens: None,

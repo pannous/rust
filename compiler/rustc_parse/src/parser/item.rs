@@ -303,8 +303,18 @@ impl<'a> Parser<'a> {
             // Go-style short variable declaration: x := expr -> __walrus!(x = expr)
             return self.parse_walrus_assignment(lo, attrs);
         } else if self.is_script_let_statement() {
-            // Script mode: let x = expr; -> __walrus!(x = expr)
+            // Script mode: let x = expr; -> __let!(x = expr)
             return self.parse_script_let_statement(lo, attrs);
+        } else if self.is_script_var_statement() {
+            // Script mode: var x = expr; -> __let!(x = expr) (var as alias for let)
+            return self.parse_script_var_statement(lo, attrs);
+        // TODO: for/while at item level disabled for now - breaks impl parsing
+        // } else if self.is_script_for_statement() {
+        //     // Script mode: for i in x { } -> __for!(i in x { })
+        //     return self.parse_script_for_statement(lo, attrs);
+        // } else if self.is_script_while_statement() {
+        //     // Script mode: while cond { } -> __while!(cond { })
+        //     return self.parse_script_while_statement(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -608,6 +618,205 @@ impl<'a> Parser<'a> {
 
         let mac = MacCall { path: let_path, args: Box::new(args) };
 
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
+    }
+
+    /// Check for script-mode var statement at item level (Go/JS style)
+    fn is_script_var_statement(&self) -> bool {
+        self.token.is_ident_named(sym::var)
+    }
+
+    /// Parse script-mode var statement: `var x = expr;` -> `__let!(x = expr)`
+    fn parse_script_var_statement(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
+
+        let var_line = self.psess.source_map().lookup_char_pos(self.token.span.lo()).line;
+        self.bump(); // consume `var`
+
+        let stmt_lo = self.token.span;
+        let mut stmt_tokens = Vec::new();
+
+        loop {
+            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
+                break;
+            }
+            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
+            if token_pos.line > var_line {
+                if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
+                   || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
+                   || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
+                   || self.token.is_keyword(kw::Use) || self.token.is_keyword(kw::Struct)
+                   || self.token == token::Pound {
+                    break;
+                }
+            }
+            if let Some(tt) = self.collect_token_tree() {
+                stmt_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        let _ = self.eat(exp!(Semi));
+        let stmt_hi = self.prev_token.span;
+
+        // Use __let! macro (var is alias for let)
+        let let_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__let, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(stmt_tokens),
+        };
+
+        let mac = MacCall { path: let_path, args: Box::new(args) };
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
+    }
+
+    /// Check for script-mode for statement at item level
+    /// Only matches `for x in ...` pattern, not `impl ... for ...` or `for<'a>`
+    #[allow(dead_code)] // TODO: re-enable when for/while at item level works
+    fn is_script_for_statement(&self) -> bool {
+        self.token.is_keyword(kw::For)
+            && self.look_ahead(1, |t| t.is_ident() || *t == token::OpenParen)
+            && self.look_ahead(2, |t| t.is_keyword(kw::In) || *t == token::Comma || *t == token::Colon)
+    }
+
+    /// Parse script-mode for statement: `for i in x { }` -> `__for!(i in x { })`
+    #[allow(dead_code)]
+    fn parse_script_for_statement(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
+
+        self.bump(); // consume `for`
+
+        let stmt_lo = self.token.span;
+        let mut stmt_tokens = Vec::new();
+
+        // Collect tokens including the body block
+        let mut brace_depth = 0;
+        loop {
+            if self.check(exp!(Eof)) {
+                break;
+            }
+
+            // Track brace depth to know when we've finished the for body
+            if self.token == token::OpenBrace {
+                brace_depth += 1;
+            } else if self.token == token::CloseBrace {
+                if brace_depth == 0 {
+                    break;
+                }
+                brace_depth -= 1;
+                if brace_depth == 0 {
+                    // Include the closing brace and we're done
+                    if let Some(tt) = self.collect_token_tree() {
+                        stmt_tokens.push(tt);
+                    }
+                    break;
+                }
+            }
+
+            if let Some(tt) = self.collect_token_tree() {
+                stmt_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        let stmt_hi = self.prev_token.span;
+
+        let for_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__for, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(stmt_tokens),
+        };
+
+        let mac = MacCall { path: for_path, args: Box::new(args) };
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
+    }
+
+    /// Check for script-mode while statement at item level
+    #[allow(dead_code)]
+    fn is_script_while_statement(&self) -> bool {
+        self.token.is_keyword(kw::While)
+    }
+
+    /// Parse script-mode while statement: `while cond { }` -> `__while!(cond { })`
+    #[allow(dead_code)]
+    fn parse_script_while_statement(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
+
+        self.bump(); // consume `while`
+
+        let stmt_lo = self.token.span;
+        let mut stmt_tokens = Vec::new();
+
+        // Collect tokens including the body block
+        let mut brace_depth = 0;
+        loop {
+            if self.check(exp!(Eof)) {
+                break;
+            }
+
+            if self.token == token::OpenBrace {
+                brace_depth += 1;
+            } else if self.token == token::CloseBrace {
+                if brace_depth == 0 {
+                    break;
+                }
+                brace_depth -= 1;
+                if brace_depth == 0 {
+                    if let Some(tt) = self.collect_token_tree() {
+                        stmt_tokens.push(tt);
+                    }
+                    break;
+                }
+            }
+
+            if let Some(tt) = self.collect_token_tree() {
+                stmt_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        let stmt_hi = self.prev_token.span;
+
+        let while_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__while, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(stmt_tokens),
+        };
+
+        let mac = MacCall { path: while_path, args: Box::new(args) };
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
 
