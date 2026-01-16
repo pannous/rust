@@ -275,6 +275,21 @@ impl<'input> Iterator for Parser<'input> {
                         None
                     }
                 }
+                '%' if self.mode == ParseMode::Format => {
+                    // C-style printf format specifier
+                    self.input_vec_index += 1;
+                    if let Some((_, i, '%')) = self.peek() {
+                        self.input_vec_index += 1;
+                        // double percent escape: "%%"
+                        Some(Piece::Lit(self.string(i)))
+                    } else if let Some(arg) = self.printf_argument(start, end) {
+                        // Successfully parsed a printf-style format specifier
+                        Some(Piece::NextArgument(Box::new(arg)))
+                    } else {
+                        // Not a valid printf specifier, treat % as literal
+                        Some(Piece::Lit(self.string(idx)))
+                    }
+                }
                 _ => Some(Piece::Lit(self.string(idx))),
             }
         } else {
@@ -481,6 +496,9 @@ impl<'input> Parser<'input> {
                 '{' | '}' => {
                     return &self.input[start..i];
                 }
+                '%' if self.mode == ParseMode::Format => {
+                    return &self.input[start..i];
+                }
                 '\n' if self.is_source_literal => {
                     self.input_vec_index += 1;
                     self.line_spans.push(self.cur_line_start..r.start);
@@ -496,6 +514,230 @@ impl<'input> Parser<'input> {
             }
         }
         &self.input[start..]
+    }
+
+    /// Parses a printf-style format specifier like %d, %s, %10.2f, etc.
+    /// Returns None if the sequence after % is not a valid printf specifier.
+    fn printf_argument(&mut self, percent_start: usize, _percent_end: usize) -> Option<Argument<'input>> {
+        let start_idx = self.input_vec_index;
+        let position_span_start = percent_start;
+
+        // Parse optional parameter (e.g., %1$d)
+        let mut parameter: Option<usize> = None;
+        if let Some(n) = self.printf_integer() {
+            if self.consume('$') {
+                parameter = Some(n.saturating_sub(1)); // Convert 1-based to 0-based
+            } else {
+                // Not a parameter, reset and treat as width later
+                self.input_vec_index = start_idx;
+            }
+        }
+
+        // Parse flags: - + space # 0 '
+        let mut align = AlignUnknown;
+        let mut sign: Option<Sign> = None;
+        let mut alternate = false;
+        let mut zero_pad = false;
+
+        loop {
+            match self.peek().map(|(_, _, c)| c) {
+                Some('-') => {
+                    self.input_vec_index += 1;
+                    align = AlignLeft;
+                }
+                Some('+') => {
+                    self.input_vec_index += 1;
+                    sign = Some(Sign::Plus);
+                }
+                Some(' ') => {
+                    self.input_vec_index += 1;
+                    // Space flag - Rust doesn't have direct equivalent, skip
+                }
+                Some('#') => {
+                    self.input_vec_index += 1;
+                    alternate = true;
+                }
+                Some('0') => {
+                    self.input_vec_index += 1;
+                    zero_pad = true;
+                }
+                Some('\'') => {
+                    self.input_vec_index += 1;
+                    // Thousands separator - Rust doesn't support, skip
+                }
+                _ => break,
+            }
+        }
+
+        // Parse width
+        let width = if self.consume('*') {
+            // Width from next argument
+            let i = self.curarg;
+            self.curarg += 1;
+            CountIsStar(i)
+        } else if let Some(n) = self.printf_integer() {
+            CountIs(n as u16)
+        } else {
+            CountImplied
+        };
+
+        // Parse precision
+        let precision = if self.consume('.') {
+            if self.consume('*') {
+                // Precision from next argument
+                let i = self.curarg;
+                self.curarg += 1;
+                CountIsStar(i)
+            } else if let Some(n) = self.printf_integer() {
+                CountIs(n as u16)
+            } else {
+                CountIs(0) // %.s means precision 0
+            }
+        } else {
+            CountImplied
+        };
+
+        // Skip length modifiers (hh, h, l, ll, L, z, j, t, I, I32, I64, q)
+        // These don't affect Rust formatting
+        match self.peek().map(|(_, _, c)| c) {
+            Some('h') => {
+                self.input_vec_index += 1;
+                if self.peek().map(|(_, _, c)| c) == Some('h') {
+                    self.input_vec_index += 1;
+                }
+            }
+            Some('l') => {
+                self.input_vec_index += 1;
+                if self.peek().map(|(_, _, c)| c) == Some('l') {
+                    self.input_vec_index += 1;
+                }
+            }
+            Some('L' | 'z' | 'j' | 't' | 'q') => {
+                self.input_vec_index += 1;
+            }
+            Some('I') => {
+                self.input_vec_index += 1;
+                // Check for I32 or I64
+                if self.peek().map(|(_, _, c)| c) == Some('3') {
+                    self.input_vec_index += 1;
+                    if self.peek().map(|(_, _, c)| c) == Some('2') {
+                        self.input_vec_index += 1;
+                    }
+                } else if self.peek().map(|(_, _, c)| c) == Some('6') {
+                    self.input_vec_index += 1;
+                    if self.peek().map(|(_, _, c)| c) == Some('4') {
+                        self.input_vec_index += 1;
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        // Parse type specifier
+        let (_, _, type_char) = self.peek()?;
+        let ty: &'static str = match type_char {
+            'd' | 'i' | 'u' | 'f' | 'F' | 's' | 'c' => {
+                self.input_vec_index += 1;
+                "" // Display
+            }
+            'x' => {
+                self.input_vec_index += 1;
+                "x" // LowerHex
+            }
+            'X' => {
+                self.input_vec_index += 1;
+                "X" // UpperHex
+            }
+            'o' => {
+                self.input_vec_index += 1;
+                "o" // Octal
+            }
+            'e' => {
+                self.input_vec_index += 1;
+                "e" // LowerExp
+            }
+            'E' => {
+                self.input_vec_index += 1;
+                "E" // UpperExp
+            }
+            'p' => {
+                self.input_vec_index += 1;
+                "p" // Pointer
+            }
+            'b' => {
+                self.input_vec_index += 1;
+                "b" // Binary (extension)
+            }
+            'g' => {
+                self.input_vec_index += 1;
+                "e" // Use LowerExp as approximation
+            }
+            'G' => {
+                self.input_vec_index += 1;
+                "E" // Use UpperExp as approximation
+            }
+            '?' => {
+                self.input_vec_index += 1;
+                "?" // Debug (extension)
+            }
+            _ => {
+                // Not a valid printf type specifier, restore position
+                self.input_vec_index = start_idx;
+                return None;
+            }
+        };
+
+        let position_span_end = self.input_vec_index2range(self.input_vec_index).start;
+
+        // Determine position
+        let position = if let Some(p) = parameter {
+            ArgumentIs(p)
+        } else {
+            let i = self.curarg;
+            self.curarg += 1;
+            ArgumentImplicitlyIs(i)
+        };
+
+        // Record arg place for source literal
+        if self.is_source_literal {
+            self.arg_places.push(position_span_start..position_span_end);
+        }
+
+        Some(Argument {
+            position,
+            position_span: position_span_start..position_span_end,
+            format: FormatSpec {
+                fill: None,
+                fill_span: None,
+                align,
+                sign,
+                alternate,
+                zero_pad,
+                debug_hex: None,
+                precision,
+                precision_span: None,
+                width,
+                width_span: None,
+                ty,
+                ty_span: None,
+            },
+        })
+    }
+
+    /// Parse an integer for printf-style format (returns usize, not u16)
+    fn printf_integer(&mut self) -> Option<usize> {
+        let mut cur: usize = 0;
+        let mut found = false;
+        while let Some((_, _, c)) = self.peek() {
+            if let Some(i) = c.to_digit(10) {
+                self.input_vec_index += 1;
+                cur = cur.saturating_mul(10).saturating_add(i as usize);
+                found = true;
+            } else {
+                break;
+            }
+        }
+        found.then_some(cur)
     }
 
     /// Parses an `Argument` structure, or what's contained within braces inside the format string.
