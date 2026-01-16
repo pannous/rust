@@ -9,7 +9,7 @@ echo "This builds the compiler with itself to verify self-hosting capability"
 echo "Expected time: ~5 minutes"
 echo ""
 
-./x.py build --stage 2 compiler
+./x.py build --stage 2 compiler --warnings warn
 
 STAGE2="./build/host/stage2/bin/rustc"
 
