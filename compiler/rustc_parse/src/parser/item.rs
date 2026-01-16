@@ -125,7 +125,7 @@ enum ReuseKind {
 impl<'a> Parser<'a> {
     pub fn parse_item(&mut self, force_collect: ForceCollect) -> PResult<'a, Option<Box<Item>>> {
         let fn_parse_mode =
-            FnParseMode { req_name: |_, _| true, context: FnContext::Free, req_body: true };
+            FnParseMode { req_name: |_, _| true, context: FnContext::Free, req_body: true, in_block: false };
         self.parse_item_(fn_parse_mode, force_collect).map(|i| i.map(Box::new))
     }
 
@@ -308,13 +308,14 @@ impl<'a> Parser<'a> {
         } else if self.is_script_var_statement() {
             // Script mode: var x = expr; -> __let!(x = expr) (var as alias for let)
             return self.parse_script_var_statement(lo, attrs);
-        // TODO: for/while at item level disabled for now - breaks impl parsing
-        // } else if self.is_script_for_statement() {
-        //     // Script mode: for i in x { } -> __for!(i in x { })
-        //     return self.parse_script_for_statement(lo, attrs);
-        // } else if self.is_script_while_statement() {
-        //     // Script mode: while cond { } -> __while!(cond { })
-        //     return self.parse_script_while_statement(lo, attrs);
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_for_statement() {
+            // Script mode: for i in x { } -> __for!(i in x { })
+            // Only at module level (Free context), not inside impl/trait/blocks
+            return self.parse_script_for_statement(lo, attrs);
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_while_statement() {
+            // Script mode: while cond { } -> __while!(cond { })
+            // Only at module level (Free context), not inside impl/trait/blocks
+            return self.parse_script_while_statement(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -683,7 +684,6 @@ impl<'a> Parser<'a> {
 
     /// Check for script-mode for statement at item level
     /// Only matches `for x in ...` pattern, not `impl ... for ...` or `for<'a>`
-    #[allow(dead_code)] // TODO: re-enable when for/while at item level works
     fn is_script_for_statement(&self) -> bool {
         self.token.is_keyword(kw::For)
             && self.look_ahead(1, |t| t.is_ident() || *t == token::OpenParen)
@@ -691,7 +691,6 @@ impl<'a> Parser<'a> {
     }
 
     /// Parse script-mode for statement: `for i in x { }` -> `__for!(i in x { })`
-    #[allow(dead_code)]
     fn parse_script_for_statement(
         &mut self,
         lo: Span,
@@ -754,13 +753,11 @@ impl<'a> Parser<'a> {
     }
 
     /// Check for script-mode while statement at item level
-    #[allow(dead_code)]
     fn is_script_while_statement(&self) -> bool {
         self.token.is_keyword(kw::While)
     }
 
     /// Parse script-mode while statement: `while cond { }` -> `__while!(cond { })`
-    #[allow(dead_code)]
     fn parse_script_while_statement(
         &mut self,
         lo: Span,
@@ -1468,7 +1465,7 @@ impl<'a> Parser<'a> {
         force_collect: ForceCollect,
     ) -> PResult<'a, Option<Option<Box<AssocItem>>>> {
         let fn_parse_mode =
-            FnParseMode { req_name: |_, _| true, context: FnContext::Impl, req_body: true };
+            FnParseMode { req_name: |_, _| true, context: FnContext::Impl, req_body: true, in_block: false };
         self.parse_assoc_item(fn_parse_mode, force_collect)
     }
 
@@ -1480,6 +1477,7 @@ impl<'a> Parser<'a> {
             req_name: |edition, _| edition >= Edition::Edition2018,
             context: FnContext::Trait,
             req_body: false,
+            in_block: false,
         };
         self.parse_assoc_item(fn_parse_mode, force_collect)
     }
@@ -1741,6 +1739,7 @@ impl<'a> Parser<'a> {
             req_name: |_, is_dot_dot_dot| is_dot_dot_dot == IsDotDotDot::No,
             context: FnContext::Free,
             req_body: false,
+            in_block: false,
         };
         Ok(self.parse_item_(fn_parse_mode, force_collect)?.map(
             |Item { attrs, id, span, vis, kind, tokens }| {
@@ -2600,7 +2599,7 @@ impl<'a> Parser<'a> {
                     Visibility { span: DUMMY_SP, kind: VisibilityKind::Inherited, tokens: None };
                 // We use `parse_fn` to get a span for the function
                 let fn_parse_mode =
-                    FnParseMode { req_name: |_, _| true, context: FnContext::Free, req_body: true };
+                    FnParseMode { req_name: |_, _| true, context: FnContext::Free, req_body: true, in_block: false };
                 match self.parse_fn(
                     &mut AttrVec::new(),
                     fn_parse_mode,
@@ -2911,6 +2910,10 @@ pub(crate) struct FnParseMode {
     /// definition or extern block. Within an impl block or a module, it should
     /// always be set to true.
     pub(super) req_body: bool,
+    /// Whether we're parsing items inside a block (function body, etc.)
+    /// Script-mode transformations (for/while at item level) should NOT
+    /// trigger when parsing items inside blocks.
+    pub(super) in_block: bool,
 }
 
 /// The context in which a function is parsed.

@@ -407,6 +407,7 @@ impl<'a> Parser<'a> {
                             context: FnContext::Free,
                             req_name: |_, _| false,
                             req_body: false,
+                            in_block: false,
                         };
                         let param = p.parse_param_general(&mode, false, false);
                         param.map(move |param| {
