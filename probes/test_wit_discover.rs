@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 //! Runtime WIT type discovery
 //!
 //! Loads a library, reads embedded WIT metadata, and discovers types at runtime.

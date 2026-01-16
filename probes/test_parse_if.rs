@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 use warp::parse;
 fn main() {
     println!("if(zero()){{3}} => {:?}", parse("if(zero()){3}"));

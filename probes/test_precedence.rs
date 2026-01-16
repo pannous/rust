@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 fn main() {
     // Test precedence: and should bind tighter than or (like && vs ||)
     let t = true;

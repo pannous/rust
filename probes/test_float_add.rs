@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Simple test to verify float type upgrading
 use wasp::wasp_parser::WaspParser;
 use wasp::wasm_gc_emitter::eval;

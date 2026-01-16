@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test for #[dynexport] attribute - stable dynamic library exports
 
 #[dynexport]

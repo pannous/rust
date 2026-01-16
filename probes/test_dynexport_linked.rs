@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 //! Test: Link against dynexport library at compile time (like C/C++)
 //!
 //! Compile library first:

@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 //! Complete dynload test with forked rustc #[dynexport] library
 
 use std::ffi::{c_char, c_int, c_void, CStr, CString};

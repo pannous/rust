@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 //! Test HashMap<i32,i32> with OptionI32 return
 
 use std::ffi::{c_char, c_int, c_void, CString, OsStr};

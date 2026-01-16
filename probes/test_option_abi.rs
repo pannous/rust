@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 //! Debug OptionI32 ABI with extern "C"
 
 use std::ffi::{c_char, c_int, c_void, CString};

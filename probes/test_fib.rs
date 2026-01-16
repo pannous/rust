@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 use warp::wasm_gc_emitter::WasmGcEmitter;
 use warp::wasp_parser::WaspParser;
 use warp::write_wasm;

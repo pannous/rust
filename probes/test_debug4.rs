@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Standalone test with same imports as test_math.rs
 use warp::extensions::print;
 use warp::is;

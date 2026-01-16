@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 use warp::wasm_gc_emitter::eval;
 
 fn main() {
