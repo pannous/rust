@@ -461,6 +461,8 @@ pub enum TokenKind {
     Colon,
     /// `::`
     PathSep,
+    /// `:=`
+    ColonEq,
     /// `->`
     RArrow,
     /// `<-`
@@ -571,6 +573,7 @@ impl TokenKind {
             (DotDotDot, 2) => (DotDot, Dot), // `..` + `.`
             (DotDotEq, 2) => (DotDot, Eq),
             (PathSep, 1) => (Colon, Colon),
+            (ColonEq, 1) => (Colon, Eq),
             (RArrow, 1) => (Minus, Gt),
             (LArrow, 1) => (Lt, Minus),
             (FatArrow, 1) => (Eq, Gt),
@@ -650,7 +653,7 @@ impl Token {
             Eq | Lt | Le | EqEq | Ne | Ge | Gt | AndAnd | OrOr | Bang | Tilde | Plus | Minus
             | Star | Slash | Percent | Caret | And | Or | Shl | Shr | PlusEq | MinusEq | StarEq
             | SlashEq | PercentEq | CaretEq | AndEq | OrEq | ShlEq | ShrEq | At | Dot | DotDot
-            | DotDotDot | DotDotEq | Comma | Semi | Colon | PathSep | RArrow | LArrow
+            | DotDotDot | DotDotEq | Comma | Semi | Colon | PathSep | ColonEq | RArrow | LArrow
             | FatArrow | Pound | Dollar | Question | QuestionQuestion | SingleQuote => true,
 
             OpenParen | CloseParen | OpenBrace | CloseBrace | OpenBracket | CloseBracket
@@ -686,6 +689,7 @@ impl Token {
             Lt | Shl                          | // associated path
             PathSep                           | // global path
             Lifetime(..)                      | // labeled loop
+            At                                | // @[...] vec literal
             Pound                             => true, // expression attributes
             OpenInvisible(InvisibleOrigin::MetaVar(
                 MetaVarKind::Block |
@@ -1059,6 +1063,7 @@ impl Token {
             (DotDot, _) => return None,
 
             (Colon, Colon) => PathSep,
+            (Colon, Eq) => ColonEq,
             (Colon, _) => return None,
 
             (SingleQuote, Ident(name, is_raw)) => {
@@ -1069,7 +1074,7 @@ impl Token {
             (
                 Le | EqEq | Ne | Ge | AndAnd | OrOr | Tilde | PlusEq | MinusEq | StarEq | SlashEq
                 | PercentEq | CaretEq | AndEq | OrEq | ShlEq | ShrEq | At | DotDotDot | DotDotEq
-                | Comma | Semi | PathSep | RArrow | LArrow | FatArrow | Pound | Dollar | Question
+                | Comma | Semi | PathSep | ColonEq | RArrow | LArrow | FatArrow | Pound | Dollar | Question
                 | QuestionQuestion | OpenParen | CloseParen | OpenBrace | CloseBrace | OpenBracket | CloseBracket
                 | OpenInvisible(_) | CloseInvisible(_) | Literal(..) | Ident(..) | NtIdent(..)
                 | Lifetime(..) | NtLifetime(..) | DocComment(..) | Eof,

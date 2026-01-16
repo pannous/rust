@@ -476,13 +476,11 @@ impl<'a> Parser<'a> {
 
     /// Check for Go-style short variable declaration: `x :=`
     fn is_walrus_assignment(&self) -> bool {
-        self.token.is_ident()
-            && self.look_ahead(1, |t| *t == token::Colon)
-            && self.look_ahead(2, |t| *t == token::Eq)
+        self.token.is_ident() && self.look_ahead(1, |t| *t == token::ColonEq)
     }
 
     /// Parse Go-style short variable declaration: `x := expr`
-    /// Transforms to `__walrus!(x = expr)` macro call for script mode
+    /// Transforms to `__let!(mut x = expr)` macro call for script mode
     fn parse_walrus_assignment(
         &mut self,
         lo: Span,
@@ -492,8 +490,7 @@ impl<'a> Parser<'a> {
 
         let ident = self.parse_ident()?;
         let ident_line = self.psess.source_map().lookup_char_pos(ident.span.lo()).line;
-        self.bump(); // consume `:`
-        self.bump(); // consume `=`
+        self.bump(); // consume `:=` (ColonEq token)
 
         let expr_lo = self.token.span;
         let mut expr_tokens = Vec::new();
@@ -525,15 +522,20 @@ impl<'a> Parser<'a> {
 
         let expr_hi = self.prev_token.span;
 
-        // Build __walrus!(ident = expr_tokens) macro call
-        let walrus_path = ast::Path {
+        // Build __let!(mut ident = expr_tokens) macro call
+        // This produces `let mut ident = expr;` after expansion
+        let let_path = ast::Path {
             span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__walrus, lo))],
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__let, lo))],
             tokens: None,
         };
 
-        // Build the macro arguments: ident = expr_tokens
+        // Build the macro arguments: mut ident = expr_tokens
         let mut args_tokens = vec![
+            TokenTree::Token(
+                token::Token::new(token::Ident(kw::Mut, IdentIsRaw::No), ident.span),
+                Spacing::Alone,
+            ),
             TokenTree::Token(
                 token::Token::new(token::Ident(ident.name, IdentIsRaw::No), ident.span),
                 Spacing::Alone,
@@ -548,7 +550,7 @@ impl<'a> Parser<'a> {
             tokens: TokenStream::new(args_tokens),
         };
 
-        let mac = MacCall { path: walrus_path, args: Box::new(args) };
+        let mac = MacCall { path: let_path, args: Box::new(args) };
 
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }

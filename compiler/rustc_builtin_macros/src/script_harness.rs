@@ -380,65 +380,6 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         tokens: None,
     }));
 
-    // macro_rules! __walrus { ($i:ident = $($e:tt)+) => { let mut $i = $($e)+; }; }
-    // For Go-style short variable declarations: x := expr -> __walrus!(x = expr_tokens)
-    // Uses `let mut` so variables are mutable by default (like Go/Python)
-    let walrus_body = vec![
-        // ($i:ident = $($e:tt)+)
-        delim(Delimiter::Parenthesis, vec![
-            TokenTree::token_alone(TokenKind::Dollar, def_site),
-            ident("i"),
-            TokenTree::token_alone(TokenKind::Colon, def_site),
-            ident("ident"),
-            TokenTree::token_alone(TokenKind::Eq, def_site),
-            TokenTree::token_alone(TokenKind::Dollar, def_site),
-            delim(Delimiter::Parenthesis, vec![
-                TokenTree::token_alone(TokenKind::Dollar, def_site),
-                ident("e"),
-                TokenTree::token_alone(TokenKind::Colon, def_site),
-                ident("tt"),
-            ]),
-            TokenTree::token_alone(TokenKind::Plus, def_site),
-        ]),
-        TokenTree::token_alone(TokenKind::FatArrow, def_site),
-        // { let mut $i = $($e)+; }
-        delim(Delimiter::Brace, vec![
-            ident("let"),
-            ident("mut"),
-            TokenTree::token_alone(TokenKind::Dollar, def_site),
-            ident("i"),
-            TokenTree::token_alone(TokenKind::Eq, def_site),
-            TokenTree::token_alone(TokenKind::Dollar, def_site),
-            delim(Delimiter::Parenthesis, vec![
-                TokenTree::token_alone(TokenKind::Dollar, def_site),
-                ident("e"),
-            ]),
-            TokenTree::token_alone(TokenKind::Plus, def_site),
-            TokenTree::token_alone(TokenKind::Semi, def_site),
-        ]),
-        TokenTree::token_alone(TokenKind::Semi, def_site),
-    ];
-
-    let walrus_macro = ast::MacroDef {
-        body: Box::new(ast::DelimArgs {
-            dspan: DelimSpan::from_single(def_site),
-            delim: Delimiter::Brace,
-            tokens: TokenStream::new(walrus_body),
-        }),
-        macro_rules: true,
-        eii_extern_target: None,
-    };
-
-    items.push(Box::new(ast::Item {
-        attrs: vec![allow_unused.clone()].into(),
-        id: ast::DUMMY_NODE_ID,
-        // Use call_site for the macro name so it's visible to user code
-        kind: ast::ItemKind::MacroDef(Ident::new(sym::__walrus, call_site), walrus_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
-        span: def_site,
-        tokens: None,
-    }));
-
     // macro_rules! __let { ($($t:tt)*) => { let $($t)*; }; }
     // For script-mode let statements with type annotations: `let x: Type = expr;`
     let let_body = vec![

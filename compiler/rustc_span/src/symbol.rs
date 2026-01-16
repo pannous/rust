@@ -1808,7 +1808,6 @@ symbols! {
         pure,
         put,
         pushpop_unsafe,
-        __walrus,
         __let,
         __for,
         __while,

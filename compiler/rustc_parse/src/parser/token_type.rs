@@ -45,6 +45,7 @@ pub enum TokenType {
     Semi,
     Colon,
     PathSep,
+    ColonEq,
     RArrow,
     FatArrow,
     Pound,
@@ -392,6 +393,7 @@ impl TokenType {
             TokenType::Semi => "`;`",
             TokenType::Colon => "`:`",
             TokenType::PathSep => "`::`",
+            TokenType::ColonEq => "`:=`",
             TokenType::RArrow => "`->`",
             TokenType::FatArrow => "`=>`",
             TokenType::Pound => "`#`",
@@ -491,6 +493,7 @@ macro_rules! exp {
     (Semi)           => { exp!(@tok, Semi) };
     (Colon)          => { exp!(@tok, Colon) };
     (PathSep)        => { exp!(@tok, PathSep) };
+    (ColonEq)        => { exp!(@tok, ColonEq) };
     (RArrow)         => { exp!(@tok, RArrow) };
     (FatArrow)       => { exp!(@tok, FatArrow) };
     (Pound)          => { exp!(@tok, Pound) };

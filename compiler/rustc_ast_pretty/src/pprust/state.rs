@@ -1019,6 +1019,7 @@ pub trait PrintState<'a>: std::ops::Deref<Target = pp::Printer> + std::ops::Dere
             token::Semi => ";".into(),
             token::Colon => ":".into(),
             token::PathSep => "::".into(),
+            token::ColonEq => ":=".into(),
             token::RArrow => "->".into(),
             token::LArrow => "<-".into(),
             token::FatArrow => "=>".into(),
