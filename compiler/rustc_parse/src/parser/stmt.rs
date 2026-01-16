@@ -1170,6 +1170,11 @@ impl<'a> Parser<'a> {
         if add_semi_to_stmt || (eat_semi && self.eat(exp!(Semi))) {
             stmt = stmt.add_trailing_semicolon();
         }
+        // When we infer a semicolon from newline, also consume any trailing explicit semicolon
+        // to prevent it from becoming an empty statement
+        if add_semi_to_stmt {
+            let _ = self.eat(exp!(Semi));
+        }
 
         stmt.span = stmt.span.to(self.prev_token.span);
         Ok(Some(stmt))
