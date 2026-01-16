@@ -126,8 +126,8 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     krate.items.push(main_fn);
 }
 
-/// Create #[allow(unused_macros)] attribute for suppressing warnings on auto-generated macros
-fn create_allow_unused_attr(span: Span) -> ast::Attribute {
+/// Create #[allow(lint_name)] attribute for suppressing warnings
+fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribute {
     use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
 
     let path = Path {
@@ -146,7 +146,7 @@ fn create_allow_unused_attr(span: Span) -> ast::Attribute {
             use rustc_ast::token::{IdentIsRaw, TokenKind};
             use rustc_ast::tokenstream::{TokenStream, TokenTree};
             TokenStream::new(vec![TokenTree::token_alone(
-                TokenKind::Ident(sym::unused_macros, IdentIsRaw::No),
+                TokenKind::Ident(lint_name, IdentIsRaw::No),
                 span,
             )])
         },
@@ -179,7 +179,7 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     let mut items = ThinVec::new();
 
     // Create #[allow(unused_macros)] attribute for auto-generated macros
-    let allow_unused = create_allow_unused_attr(def_site);
+    let allow_unused = create_allow_attr(def_site, sym::unused_macros);
 
     // Helper to create a delimited group (uses def_site for internal implementation)
     let delim = |d: Delimiter, inner: Vec<TokenTree>| -> TokenTree {
@@ -570,7 +570,7 @@ fn partition_items(
     (module_items, main_stmts)
 }
 
-/// Build a `fn main() { <stmts> }` function.
+/// Build a `fn main() { <stmts> }` function with #[allow(unused_mut)] for script mode.
 fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
     use rustc_span::hygiene::SyntaxContext;
     // Use SyntaxContext::root() for the main name so entry point detection finds it
@@ -615,9 +615,12 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
         eii_impls: ThinVec::new(),
     }));
 
+    // Suppress common warnings in script mode for convenience
+    let allow_unused_mut = create_allow_attr(span, sym::unused_mut);
+
     // Node IDs will be assigned during macro expansion
     Box::new(ast::Item {
-        attrs: ast::AttrVec::new(),
+        attrs: vec![allow_unused_mut].into(),
         id: ast::DUMMY_NODE_ID,
         kind: main_fn,
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Public, tokens: None },

@@ -2432,6 +2432,7 @@ symbols! {
         untagged_unions,
         unused_imports,
         unused_macros,
+        unused_mut,
         unwind,
         unwind_attributes,
         unwind_safe_trait,
