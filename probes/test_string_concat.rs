@@ -1,7 +1,12 @@
 #!/usr/bin/env rust
-
+//   string concatenation requires an owned `String` on the left
 
 // Test string + number concatenation feature
+
+result0 := "a" + "0"
+put!("Test 1: " + result0)
+eq!( result0 , "a0");
+
 
 // Basic string + integer
 result1 := "a" + 1
@@ -40,11 +45,11 @@ eq!( result7 , "prefix12suffix");
 
 result8 := "a " + true
 put!("Test 8: " + result8)
-eq!( result8 , "a ✔️" or result8 == "a true");
+eq!( result8 , "a ✔️");
 
 result9 := "a " + false
 put!("Test 9: " + result9)
-eq!( result9 , "a ✖️" or result9 == "a false");
+eq!( result9 , "a ✖️" );
 
 
 put!("All string concatenation tests passed!")

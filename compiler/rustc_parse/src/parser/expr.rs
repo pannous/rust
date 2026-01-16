@@ -4116,30 +4116,88 @@ impl<'a> Parser<'a> {
     }
 
     fn mk_binary(&self, binop: BinOp, lhs: Box<Expr>, rhs: Box<Expr>) -> ExprKind {
-        // Transform string literal % value -> String::from(literal) % value
-        // This enables Python-style string formatting with the % operator
-        if binop.node == BinOpKind::Rem {
-            if let ExprKind::Lit(token_lit) = &lhs.kind {
-                if matches!(token_lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_)) {
-                    // Build String::from(lhs) call
-                    let string_from_path = Path {
-                        span: lhs.span,
-                        segments: thin_vec![
-                            PathSegment::from_ident(Ident::new(sym::String, lhs.span)),
-                            PathSegment::from_ident(Ident::new(sym::from, lhs.span)),
-                        ],
-                        tokens: None,
-                    };
-                    let path_expr = self.mk_expr(lhs.span, ExprKind::Path(None, string_from_path));
-                    let call_expr = self.mk_expr(
-                        lhs.span,
-                        ExprKind::Call(path_expr, thin_vec![lhs]),
-                    );
-                    return ExprKind::Binary(binop, call_expr, rhs);
-                }
+        // Check if expression is a literal or literal-like (includes unary ops, parens)
+        fn is_literal_like(e: &Expr) -> bool {
+            match &e.kind {
+                ExprKind::Lit(_) => true,
+                // Handle unary operators on literals: -5, !true
+                ExprKind::Unary(_, inner) => is_literal_like(inner),
+                // Handle parenthesized expressions: (-5), (42)
+                ExprKind::Paren(inner) => is_literal_like(inner),
+                _ => false,
             }
         }
+        // Check if expression is a string literal specifically
+        let is_str_lit = |e: &Expr| matches!(&e.kind, ExprKind::Lit(lit)
+            if matches!(lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_)));
+
+        let lhs_is_str_lit = is_str_lit(&lhs);
+        let rhs_is_str_lit = is_str_lit(&rhs);
+        let rhs_is_literal = is_literal_like(&rhs);
+
+        // Transform string literal % value -> String::from(literal) % value
+        // This enables Python-style string formatting with the % operator
+        if binop.node == BinOpKind::Rem && lhs_is_str_lit {
+            let call_expr = self.wrap_in_string_from(lhs);
+            return ExprKind::Binary(binop, call_expr, rhs);
+        }
+
+        // Transform string concatenation with + operator
+        if binop.node == BinOpKind::Add {
+            // "str" + expr -> String::from("str") + &expr (borrow non-literals to avoid move)
+            if lhs_is_str_lit {
+                let call_expr = self.wrap_in_string_from(lhs);
+                // Borrow the rhs if it's not a literal to avoid moving
+                let rhs = if !rhs_is_literal {
+                    self.wrap_in_borrow(rhs)
+                } else {
+                    rhs
+                };
+                return ExprKind::Binary(binop, call_expr, rhs);
+            }
+            // expr + "str" (where expr is not a string literal) -> expr.to_string() + "str"
+            if rhs_is_str_lit && !lhs_is_str_lit {
+                let call_expr = self.wrap_in_to_string(lhs);
+                return ExprKind::Binary(binop, call_expr, rhs);
+            }
+        }
+
         ExprKind::Binary(binop, lhs, rhs)
+    }
+
+    /// Wrap an expression in &expr (borrow)
+    fn wrap_in_borrow(&self, expr: Box<Expr>) -> Box<Expr> {
+        let span = expr.span;
+        self.mk_expr(span, ExprKind::AddrOf(ast::BorrowKind::Ref, ast::Mutability::Not, expr))
+    }
+
+    /// Wrap an expression in String::from(expr)
+    fn wrap_in_string_from(&self, expr: Box<Expr>) -> Box<Expr> {
+        let span = expr.span;
+        let string_from_path = Path {
+            span,
+            segments: thin_vec![
+                PathSegment::from_ident(Ident::new(sym::String, span)),
+                PathSegment::from_ident(Ident::new(sym::from, span)),
+            ],
+            tokens: None,
+        };
+        let path_expr = self.mk_expr(span, ExprKind::Path(None, string_from_path));
+        self.mk_expr(span, ExprKind::Call(path_expr, thin_vec![expr]))
+    }
+
+    /// Wrap an expression in expr.to_string()
+    fn wrap_in_to_string(&self, expr: Box<Expr>) -> Box<Expr> {
+        let span = expr.span;
+        self.mk_expr(
+            span,
+            ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg: PathSegment::from_ident(Ident::new(sym::to_string, span)),
+                receiver: expr,
+                args: thin_vec![],
+                span,
+            })),
+        )
     }
 
     fn mk_index(&self, expr: Box<Expr>, idx: Box<Expr>, brackets_span: Span) -> ExprKind {

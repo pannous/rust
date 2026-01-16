@@ -2794,6 +2794,74 @@ impl AddAssign<&str> for String {
     }
 }
 
+/// Implements string concatenation with various types for script mode.
+/// `String + T` where T is a displayable type appends the display representation.
+macro_rules! impl_string_add_for_type {
+    ($($t:ty),*) => {
+        $(
+            #[cfg(not(no_global_oom_handling))]
+            #[stable(feature = "string_concat_types", since = "1.0.0")]
+            impl Add<$t> for String {
+                type Output = String;
+
+                #[inline]
+                fn add(mut self, other: $t) -> String {
+                    use core::fmt::Write;
+                    let _ = write!(self, "{}", other);
+                    self
+                }
+            }
+        )*
+    };
+}
+
+// Only implement for default numeric types (i32, f64) to avoid type inference ambiguity
+// with unsuffixed literals. For other numeric types, users can cast explicitly.
+impl_string_add_for_type!(i32, f64, char);
+
+/// Special implementation for bool that uses emoji representation.
+#[cfg(not(no_global_oom_handling))]
+#[stable(feature = "string_concat_bool", since = "1.0.0")]
+impl Add<bool> for String {
+    type Output = String;
+
+    #[inline]
+    fn add(mut self, other: bool) -> String {
+        if other {
+            self.push_str("✔️");
+        } else {
+            self.push_str("✖️");
+        }
+        self
+    }
+}
+
+/// Implements `String + String` concatenation.
+#[cfg(not(no_global_oom_handling))]
+#[stable(feature = "string_concat_string", since = "1.0.0")]
+impl Add<String> for String {
+    type Output = String;
+
+    #[inline]
+    fn add(mut self, other: String) -> String {
+        self.push_str(&other);
+        self
+    }
+}
+
+/// Implements `String + &String` concatenation (non-consuming).
+#[cfg(not(no_global_oom_handling))]
+#[stable(feature = "string_concat_ref_string", since = "1.0.0")]
+impl Add<&String> for String {
+    type Output = String;
+
+    #[inline]
+    fn add(mut self, other: &String) -> String {
+        self.push_str(other);
+        self
+    }
+}
+
 /// Implements Python-style `%` string formatting for `String`.
 ///
 /// Replaces the first format placeholder (`%s`, `%d`, `%v`, etc.) with the
