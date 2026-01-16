@@ -223,6 +223,9 @@ pub struct Parser<'a> {
     /// Whether the parser is allowed to do recovery.
     /// This is disabled when parsing macro arguments, see #103534
     recovery: Recovery,
+    /// Whether the parser is in script mode (shebang file or -Z script).
+    /// Enables Python-like string behavior where "foo" becomes String.
+    script_mode: bool,
 }
 
 // This type is used a lot, e.g. it's cloned when matching many declarative macro rules with
@@ -372,6 +375,7 @@ impl<'a> Parser<'a> {
             },
             current_closure: None,
             recovery: Recovery::Allowed,
+            script_mode: false,
         };
 
         // Make parser point to the first token.
@@ -389,6 +393,18 @@ impl<'a> Parser<'a> {
     pub fn recovery(mut self, recovery: Recovery) -> Self {
         self.recovery = recovery;
         self
+    }
+
+    #[inline]
+    pub fn script_mode(mut self, enabled: bool) -> Self {
+        self.script_mode = enabled;
+        self
+    }
+
+    #[inline]
+    pub fn is_script_mode(&self) -> bool {
+        // Check both parser-local flag and session-wide flag
+        self.script_mode || self.psess.script_mode()
     }
 
     #[inline]

@@ -205,12 +205,33 @@ fn new_parser_from_source_file(
     strip_tokens: StripTokens,
 ) -> Result<Parser<'_>, Vec<Diag<'_>>> {
     let end_pos = source_file.end_position();
+    // Detect shebang for script mode - set on session so all parsers see it
+    let has_shebang = source_file
+        .src
+        .as_ref()
+        .map(|s| is_shebang_line(s))
+        .unwrap_or(false);
+    if has_shebang {
+        psess.set_script_mode(true);
+    }
     let stream = source_file_to_stream(psess, source_file, None, strip_tokens)?;
     let mut parser = Parser::new(psess, stream, None);
     if parser.token == token::Eof {
         parser.token.span = Span::new(end_pos, end_pos, parser.token.span.ctxt(), None);
     }
     Ok(parser)
+}
+
+/// Check if the content starts with a shebang line.
+/// A shebang is `#!` at the start, but NOT `#![` which is a Rust attribute.
+fn is_shebang_line(content: &str) -> bool {
+    if let Some(rest) = content.strip_prefix("#!") {
+        // `#![` is a Rust inner attribute, not a shebang
+        let next_char = rest.chars().next();
+        next_char != Some('[')
+    } else {
+        false
+    }
 }
 
 /// Given a source string, produces a sequence of token trees.

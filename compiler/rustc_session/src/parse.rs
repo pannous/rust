@@ -278,6 +278,9 @@ pub struct ParseSess {
     proc_macro_quoted_spans: AppendOnlyVec<Span>,
     /// Used to generate new `AttrId`s. Every `AttrId` is unique.
     pub attr_id_generator: AttrIdGenerator,
+    /// Whether script mode is enabled (shebang file or -Z script).
+    /// In script mode, string literals automatically become String type.
+    script_mode: std::sync::atomic::AtomicBool,
 }
 
 impl ParseSess {
@@ -312,6 +315,7 @@ impl ParseSess {
             assume_incomplete_release: false,
             proc_macro_quoted_spans: Default::default(),
             attr_id_generator: AttrIdGenerator::new(),
+            script_mode: std::sync::atomic::AtomicBool::new(false),
         }
     }
 
@@ -372,5 +376,17 @@ impl ParseSess {
 
     pub fn dcx(&self) -> DiagCtxtHandle<'_> {
         self.dcx.handle()
+    }
+
+    /// Set script mode for this parse session.
+    /// In script mode, string literals automatically become String type.
+    pub fn set_script_mode(&self, enabled: bool) {
+        self.script_mode.store(enabled, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// Check if script mode is enabled.
+    #[inline]
+    pub fn script_mode(&self) -> bool {
+        self.script_mode.load(std::sync::atomic::Ordering::Relaxed)
     }
 }
