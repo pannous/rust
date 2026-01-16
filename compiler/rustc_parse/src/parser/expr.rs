@@ -583,7 +583,10 @@ impl<'a> Parser<'a> {
                 let operand_expr = this.parse_expr_dot_or_call(attrs)?;
                 this.recover_from_prefix_increment(operand_expr, pre_span, starts_stmt)
             }
-            token::Ident(..) if this.token.is_keyword(kw::Box) => {
+            // `box(expr)` desugars to `Box::new(expr)`
+            token::Ident(..) if this.token.is_keyword(kw::Box)
+                && this.look_ahead(1, |t| *t == token::OpenParen) =>
+            {
                 make_it!(this, attrs, |this, _| this.parse_expr_box(lo))
             }
             // C++ style: `not` as alias for `!`
@@ -618,16 +621,27 @@ impl<'a> Parser<'a> {
         self.parse_expr_unary(lo, UnOp::Not)
     }
 
-    /// Parse `box expr` - this syntax has been removed, but we still parse this
-    /// for now to provide a more useful error
-    fn parse_expr_box(&mut self, box_kw: Span) -> PResult<'a, (Span, ExprKind)> {
-        let (span, expr) = self.parse_expr_prefix_common(box_kw)?;
-        // Make a multipart suggestion instead of `span_to_snippet` in case source isn't available
-        let box_kw_and_lo = box_kw.until(self.interpolated_or_expr_span(&expr));
-        let hi = span.shrink_to_hi();
-        let sugg = errors::AddBoxNew { box_kw_and_lo, hi };
-        let guar = self.dcx().emit_err(errors::BoxSyntaxRemoved { span, sugg });
-        Ok((span, ExprKind::Err(guar)))
+    /// Parse `box(expr)` and desugar to `Box::new(expr)`
+    fn parse_expr_box(&mut self, lo: Span) -> PResult<'a, (Span, ExprKind)> {
+        self.bump(); // consume `box`
+        self.bump(); // consume `(`
+        let expr = self.parse_expr()?;
+        self.expect(exp!(CloseParen))?;
+        let span = lo.to(self.prev_token.span);
+        // Create path `Box::new`
+        let box_ident = Ident::new(sym::Box, lo);
+        let new_ident = Ident::new(sym::new, lo);
+        let path = Path {
+            span: lo,
+            segments: thin_vec![
+                PathSegment::from_ident(box_ident),
+                PathSegment::from_ident(new_ident),
+            ],
+            tokens: None,
+        };
+        let path_expr = self.mk_expr(lo, ExprKind::Path(None, path));
+        let call = self.mk_call(path_expr, thin_vec![expr]);
+        Ok((span, call))
     }
 
     /// Check if current token is `not` used as a unary operator (C++ style).

@@ -2980,28 +2980,6 @@ impl HelpUseLatestEdition {
 }
 
 #[derive(Diagnostic)]
-#[diag(parse_box_syntax_removed)]
-pub(crate) struct BoxSyntaxRemoved {
-    #[primary_span]
-    pub span: Span,
-    #[subdiagnostic]
-    pub sugg: AddBoxNew,
-}
-
-#[derive(Subdiagnostic)]
-#[multipart_suggestion(
-    parse_box_syntax_removed_suggestion,
-    applicability = "machine-applicable",
-    style = "verbose"
-)]
-pub(crate) struct AddBoxNew {
-    #[suggestion_part(code = "Box::new(")]
-    pub box_kw_and_lo: Span,
-    #[suggestion_part(code = ")")]
-    pub hi: Span,
-}
-
-#[derive(Diagnostic)]
 #[diag(parse_bad_return_type_notation_output)]
 pub(crate) struct BadReturnTypeNotationOutput {
     #[primary_span]

@@ -191,6 +191,7 @@ symbols! {
         BinaryHeap,
         Borrow,
         BorrowMut,
+        Box,
         Break,
         BuildHasher,
         C,
