@@ -1,6 +1,6 @@
 ./x.py build --stage 1 compiler
 echo "test with ./rustc -Z script probes/test_main.rs -o test && test"
- echo "./rustc  is ./build/host/stage1/bin/rustc  is ./build/x86_64-apple-darwin/stage1/bin/rustc"
+echo "./rustc  is ./build/host/stage1/bin/rustc"
 # ⏺ Just the compiler: 5 seconds!
 
 # ⏺ Final summary - single line change rebuild times:
