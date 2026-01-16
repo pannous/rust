@@ -5,9 +5,10 @@ use ast::token::IdentIsRaw;
 use rustc_ast::token::{self, Lit, LitKind, Token, TokenKind};
 use rustc_ast::util::parser::AssocOp;
 use rustc_ast::{
-    self as ast, AngleBracketedArg, AngleBracketedArgs, AnonConst, AttrVec, BinOpKind, BindingMode,
-    Block, BlockCheckMode, Expr, ExprKind, GenericArg, Generics, Item, ItemKind,
-    MgcaDisambiguation, Param, Pat, PatKind, Path, PathSegment, QSelf, Recovered, Ty, TyKind,
+    self as ast, AngleBracketedArg, AngleBracketedArgs, AnonConst, AssignOpKind, AttrVec,
+    BinOpKind, BindingMode, Block, BlockCheckMode, Expr, ExprKind, GenericArg, Generics, Item,
+    ItemKind, MgcaDisambiguation, Param, Pat, PatKind, Path, PathSegment, QSelf, Recovered, Ty,
+    TyKind, DUMMY_NODE_ID,
 };
 use rustc_ast_pretty::pprust;
 use rustc_data_structures::fx::FxHashSet;
@@ -176,12 +177,14 @@ enum IsStandalone {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)]
 enum IncOrDec {
     Inc,
     Dec,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[allow(dead_code)]
 enum UnaryFixity {
     Pre,
     Post,
@@ -1710,32 +1713,50 @@ impl<'a> Parser<'a> {
         self.recover_from_inc_dec(operand_expr, kind, op_span)
     }
 
+    /// Desugar `i++` to `i += 1`
     pub(super) fn recover_from_postfix_increment(
         &mut self,
         operand_expr: Box<Expr>,
         op_span: Span,
-        start_stmt: bool,
+        _start_stmt: bool,
     ) -> PResult<'a, Box<Expr>> {
-        let kind = IncDecRecovery {
-            standalone: if start_stmt { IsStandalone::Standalone } else { IsStandalone::Subexpr },
-            op: IncOrDec::Inc,
-            fixity: UnaryFixity::Post,
-        };
-        self.recover_from_inc_dec(operand_expr, kind, op_span)
+        Ok(self.mk_inc_dec_expr(operand_expr, op_span, AssignOpKind::AddAssign))
     }
 
+    /// Desugar `i--` to `i -= 1`
     pub(super) fn recover_from_postfix_decrement(
         &mut self,
         operand_expr: Box<Expr>,
         op_span: Span,
-        start_stmt: bool,
+        _start_stmt: bool,
     ) -> PResult<'a, Box<Expr>> {
-        let kind = IncDecRecovery {
-            standalone: if start_stmt { IsStandalone::Standalone } else { IsStandalone::Subexpr },
-            op: IncOrDec::Dec,
-            fixity: UnaryFixity::Post,
-        };
-        self.recover_from_inc_dec(operand_expr, kind, op_span)
+        Ok(self.mk_inc_dec_expr(operand_expr, op_span, AssignOpKind::SubAssign))
+    }
+
+    /// Create an assignment expression: `lhs op= 1` (e.g., `i += 1` or `i -= 1`)
+    fn mk_inc_dec_expr(
+        &self,
+        lhs: Box<Expr>,
+        op_span: Span,
+        op_kind: AssignOpKind,
+    ) -> Box<Expr> {
+        let span = lhs.span.to(op_span);
+        let one_lit = token::Lit { kind: token::LitKind::Integer, symbol: sym::integer(1), suffix: None };
+        let one_expr = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(one_lit),
+            span: op_span,
+            attrs: AttrVec::new(),
+            tokens: None,
+        });
+        let assign_op = Spanned { span: op_span, node: op_kind };
+        Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::AssignOp(assign_op, lhs, one_expr),
+            span,
+            attrs: AttrVec::new(),
+            tokens: None,
+        })
     }
 
     fn recover_from_inc_dec(
