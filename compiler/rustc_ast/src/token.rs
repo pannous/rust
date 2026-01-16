@@ -689,7 +689,6 @@ impl Token {
             Lt | Shl                          | // associated path
             PathSep                           | // global path
             Lifetime(..)                      | // labeled loop
-            At                                | // @[...] vec literal
             Pound                             => true, // expression attributes
             OpenInvisible(InvisibleOrigin::MetaVar(
                 MetaVarKind::Block |
