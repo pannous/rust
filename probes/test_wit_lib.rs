@@ -12,9 +12,9 @@ pub static WIT_TYPES: &str = r#"
 package example:math@1.0.0;
 
 interface math {
-    add: func(a: s32, b: s32) -> s32;
-    multiply: func(a: f64, b: f64) -> f64;
-    factorial: func(n: u32) -> u64;
+    add: fn(a: s32, b: s32) -> s32;
+    multiply: fn(a: f64, b: f64) -> f64;
+    factorial: fn(n: u32) -> u64;
 }
 
 interface strings {
@@ -23,13 +23,13 @@ interface strings {
         age: u32,
     }
 
-    greet: func(name: string) -> string;
-    greet-person: func(p: person) -> string;
+    greet: fn(name: string) -> string;
+    greet-person: fn(p: person) -> string;
 }
 
 interface arrays {
-    sum-array: func(data: list<s32>) -> s64;
-    mean: func(data: list<f64>) -> f64;
+    sum-array: fn(data: list<s32>) -> s64;
+    mean: fn(data: list<f64>) -> f64;
 }
 "#;
 

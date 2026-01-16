@@ -31,7 +31,7 @@ if "hello" {
 }
 
 // Test slice truthiness
-var nilSlice []int
+let nilSlice []int
 if nilSlice {
 	put!("FAIL: nil slice should be falsy")
 	assert!()false
@@ -71,7 +71,7 @@ if false {
 }
 
 // Test map truthiness  
-var nilMap map[string]int
+let nilMap map[string]int
 if nilMap {
 	put!("FAIL: nil map should be falsy")
 	assert!()false
@@ -96,7 +96,7 @@ if filledMap {
 }
 
 // Test pointer truthiness
-var nilPtr *int
+let nilPtr *int
 if nilPtr {
 	put!("FAIL: nil pointer should be falsy")
 	assert!()false
@@ -114,7 +114,7 @@ if ptr {
 }
 
 // Test channel truthiness
-var nilChan chan int
+let nilChan chan int
 if nilChan {
 	put!("FAIL: nil channel should be falsy")
 	assert!()false

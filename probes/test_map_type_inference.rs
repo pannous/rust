@@ -18,11 +18,11 @@ mixed := {name: "John", age: 25, active: true}
 put!("Mixed inference - name:", mixed.name)
 
 // Test 5: Assignment compatibility
-var grades map[string]int = {math: 95, english: 87}
+let grades map[string]int = {math: 95, english: 87}
 put!("Assignment works:", grades)
 
 // Test 6: Function parameter compatibility
-func printGrades(g map[string]int) {
+fn printGrades(g map[string]int) {
     put!("Function param:", g)
 }
 printGrades({physics: 88, chemistry: 91})

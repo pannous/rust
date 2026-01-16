@@ -2,8 +2,8 @@
 // import "iter"
 
 // Custom iterator that yields numbers 1-3
-func Numbers() iter.Seq[int] {
-	return func(yield func(int) bool) {
+fn Numbers() iter.Seq[int] {
+	return fn(yield fn(int) bool) {
 		for i := 1; i <= 3; i++ {
 			if !yield(i) {
 				return
@@ -12,7 +12,7 @@ func Numbers() iter.Seq[int] {
 	}
 }
 
-func main() {
+fn main() {
 	println("Testing standard Go range with iterator:")
 	for num := range Numbers() {
 		put!("%d ", num)

@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
 // import "strconv"
 
-func testAssignment() error {
+fn testAssignment() error {
 	try val := strconv.Atoi("42")
 	println("Converted value:", val)
 	
@@ -11,7 +11,7 @@ func testAssignment() error {
 	return nil
 }
 
-func main() {
+fn main() {
 	err := testAssignment()
 	if err != nil {
 		println("Error caught:", err.Error())

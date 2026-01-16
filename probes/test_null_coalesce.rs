@@ -1,7 +1,6 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test: Null coalescing operator ??
 
-fn main() {
     // Basic null coalescing: Some case
     let some_val: Option<i32> = Some(42);
     let result = some_val ?? 0;
@@ -56,4 +55,3 @@ fn main() {
     assert_eq!(combined(), Ok(999));
 
     println!("All null coalescing tests passed!");
-}

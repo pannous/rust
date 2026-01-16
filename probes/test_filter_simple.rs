@@ -8,4 +8,4 @@ eq!( evens , [2, 4]);
 odds := xs.filter(x => x%2 == 1) 
 eq!( odds , [1, 3, 5]);
 
-print("Filter tests passed")
+put!("Filter tests passed")

@@ -64,4 +64,4 @@ put!("1 g-force:", gf_val)
 // deg_val := 180°
 // put!("180 degrees:", deg_val)
 
-print("All comprehensive unit tests passed!")
+put!("All comprehensive unit tests passed!")

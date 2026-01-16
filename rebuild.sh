@@ -1,4 +1,5 @@
 ./x.py build --stage 1 compiler
+./x.py build --stage 1 library
 echo "test with ./rustc -Z script probes/test_main.rs -o test && test"
 echo "./rustc  is ./build/host/stage1/bin/rustc"
 # ⏺ Just the compiler: 5 seconds!

@@ -7,9 +7,9 @@ eq!( "hi".last() , "i");
 eq!( "hi".size() , 2);
 eq!( "hi".length() , 2);
 
-#struct Person {
-#		name string
-#		age  int
-#}
-#p := Person{name: "Alice", age: 30}
-#eq!( "Name: " + p.name + ", Age: " + p.age , "Name: Alice, Age: 30");
+// #struct Person {
+// #		name string
+// #		age  int
+// #}
+// #p := Person{name: "Alice", age: 30}
+// #eq!( "Name: " + p.name + ", Age: " + p.age , "Name: Alice, Age: 30");

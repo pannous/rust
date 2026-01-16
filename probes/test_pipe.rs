@@ -1,17 +1,17 @@
 #!/usr/bin/env rust
-func square(x int) int {
+fn square(x int) int {
 	return x * x
 }
 
-func double(x int) int {
+fn double(x int) int {
 	return x * 2
 }
 
-func increment(x int) int {
+fn increment(x int) int {
 	return x + 1
 }
 
-func negate(x int) int {
+fn negate(x int) int {
 	return -x
 }
 

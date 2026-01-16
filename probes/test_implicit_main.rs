@@ -3,12 +3,12 @@
 
 // main-less top level code ok via bin/go run goo/test_implicit_main.go but not in GoLang :(
 package main
-print("Hello, ")    // writes to stderr
+put!("Hello, ")    // writes to stderr
 println("world!")   // adds newline
-func helper() int {
+fn helper() int {
 	return 42
 }
 put!("The answer is: ", helper()) // UN-formatted output
 
 x := 421
-print("The answer is: ", x, "\n")
+put!("The answer is: ", x, "\n")

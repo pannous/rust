@@ -5,7 +5,7 @@ use warp::is;
 use warp::wasm_gc_emitter::eval;
 
 fn main() {
-    print("Testing variable_minus...");
+    put!("Testing variable_minus...");
     
     let result = eval("a=-1; b=2; b - a");
     println!("Result node: {:?}", result);

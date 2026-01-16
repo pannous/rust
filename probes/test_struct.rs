@@ -1,21 +1,22 @@
 #!/usr/bin/env rust
 
 // needs main()
-type Tee struct {
-	x, y int
+struct Tee{
+	x:int,
+	y:int
 }
 
-func (t Tee) sum() int       { return t.x + t.y }
-func (t Tee) display()       { println("x:", t.x, "y:", t.y) }
+fn sum(t:Tee) -> int{ return t.x + t.y }
+fn display(t:Tee){ println("x:", t.x, "y:", t.y) }
 
-func tee(x, y int) Tee    { return Tee{x, y} }
+fn tee(x:int, y:int) -> Tee { return Tee{x, y} }
 
-func test_struct() {
+fn test_struct() {
 	t := tee(3, 4)
 	t.display()
 	println("Sum:", t.sum())
 }
 
-func main() {
+fn main() {
 	test_struct()
 }

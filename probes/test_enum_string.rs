@@ -4,7 +4,7 @@ enum State { OK, ERROR, PENDING }
 println("Testing enum String() method:")
 
 // Test normal cases
-var s State = OK
+let s State = OK
 put!("OK.String() = %v\n", s)
 eq!( s as string , "OK");
 

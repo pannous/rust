@@ -5,5 +5,5 @@ use warp::extensions::print;
 fn main() {
     let expr = "global x=1+3.14";
     let node = parse(expr);
-    print(&format!("Parsed: {:?}", node));
+    put!(&format!("Parsed: {:?}", node));
 }

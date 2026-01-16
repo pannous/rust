@@ -7,7 +7,7 @@ class User {
 users := []User{{Name: "Bob", Age: 17}, {Name: "Charlie", Age: 22}, {Name: "Alice", Age: 20}}
 user := users.filter(u => u.Age > 18).first()
 
-var result string
+let result string
 if user and user.Name {
     result = user.Name
 } else {

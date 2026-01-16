@@ -18,9 +18,9 @@ eq!( evens3 , expected  );
 eq!( evens4 , expected);
 eq!( evens5 , expected);
 
-print("✅ filter() works")
-print("✅ where() works") 
-print("✅ chose() works")
-print("✅ that() works")
-print("✅ which() works")
-print("🎉 All filter synonyms working perfectly!")
+put!("✅ filter() works")
+put!("✅ where() works")
+put!("✅ chose() works")
+put!("✅ that() works")
+put!("✅ which() works")
+put!("🎉 All filter synonyms working perfectly!")

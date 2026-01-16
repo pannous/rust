@@ -1,17 +1,17 @@
 #!/usr/bin/env rust
 // import math
 // Test Unicode identifiers
-var δ = 42
-var 变量 = "Chinese variable 变量"
+let δ = 42
+let 变量 = "Chinese variable 变量"
 #eq!( 变量#-1 , '量');
-var переменная = "Russian variable"
-var π = 3.14159
+let переменная = "Russian variable"
+let π = 3.14159
 
-func 函数() string {
+fn 函数() string {
     return "Unicode function name"
 }
 
-func αβγ() int {
+fn αβγ() int {
     return δ + 10
 }
 

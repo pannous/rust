@@ -1,2 +1,2 @@
 #!/usr/bin/env rust
-package main; func main() { put!("hello") }
+package main; fn main() { put!("hello") }

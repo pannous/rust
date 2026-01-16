@@ -2,8 +2,8 @@
 // import "iter"
 
 // Custom iterator that yields numbers 1-5
-func Numbers() iter.Seq[int] {
-	return func(yield func(int) bool) {
+fn Numbers() iter.Seq[int] {
+	return fn(yield fn(int) bool) {
 		for i := 1; i <= 5; i++ {
 			if !yield(i) {
 				return
@@ -12,7 +12,7 @@ func Numbers() iter.Seq[int] {
 	}
 }
 
-func main() {
+fn main() {
 	println("Testing iterator membership with in operator:")
 	
 	// Note: This would test membership if the parsing issues were resolved

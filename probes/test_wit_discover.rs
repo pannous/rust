@@ -95,13 +95,13 @@ fn parse_type(s: &str) -> WitType {
 }
 
 fn parse_func(line: &str) -> Option<WitFunc> {
-    // Parse: "name: func(param: type, ...) -> result"
+    // Parse: "name: fn(param: type, ...) -> result"
     let line = line.trim().trim_end_matches(';');
-    if !line.contains(": func(") {
+    if !line.contains(": fn(") {
         return None;
     }
 
-    let parts: Vec<&str> = line.splitn(2, ": func(").collect();
+    let parts: Vec<&str> = line.splitn(2, ": fn(").collect();
     if parts.len() != 2 {
         return None;
     }
@@ -149,7 +149,7 @@ fn parse_record(lines: &[&str], start: usize) -> Option<(WitRecord, usize)> {
         if line == "}" {
             break;
         }
-        if line.contains(':') && !line.contains("func") {
+        if line.contains(':') && !line.contains("fn") {
             let parts: Vec<&str> = line.trim_end_matches(',').splitn(2, ':').collect();
             if parts.len() == 2 {
                 let fname = parts[0].trim().replace("-", "_");
@@ -218,10 +218,10 @@ pub fn parse_wit(source: &str) -> WitPackage {
             }
         }
         // Function
-        else if line.contains(": func(") {
-            if let Some(func) = parse_func(line) {
+        else if line.contains(": fn(") {
+            if let Some(fn) = parse_func(line) {
                 if let Some(ref mut iface) = current_interface {
-                    iface.functions.push(func);
+                    iface.functions.push(fn);
                 }
             }
         }
@@ -336,14 +336,14 @@ fn main() {
             }
         }
 
-        for func in &iface.functions {
-            let params: Vec<String> = func.params.iter()
+        for fn in &iface.functions {
+            let params: Vec<String> = fn.params.iter()
                 .map(|p| format!("{}: {:?}", p.name, p.ty))
                 .collect();
-            let result = func.result.as_ref()
+            let result = fn.result.as_ref()
                 .map(|r| format!(" -> {:?}", r))
                 .unwrap_or_default();
-            println!("  func {}({}){}", func.name, params.join(", "), result);
+            println!("  fn {}({}){}", fn.name, params.join(", "), result);
         }
         println!();
     }

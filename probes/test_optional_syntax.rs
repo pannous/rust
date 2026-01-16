@@ -1,4 +1,4 @@
-#!/usr/bin/env rustc
+#!/usr/bin/env rust
 // Test: T? syntax for Option<T>
 
 fn get_value(flag: bool) -> i32? {

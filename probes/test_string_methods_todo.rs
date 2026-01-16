@@ -8,7 +8,7 @@
 
 // NON WORKING
 
-func main() {
+fn main() {
 	chars := ['h', 'e', 'l', 'l', 'ø'] 
 	runes := []rune("hello")
 	put!(typeof(runes)) // prints "[]rune"

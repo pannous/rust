@@ -14,8 +14,8 @@ eq!( result1 , expected);
 eq!( result2 , expected  );
 eq!( result3 , expected);
 
-print("✅ apply() works")
-print("✅ transform() works")
-print("✅ convert() works")
-print("🛡️ No map keyword conflict!")
-print("🎉 Transform synonyms working safely!")
+put!("✅ apply() works")
+put!("✅ transform() works")
+put!("✅ convert() works")
+put!("🛡️ No map keyword conflict!")
+put!("🎉 Transform synonyms working safely!")

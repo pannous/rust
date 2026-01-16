@@ -2,23 +2,23 @@
 // import "fmt"
 // import "errors"
 
-func niceFunction() error{
+fn niceFunction() error{
 	return nil
 }
 
 
-func failingFunction() error {
+fn failingFunction() error {
 	return errors.New("try to catch me;)")
 }
 
-func testFunction() error {
+fn testFunction() error {
 	try niceFunction()
 	try failingFunction()
 	put!("This should not be reached")
 	return nil  
 }
 
-func main() {
+fn main() {
 	err := testFunction()
 	if err != nil {
 		println("Success! Error propagated:", err.Error())

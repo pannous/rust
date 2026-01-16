@@ -1,20 +1,18 @@
 #!/usr/bin/env rust
-// import "fmt"
-// import "reflect"
 
-var x any = 42
-var y any = 41 + 1
+let x = 42
+let y = 41 + 1
 eq!( x , y);
-if [1,2] == [1,2] {
+if @[1,2] == @[1,2] {
 	put!("Test passed: lists are equal")
 } else {
 	put!("Test failed: lists are not equal")
 }
-a := [1, 2, 3]
-b := [1, 2, 3]
+a := @[1, 2, 3]
+b := @[1, 2, 3]
 eq!( a , b);
 
-eq!( [1,2] , [1,2]);
+eq!( @[1,2] , @[1,2]);
 
 put!("Test passed: a and b are equal")
 
@@ -24,18 +22,18 @@ put!("Test passed: a and b are equal")
 // We can infer this from what comparisons work
 
 // Basic types that should be comparable
-fmt.Println("Testing basic comparisons:")
+put!("Testing basic comparisons:")
 put!("int: %d == %d: %v\n", 1, 1, 1 == 1)
 put!("string: %s == %s: %v\n", "a", "a", "a" == "a")
 put!("bool: %v == %v: %v\n", true, true, true == true)
 
 // Function types (should not be comparable except to nil)
-# var f1 func()
-# var f2 func()
-# put!("nil func == nil func: %v\n", f1 == f2)
+# let f1 fn()
+# let f2 fn()
+# put!("nil fn == nil fn: %v\n", f1 == f2)
 
 // What about slices of functions?
-fmt.Println("Testing slice element types:")
+put!("Testing slice element types:")
 
 // Try to compare int slices (this might tell us if they're going through runtime)
 a1 := []int{1}  // no new variables on left side of :=
@@ -67,8 +65,8 @@ put!("len(empty1) == len(empty2): %v\n", len(empty1) == len(empty2))
 put!("empty1 == empty2: %v\n", empty1 == empty2)
 
 // Test nil slices
-var nil1 []int
-var nil2 []int
+let nil1 []int
+let nil2 []int
 put!("nil1 == nil2: %v\n", nil1 == nil2)
 put!("len(nil1): %d, len(nil2): %d\n", len(nil1), len(nil2))
 

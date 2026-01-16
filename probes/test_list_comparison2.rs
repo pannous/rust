@@ -19,8 +19,8 @@ f := []int{}
 put!("Empty slices: %v\n", e == f)
 
 // Test nil slices
-var g []int
-var h []int
+let g []int
+let h []int
 put!("Nil slices: %v\n", g == h)
 
 put!("All tests completed successfully.\n")

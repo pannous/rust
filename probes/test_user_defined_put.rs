@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
 // import "fmt"
 
-func put!(x int) {
+fn put!(x int) {
 	put!("USER DEFINED: %d\n", x)
 }
 

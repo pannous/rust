@@ -2,8 +2,8 @@
 // import "iter"
 
 // Custom iterator that yields numbers 1-5
-func Numbers() iter.Seq[int] {
-	return func(yield func(int) bool) {
+fn Numbers() iter.Seq[int] {
+	return fn(yield fn(int) bool) {
 		for i := 1; i <= 5; i++ {
 			if !yield(i) {
 				return
@@ -13,8 +13,8 @@ func Numbers() iter.Seq[int] {
 }
 
 // Custom iterator that yields key-value pairs
-func KeyValuePairs() iter.Seq2[string, int] {
-	return func(yield func(string, int) bool) {
+fn KeyValuePairs() iter.Seq2[string, int] {
+	return fn(yield fn(string, int) bool) {
 		pairs := map[string]int{"a": 1, "b": 2, "c": 3}
 		for k, v := range pairs {
 			if !yield(k, v) {
@@ -24,7 +24,7 @@ func KeyValuePairs() iter.Seq2[string, int] {
 	}
 }
 
-func main() {
+fn main() {
 	println("Testing for-in with single value iterator:")
 	for num in Numbers() {
 		put!("%d ", num)

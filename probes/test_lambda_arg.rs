@@ -1,6 +1,6 @@
 #!/usr/bin/env rust
 #Apply := (f, x) => f(x)
-func Apply[T any, R any](f func(T) R, x T) R {
+fn Apply[T any, R any](f fn(T) R, x T) R {
 	return f(x)
 }
 def testLambdaArg() {

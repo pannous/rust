@@ -29,10 +29,10 @@ eq!( not 0.0 , true);
 eq!( not 3.14 , false);
 
 // Test with different integer types (these should work with type info)
-var zero_int8 int8 = 0
+let zero_int8 int8 = 0
 eq!( not zero_int8 , true);
 
-var nonzero_int64 int64 = 42
+let nonzero_int64 int64 = 42
 eq!( not nonzero_int64 , false);
 
 // TODO: Add support for maps, pointers, channels in 'not' operator

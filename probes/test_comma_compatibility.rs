@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
 
 // Test all existing syntaxes still work
-fmt.Println("=== Testing all syntax variations ===")
+put!("=== Testing all syntax variations ===")
 
 // Original syntaxes
 z1 := map{"a": 1, "b": 2}

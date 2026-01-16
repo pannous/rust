@@ -15,4 +15,4 @@ if nums#4 != 40 { panic("nums#4 failed") }
 idx := 2
 if z#idx != 'b' { panic("z#idx failed") }
 
-print("all tests passing")
+put!("all tests passing")

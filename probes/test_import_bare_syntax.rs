@@ -3,7 +3,7 @@
 // import fmt
 // import strings
 
-func main() {
+fn main() {
     // Test that bare imports work correctly
     result := strings.ToUpper("hello world")
     fmt.put!("Result: %s\n", result)

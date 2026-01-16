@@ -4,6 +4,6 @@ package main
 
 // import "fmt"
 
-func main() {
-	fmt.Println("Explicit main still works!")
+fn main() {
+	put!("Explicit main still works!")
 }

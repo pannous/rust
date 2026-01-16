@@ -4,14 +4,14 @@ package main
 
 // import "fmt"
 
-var globalVar = "I'm a global variable"
+let globalVar = "I'm a global variable"
 
-func helper() {
-	fmt.Println("Helper function called")
+fn helper() {
+	put!("Helper function called")
 }
 
 // Top-level statements that will go into implicit main
-fmt.Println("Starting program...")
-fmt.Println("Global var:", globalVar)
+put!("Starting program...")
+put!("Global let:", globalVar)
 helper()
-fmt.Println("Done!")
+put!("Done!")
