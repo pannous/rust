@@ -299,14 +299,17 @@ impl<'a> Parser<'a> {
         } else if let IsMacroRulesItem::Yes { has_bang } = self.is_macro_rules_item() {
             // MACRO_RULES ITEM
             self.parse_item_macro_rules(vis, has_bang)?
-        } else if self.is_walrus_assignment() {
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_walrus_assignment() {
             // Go-style short variable declaration: x := expr -> __walrus!(x = expr)
+            // Only at module level (Free context), not inside impl/trait/blocks/macros
             return self.parse_walrus_assignment(lo, attrs);
-        } else if self.is_script_let_statement() {
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_let_statement() {
             // Script mode: let x = expr; -> __let!(x = expr)
+            // Only at module level (Free context), not inside impl/trait/blocks/macros
             return self.parse_script_let_statement(lo, attrs);
-        } else if self.is_script_var_statement() {
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_var_statement() {
             // Script mode: var x = expr; -> __let!(x = expr) (var as alias for let)
+            // Only at module level (Free context), not inside impl/trait/blocks/macros
             return self.parse_script_var_statement(lo, attrs);
         } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_for_statement() {
             // Script mode: for i in x { } -> __for!(i in x { })
@@ -1835,7 +1838,7 @@ impl<'a> Parser<'a> {
             req_name: |_, is_dot_dot_dot| is_dot_dot_dot == IsDotDotDot::No,
             context: FnContext::Free,
             req_body: false,
-            in_block: false,
+            in_block: true,  // Set to true to prevent script-mode transformations inside extern blocks
         };
         Ok(self.parse_item_(fn_parse_mode, force_collect)?.map(
             |Item { attrs, id, span, vis, kind, tokens }| {

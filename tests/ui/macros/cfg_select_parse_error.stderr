@@ -1,26 +1,26 @@
-error: Rust has no postfix increment operator
-  --> $DIR/cfg_select_parse_error.rs:8:22
+error: macro expansion ignores `@` and any tokens following
+  --> $DIR/cfg_select_parse_error.rs:9:22
    |
-LL |         false => { 1 ++ 2 }
-   |                      ^^ not a valid postfix operator
+LL |       println!(cfg_select! {
+   |  ______________-
+LL | |         false => { 1 @ 2 }
+   | |                      ^
+LL | |
+LL | |         _ => { "not unix" }
+LL | |     });
+   | |_____- caused by the macro expansion here
    |
-help: use `+= 1` instead
+   = note: the usage of `cfg_select!` is likely invalid in expression context
+help: you might be missing a semicolon here
    |
-LL -         false => { 1 ++ 2 }
-LL +         false => { { let tmp = 1 ; 1 += 1; tmp } 2 }
-   |
+LL |     };);
+   |      +
 
-error: Rust has no postfix increment operator
-  --> $DIR/cfg_select_parse_error.rs:15:29
+error: expected one of `.`, `;`, `?`, `}`, or an operator, found `@`
+  --> $DIR/cfg_select_parse_error.rs:16:29
    |
-LL |     false => { fn foo() { 1 +++ 2 } }
-   |                             ^^ not a valid postfix operator
-   |
-help: use `+= 1` instead
-   |
-LL -     false => { fn foo() { 1 +++ 2 } }
-LL +     false => { fn foo() { { let tmp = 1 ; 1 += 1; tmp }+ 2 } }
-   |
+LL |     false => { fn foo() { 1 @ 2 } }
+   |                             ^ expected one of `.`, `;`, `?`, `}`, or an operator
 
 error: aborting due to 2 previous errors
 

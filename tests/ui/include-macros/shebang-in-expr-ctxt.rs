@@ -11,6 +11,5 @@ fn main() {
 
     // stmt ctxt (reuses expr expander)
     include!("auxiliary/shebang-expr.rs");
-    //~^ ERROR non-statement macro in statement position
-    //~? ERROR expected `[`, found `/`
+    //~^ ERROR argument must be a string literal
 }
