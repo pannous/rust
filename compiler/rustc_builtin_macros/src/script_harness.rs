@@ -747,6 +747,12 @@ fn build_truthy_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Ite
     // impl Truthy for String
     items.push(build_truthy_impl_string(def_site, call_site, &trait_path));
 
+    // impl<T> Truthy for Vec<T>
+    items.push(build_truthy_impl_vec(def_site, call_site, &trait_path));
+
+    // impl<T> Truthy for Option<T>
+    items.push(build_truthy_impl_option(def_site, call_site, &trait_path));
+
     items
 }
 
@@ -1074,6 +1080,144 @@ fn build_truthy_impl_string(
     build_truthy_impl_for_type(def_site, call_site, trait_path, sym::String, body_expr)
 }
 
+/// Build impl<T> Truthy for Vec<T> { fn is_truthy(&self) -> bool { !self.is_empty() } }
+fn build_truthy_impl_vec(
+    def_site: Span,
+    call_site: Span,
+    trait_path: &ast::Path,
+) -> Box<ast::Item> {
+    // Body: !self.is_empty()
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(
+            Ident::with_dummy_span(kw::SelfLower).with_span_pos(call_site)
+        )),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let is_empty_call = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::is_empty, call_site)),
+            receiver: self_expr,
+            args: ThinVec::new(),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Unary(ast::UnOp::Not, is_empty_call),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    build_truthy_impl_generic(def_site, call_site, trait_path, sym::Vec, body_expr)
+}
+
+/// Build impl<T> Truthy for Option<T> { fn is_truthy(&self) -> bool { self.is_some() } }
+fn build_truthy_impl_option(
+    def_site: Span,
+    call_site: Span,
+    trait_path: &ast::Path,
+) -> Box<ast::Item> {
+    // Body: self.is_some()
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(
+            Ident::with_dummy_span(kw::SelfLower).with_span_pos(call_site)
+        )),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::is_some, call_site)),
+            receiver: self_expr,
+            args: ThinVec::new(),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    build_truthy_impl_generic(def_site, call_site, trait_path, sym::Option, body_expr)
+}
+
+/// Helper to build impl<T> Truthy for Type<T> { fn is_truthy(&self) -> bool { body } }
+fn build_truthy_impl_generic(
+    def_site: Span,
+    call_site: Span,
+    trait_path: &ast::Path,
+    ty_name: rustc_span::Symbol,
+    body_expr: Box<ast::Expr>,
+) -> Box<ast::Item> {
+    // Create generic parameter T
+    let t_ident = Ident::new(sym::T, call_site);
+    let generic_param = ast::GenericParam {
+        id: ast::DUMMY_NODE_ID,
+        ident: t_ident,
+        attrs: ThinVec::new(),
+        bounds: Vec::new(),
+        is_placeholder: false,
+        kind: ast::GenericParamKind::Type { default: None },
+        colon_span: None,
+    };
+
+    let generics = ast::Generics {
+        params: ThinVec::from([generic_param]),
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span: call_site,
+        },
+        span: call_site,
+    };
+
+    // Build Vec<T> or Option<T> type
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
+        span: call_site,
+        tokens: None,
+    });
+
+    let generic_args = ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+        span: call_site,
+        args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(t_ty))]),
+    });
+
+    let self_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(
+            None,
+            ast::Path {
+                span: call_site,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(ty_name, call_site),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(generic_args)),
+                }]),
+                tokens: None,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    build_truthy_impl_with_ty_and_generics(def_site, call_site, trait_path, self_ty, body_expr, generics)
+}
+
 /// Helper to build impl Truthy for Type { fn is_truthy(&self) -> bool { body } }
 fn build_truthy_impl_for_type(
     def_site: Span,
@@ -1182,6 +1326,117 @@ fn build_truthy_impl_with_ty(
 
     let impl_def = ast::Impl {
         generics: ast::Generics::default(),
+        constness: ast::Const::No,
+        of_trait: Some(Box::new(ast::TraitImplHeader {
+            defaultness: ast::Defaultness::Final,
+            safety: ast::Safety::Default,
+            polarity: ast::ImplPolarity::Positive,
+            trait_ref: ast::TraitRef { path: trait_path.clone(), ref_id: ast::DUMMY_NODE_ID },
+        })),
+        self_ty,
+        items: ThinVec::from([impl_item]),
+    };
+
+    Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Impl(impl_def),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
+
+/// Helper to build impl<T> Truthy for Type<T> with generics
+fn build_truthy_impl_with_ty_and_generics(
+    def_site: Span,
+    call_site: Span,
+    trait_path: &ast::Path,
+    self_ty: Box<ast::Ty>,
+    body_expr: Box<ast::Expr>,
+    generics: ast::Generics,
+) -> Box<ast::Item> {
+    // Build the is_truthy method with body
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([ast::Param {
+                attrs: ThinVec::new(),
+                ty: Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Ref(
+                        None,
+                        ast::MutTy {
+                            ty: Box::new(ast::Ty {
+                                id: ast::DUMMY_NODE_ID,
+                                kind: ast::TyKind::ImplicitSelf,
+                                span: def_site,
+                                tokens: None,
+                            }),
+                            mutbl: ast::Mutability::Not,
+                        },
+                    ),
+                    span: def_site,
+                    tokens: None,
+                }),
+                pat: Box::new(ast::Pat {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::PatKind::Ident(
+                        ast::BindingMode::NONE,
+                        Ident::with_dummy_span(kw::SelfLower).with_span_pos(def_site),
+                        None,
+                    ),
+                    span: def_site,
+                    tokens: None,
+                }),
+                id: ast::DUMMY_NODE_ID,
+                span: def_site,
+                is_placeholder: false,
+            }]),
+            output: ast::FnRetTy::Ty(Box::new(ast::Ty {
+                id: ast::DUMMY_NODE_ID,
+                kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
+                span: call_site,
+                tokens: None,
+            })),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(body_expr),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(sym::is_truthy, call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    let impl_item = Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    });
+
+    let impl_def = ast::Impl {
+        generics,  // Use the provided generics
         constness: ast::Const::No,
         of_trait: Some(Box::new(ast::TraitImplHeader {
             defaultness: ast::Defaultness::Final,

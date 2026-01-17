@@ -97,6 +97,36 @@ if 1u64 {
     assert!(false)
 }
 
+// Test Vec truthiness
+if Vec::<i32>::new() {
+    put!("FAIL: empty Vec should be falsy")
+    assert!(false)
+} else {
+    put!("PASS: empty Vec is falsy")
+}
+
+if vec![1, 2, 3] {
+    put!("PASS: non-empty Vec is truthy")
+} else {
+    put!("FAIL: non-empty Vec should be truthy")
+    assert!(false)
+}
+
+// Test Option truthiness
+if None::<i32> {
+    put!("FAIL: None should be falsy")
+    assert!(false)
+} else {
+    put!("PASS: None is falsy")
+}
+
+if Some(42) {
+    put!("PASS: Some is truthy")
+} else {
+    put!("FAIL: Some should be truthy")
+    assert!(false)
+}
+
 // Test else-if chain
 x := 5
 if x == 0 {

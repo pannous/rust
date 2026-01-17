@@ -2060,6 +2060,7 @@ symbols! {
         Truthy,
         is_truthy,
         is_empty,
+        is_some,
         float_zero: "0.0",
         sdylib,
         search_unbox,
