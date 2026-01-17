@@ -629,6 +629,7 @@ symbols! {
         built,
         builtin_syntax,
         bundle,
+        byte,
         c,
         c_dash_variadic,
         c_str,
