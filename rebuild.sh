@@ -1,7 +1,9 @@
+# echo "rust command Temporarily unavailable during build. "
+# the Rust bootstrap system deletes the sysroot to prevent stale artifacts from causing subtle bugs. The comment at line 1960-1962 explains this.
 ./x.py build --stage 1 compiler
 ./x.py build --stage 1 library
-echo "test with ./rustc -Z script probes/test_main.rs -o test && test"
-echo "./rustc  is ./build/host/stage1/bin/rustc"
+# echo "test with ./rustc -Z script probes/test_main.rs -o test && test"
+# echo "rust command available again after build via ./build/host/stage1/bin/rustc"
 # ⏺ Just the compiler: 5 seconds!
 
 # ⏺ Final summary - single line change rebuild times:

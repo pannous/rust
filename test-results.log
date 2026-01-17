@@ -153,7 +153,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_simple
 [0;31m✗[0m test_slice_inference_core (compile)
 [0;31m✗[0m test_slice_inference_final (compile)
-[0;31m✗[0m test_string_auto (compile)
+[0;32m✓[0m test_string_auto
 [0;31m✗[0m test_string_char_comparison (compile)
 [0;31m✗[0m test_string_char_literal (compile)
 [0;31m✗[0m test_string_comparison (compile)
@@ -197,5 +197,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m44 passed[0m, [0;31m149 failed[0m, 0 skipped
+Results: [0;32m45 passed[0m, [0;31m148 failed[0m, 0 skipped
 ========================================

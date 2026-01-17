@@ -4526,7 +4526,7 @@ impl<'a> Parser<'a> {
     }
 
     /// Wrap an expression in expr.to_string()
-    fn wrap_in_to_string(&self, expr: Box<Expr>) -> Box<Expr> {
+    pub(super) fn wrap_in_to_string(&self, expr: Box<Expr>) -> Box<Expr> {
         let span = expr.span;
         self.mk_expr(
             span,
