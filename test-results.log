@@ -77,7 +77,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_in_operator_maps (compile)
 [0;31m✗[0m test_in_operator_rune_strings (compile)
 [0;31m✗[0m test_in_operator_slices (compile)
-[0;31m✗[0m test_in_operator_strings (compile)
+[0;32m✓[0m test_in_operator_strings
 [0;32m✓[0m test_in_operator
 [0;32m✓[0m test_increment_decrement
 [0;31m✗[0m test_int (compile)
@@ -197,5 +197,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m45 passed[0m, [0;31m148 failed[0m, 0 skipped
+Results: [0;32m46 passed[0m, [0;31m147 failed[0m, 0 skipped
 ========================================

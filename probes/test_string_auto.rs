@@ -3,6 +3,7 @@
 
 // Test 1: Simple string literal type
 let name = “Alice”
+// let name = "Alice" // still &str!!!
 eq!( std::any::type_name_of_val(&name), "alloc::string::String" )
 eq!( typeid!(name), "alloc::string::String" )
 // eq!( type(name), "alloc::string::String" )

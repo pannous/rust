@@ -432,8 +432,9 @@ impl<'a> Parser<'a> {
                     self.check_let_else_init_trailing_brace(&init);
                     LocalKind::InitElse(init, els)
                 } else {
-                    // In script mode, convert string literals to String for let bindings
-                    // without explicit type annotations
+                    // In script mode, convert Unicode-quoted string literals ("...") to String
+                    // for let bindings without explicit type annotations.
+                    // Regular ASCII quotes ("...") remain as &str.
                     let init = if self.is_script_mode()
                         && ty.is_none()
                         && matches!(
@@ -441,6 +442,9 @@ impl<'a> Parser<'a> {
                             ExprKind::Lit(lit)
                                 if matches!(lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_))
                         )
+                        && self.psess.source_map()
+                            .span_to_snippet(init.span)
+                            .is_ok_and(|s| s.starts_with('\u{201C}') || s.starts_with('\u{201D}'))  // curly quotes
                     {
                         self.wrap_in_to_string(init)
                     } else {
