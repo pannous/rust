@@ -1,1 +1,1 @@
-./build/host/stage1/bin/rustc
+/opt/other/rust/build/host/stage1/bin/rustc
