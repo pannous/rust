@@ -16,7 +16,7 @@ use rustc_span::{DUMMY_SP, Ident, Span, sym};
 use std::fs;
 use thin_vec::ThinVec;
 
-use crate::transformer;
+use rustc_parse::transformer;
 
 /// Inject a main function wrapper for script mode.
 pub fn inject(

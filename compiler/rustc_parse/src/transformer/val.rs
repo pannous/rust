@@ -9,7 +9,7 @@ use thin_vec::ThinVec;
 
 use super::create_allow_attr;
 
-pub(crate) fn build_val_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+pub fn build_val_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(dead_code)] attribute
@@ -791,7 +791,7 @@ fn build_into_call(span: Span, binding: rustc_span::Symbol) -> Box<ast::Expr> {
 }
 
 /// Build a simple type like i32, String, bool
-pub(crate) fn build_simple_ty(span: Span, name: rustc_span::Symbol) -> Box<ast::Ty> {
+pub fn build_simple_ty(span: Span, name: rustc_span::Symbol) -> Box<ast::Ty> {
     Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(name, span))),

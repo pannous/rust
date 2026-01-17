@@ -13,7 +13,7 @@ use super::create_allow_attr;
 /// Build convenience macros for script mode: put!, printf!, eq!, s!, typeid!
 /// - def_site: span for internal implementation (invisible to user)
 /// - call_site: span for macro names (visible to user code)
-pub(crate) fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(unused_macros)] attribute for auto-generated macros

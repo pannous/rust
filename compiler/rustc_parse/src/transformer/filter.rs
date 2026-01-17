@@ -23,7 +23,7 @@ use super::create_allow_attr;
 /// }
 /// ```
 #[allow(dead_code)]
-pub(crate) fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+pub fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(dead_code)] attribute

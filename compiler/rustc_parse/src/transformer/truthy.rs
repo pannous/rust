@@ -19,7 +19,7 @@ use super::create_allow_attr;
 /// impl Truthy for i32 { fn is_truthy(&self) -> bool { *self != 0 } }
 /// // ... etc
 /// ```
-pub(crate) fn build_truthy_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+pub fn build_truthy_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(dead_code)] attribute

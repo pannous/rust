@@ -20,7 +20,7 @@ use super::create_allow_attr;
 /// }
 /// impl ScriptStrExt for &str { ... }
 /// ```
-pub(crate) fn build_string_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+pub fn build_string_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(dead_code)] attribute

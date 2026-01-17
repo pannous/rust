@@ -36,6 +36,7 @@ use parser::Parser;
 use crate::lexer::StripTokens;
 
 pub mod lexer;
+pub mod transformer;
 
 mod errors;
 

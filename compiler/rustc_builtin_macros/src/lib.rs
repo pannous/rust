@@ -50,7 +50,6 @@ mod pattern_type;
 mod source_util;
 mod test;
 mod trace_macros;
-mod transformer;
 
 pub mod asm;
 pub mod cmdline_attrs;
