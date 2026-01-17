@@ -165,6 +165,7 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
     items.push(make_alias(sym::boolean, sym::bool));
     items.push(make_alias(sym::rune, sym::char));
     items.push(make_alias(sym::byte, sym::u8));
+    items.push(make_alias(sym::string, sym::String));
 
     items
 }
@@ -618,9 +619,56 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     };
 
     items.push(Box::new(ast::Item {
-        attrs: vec![allow_unused].into(),
+        attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__if, call_site), if_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! __expr { ($($t:tt)*) => { $($t)*; }; }
+    // For script-mode expression statements like `z#1 = 'X'`
+    let expr_body = vec![
+        // ($($t:tt)*)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { $($t)*; }
+        delim(Delimiter::Brace, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let expr_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(expr_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__expr, call_site), expr_macro),
         vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
         span: def_site,
         tokens: None,

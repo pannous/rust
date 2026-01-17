@@ -323,6 +323,10 @@ impl<'a> Parser<'a> {
             // Script mode: if cond { } [else { }] -> __if!(cond { } [else { }])
             // Only at module level (Free context), not inside impl/trait/blocks
             return self.parse_script_if_statement(lo, attrs);
+        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_expr_statement() {
+            // Script mode: expression statements like `z#1 = 'X'` -> __expr!(z#1 = 'X')
+            // Only at module level (Free context), not inside impl/trait/blocks
+            return self.parse_script_expr_statement(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -913,6 +917,85 @@ impl<'a> Parser<'a> {
         };
 
         let mac = MacCall { path: if_path, args: Box::new(args) };
+        Ok(Some(ItemKind::MacCall(Box::new(mac))))
+    }
+
+    /// Check for script-mode expression statement at item level
+    /// Detects expressions like `z#1 = 'X'` that aren't macro calls
+    fn is_script_expr_statement(&self) -> bool {
+        // Only in script mode
+        if !self.is_script_mode() {
+            return false;
+        }
+        // Check for identifier followed by expression operators (not `!` which is macro call)
+        self.token.is_ident() && self.look_ahead(1, |t| {
+            matches!(t.kind,
+                token::Pound      // hash indexing: z#1
+                | token::OpenBracket  // array indexing: z[0]
+                | token::Dot          // method call: z.foo()
+                | token::Eq           // assignment: z = x
+                | token::PlusEq | token::MinusEq | token::StarEq | token::SlashEq  // compound assignment
+            )
+        })
+    }
+
+    /// Parse script-mode expression statement: `expr` -> `__expr!(expr)`
+    fn parse_script_expr_statement(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
+
+        let stmt_line = self.psess.source_map().lookup_char_pos(self.token.span.lo()).line;
+        let stmt_lo = self.token.span;
+        let mut stmt_tokens = Vec::new();
+
+        // Collect expression tokens until statement boundary
+        loop {
+            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
+                break;
+            }
+
+            // Check for new statement on next line
+            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
+            if token_pos.line > stmt_line {
+                // If next line starts with something that looks like a new statement, stop
+                if self.token.is_ident() || self.token.is_keyword(kw::Let)
+                   || self.token.is_keyword(kw::Fn) || self.token.is_keyword(kw::If)
+                   || self.token.is_keyword(kw::For) || self.token.is_keyword(kw::While)
+                   || self.token.is_keyword(kw::Return) || self.token.is_keyword(kw::Use)
+                   || self.token.is_keyword(kw::Struct) || self.token == token::Pound {
+                    break;
+                }
+            }
+
+            if let Some(tt) = self.collect_token_tree() {
+                stmt_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        // Consume optional semicolon
+        let _ = self.eat(exp!(Semi));
+
+        let stmt_hi = self.prev_token.span;
+
+        // Build __expr!(tokens) macro call
+        let expr_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__expr, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(stmt_tokens),
+        };
+
+        let mac = MacCall { path: expr_path, args: Box::new(args) };
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
 

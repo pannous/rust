@@ -43,7 +43,10 @@ assert_eq!(z#(1+1), 'b')
 assert_eq!((z#1), 'a')
 assert_eq!(z#(1), 'a')
 
-// Note: Assignment like `z#1 = 'X'` works in functions but not at script top-level
+// Test assignment with hash indexing
+z#1 = 'X'
+assert_eq!(z#1, 'X')
+assert_eq!(z[0], 'X')
 
 // Chained access
 matrix := [[1, 2, 3], [4, 5, 6]]
