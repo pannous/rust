@@ -32,6 +32,13 @@
 - **Problem**: `def` used as module name throughout compiler (`rustc_hir::def`)
 - Would break self-hosting
 
+### Arrow functions (`x => expr` and `(x) => expr`)
+- Location: `compiler/rustc_parse/src/parser/expr.rs:1578,1607`
+- **Problem**: `=>` is used in match arms, causing fundamental ambiguity
+- **Simple form `x => expr`**: Conflicts with match guards `if x => result`
+- **Parenthesized form `(x) => expr`**: Conflicts with match arms `(pattern) => result`
+- **No safe fix possible**: Both Rust match arms and arrow functions use `=>`
+
 ## Script-Mode Only (Harness Injected)
 
 These features inject code at AST level, harder to make global:
