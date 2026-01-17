@@ -274,6 +274,9 @@ impl<'a> Parser<'a> {
             && !self.token.is_keyword(kw::Where)
         {
             // Go-style return type: `def foo() int { ... }` without `->`
+            // NOTE: Must stay script-mode only! Cannot make global because closures break:
+            // `|x| x.method()` - the `x` after closure param matches can_begin_type(),
+            // so parser incorrectly interprets it as a return type.
             let ty = self.parse_ty_common(
                 allow_plus,
                 AllowCVariadic::No,
