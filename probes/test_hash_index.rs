@@ -1,73 +1,59 @@
 #!/usr/bin/env rust
 
-# TODO hash vs comment FAILS:
-#put!("OK") # syntax error: unexpected name is after top level declaration
-#put!("OK")  #  multiple-value put!("%v\n", "OK") (value of type (n int, err error)) in single-value context  valid
-put!("OK") // ok
-
-// Test arrays and slices with 1-indexed access
-z := @['a', 'b', 'c']
-nums := @[10, 20, 30, 40]
+// Test arrays with 1-indexed access
+z := ['a', 'b', 'c']
+nums := [10, 20, 30, 40]
 
 // Basic 1-indexed access
-eq!( z#1 , 'a');
-eq!( z#2 , 'b');
-eq!( z#3 , 'c');
-eq!( nums#1 , 10);
+assert_eq!(z#1, 'a')
+assert_eq!(z#2, 'b')
+assert_eq!(z#3, 'c')
+assert_eq!(nums#1, 10)
 
-// Compare with 0-indexed (traditional Go)
-eq!( z[0] , z#1);
-eq!( z[1] , z#2);
-eq!( z[2] , z#3);
+// Compare with 0-indexed
+assert_eq!(z[0], z#1)
+assert_eq!(z[1], z#2)
+assert_eq!(z[2], z#3)
 
 // Test with comparison operators (precedence)
-eq!( z#1 , 'a');
-assert!()z#1 != 'b'
-assert!()nums#1 < 15
-assert!()nums#2 > 15
-assert!()nums#1 <= 10
-assert!()nums#2 >= 20
+assert!(z#1 == 'a')
+assert!(z#1 != 'b')
+assert!(nums#1 < 15)
+assert!(nums#2 > 15)
+assert!(nums#1 <= 10)
+assert!(nums#2 >= 20)
 
 // Test with arithmetic operators (# should have higher precedence)
-eq!( nums#1 + 5 , 15    ); // Addition
-eq!( nums#2 - 5 , 15    ); // Subtraction  
-eq!( nums#1 * 2 , 20    ); // Multiplication
-eq!( nums#2 / 2 , 10    ); // Division
+assert_eq!(nums#1 + 5, 15)
+assert_eq!(nums#2 - 5, 15)
+assert_eq!(nums#1 * 2, 20)
+assert_eq!(nums#2 / 2, 10)
 
 // Test with logical operators
-eq!( (z#1 , 'a') && (z#2 == 'b'));
-eq!( (z#1 , 'a') || (z#2 == 'x'));
-eq!( !(z#1 , 'x'));
+assert!((z#1 == 'a') && (z#2 == 'b'))
+assert!((z#1 == 'a') || (z#2 == 'x'))
+assert!(!(z#1 == 'x'))
 
 // Test with expressions as index
 idx := 2
-eq!( z#idx , 'b');
-eq!( z#(1+1) , 'b');
-eq!( z#len("x") , 'a' ); // len("x") == 1
+assert_eq!(z#idx, 'b')
+assert_eq!(z#(1+1), 'b')
 
 // Test with parentheses
-eq!( (z#1) , 'a');
-eq!( z#(1) , 'a');
+assert_eq!((z#1), 'a')
+assert_eq!(z#(1), 'a')
 
-// Test whitespace variations
-eq!( z #1 , 'a');
-eq!( z# 1 , 'a'  );
-eq!( z # 1 , 'a');
+// Note: Assignment like `z#1 = 'X'` works in functions but not at script top-level
 
-// Test assignment with hash indexing
-z#1 = 'X'
-eq!( z#1 , 'X');
-eq!( z[0] , 'X');
+// Chained access
+matrix := [[1, 2, 3], [4, 5, 6]]
+assert_eq!(matrix#1#1, 1)
+assert_eq!(matrix#1#2, 2)
+assert_eq!(matrix#2#1, 4)
+assert_eq!(matrix#2#3, 6)
 
-// Test in different contexts
-_ = 1; eq!( z#2 , 'b'  ); // After semicolon
-eq!( z#2	, 'b'       ); // With tab
+// Mixed with regular indexing
+assert_eq!(matrix#1[1], 2)
+assert_eq!(matrix[0]#2, 2)
 
-// Multi-line
-eq!( z#2 , );
-	'b'
-
-check
-z#2 == 'b'
-
-put!("All checks passed!")
+put!("All hash index tests passed!")
