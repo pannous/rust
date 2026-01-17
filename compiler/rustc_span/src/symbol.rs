@@ -1835,6 +1835,7 @@ symbols! {
         __while,
         __if,
         __expr,
+        __stmt,
         qreg,
         qreg_low4,
         qreg_low8,

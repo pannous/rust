@@ -65,14 +65,52 @@ impl<'a> Parser<'a> {
         let post_attr_lo = self.token.span;
         let mut items: ThinVec<Box<_>> = ThinVec::new();
 
-        // There shouldn't be any stray semicolons before or after items.
-        // `parse_item` consumes the appropriate semicolons so any leftover is an error.
-        loop {
-            while self.maybe_consume_incorrect_semicolon(items.last().map(|x| &**x)) {} // Eat all bad semicolons
-            let Some(item) = self.parse_item(ForceCollect::No)? else {
+        // In script mode, parse as a mix of items and statements
+        if self.is_script_mode() {
+            loop {
+                while self.maybe_consume_incorrect_semicolon(items.last().map(|x| &**x)) {}
+
+                if self.eat(term) {
+                    let inject_use_span = post_attr_lo.data().with_hi(post_attr_lo.lo());
+                    let mod_spans = ModSpans { inner_span: lo.to(self.prev_token.span), inject_use_span };
+                    return Ok((attrs, items, mod_spans));
+                }
+
+                // Try parsing as item first, with snapshot for recovery
+                let snapshot = self.create_snapshot_for_diagnostic();
+                match self.parse_item(ForceCollect::No) {
+                    Ok(Some(item)) => {
+                        items.push(item);
+                        continue;
+                    }
+                    Ok(None) => {
+                        // Not an item - try parsing as statement
+                    }
+                    Err(err) => {
+                        // Item parsing failed - restore and try statement
+                        err.cancel();
+                        self.restore_snapshot(snapshot);
+                    }
+                }
+
+                // Not an item - parse as statement and wrap in __stmt!
+                if let Some(stmt_item) = self.parse_script_statement_as_item()? {
+                    items.push(Box::new(stmt_item));
+                    continue;
+                }
+
+                // Nothing parsed - we're stuck
                 break;
-            };
-            items.push(item);
+            }
+        } else {
+            // Normal mode: only items
+            loop {
+                while self.maybe_consume_incorrect_semicolon(items.last().map(|x| &**x)) {}
+                let Some(item) = self.parse_item(ForceCollect::No)? else {
+                    break;
+                };
+                items.push(item);
+            }
         }
 
         if !self.eat(term) {
@@ -114,6 +152,87 @@ impl<'a> Parser<'a> {
         let inject_use_span = post_attr_lo.data().with_hi(post_attr_lo.lo());
         let mod_spans = ModSpans { inner_span: lo.to(self.prev_token.span), inject_use_span };
         Ok((attrs, items, mod_spans))
+    }
+
+    /// Parse a statement in script mode and wrap it as a __stmt! macro item
+    fn parse_script_statement_as_item(&mut self) -> PResult<'a, Option<Item>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
+
+        let lo = self.token.span;
+        let stmt_line = self.psess.source_map().lookup_char_pos(lo.lo()).line;
+        let mut stmt_tokens = Vec::new();
+
+        // Collect tokens until statement boundary
+        loop {
+            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
+                break;
+            }
+
+            // Check for new statement on next line
+            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
+            if token_pos.line > stmt_line && self.token_could_start_statement() {
+                break;
+            }
+
+            if let Some(tt) = self.collect_token_tree() {
+                stmt_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        if stmt_tokens.is_empty() {
+            return Ok(None);
+        }
+
+        // Consume optional semicolon
+        let _ = self.eat(exp!(Semi));
+
+        let hi = self.prev_token.span;
+
+        // Build __stmt!(tokens) macro call
+        let stmt_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__stmt, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(lo, hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(stmt_tokens),
+        };
+
+        let mac = MacCall { path: stmt_path, args: Box::new(args) };
+
+        Ok(Some(Item {
+            attrs: ThinVec::new(),
+            id: DUMMY_NODE_ID,
+            kind: ItemKind::MacCall(Box::new(mac)),
+            vis: Visibility { span: lo, kind: VisibilityKind::Inherited, tokens: None },
+            span: lo.to(hi),
+            tokens: None,
+        }))
+    }
+
+    /// Check if current token could start a new statement
+    fn token_could_start_statement(&self) -> bool {
+        self.token.is_ident()
+            || self.token.is_keyword(kw::Let)
+            || self.token.is_keyword(kw::Fn)
+            || self.token.is_keyword(kw::If)
+            || self.token.is_keyword(kw::For)
+            || self.token.is_keyword(kw::While)
+            || self.token.is_keyword(kw::Return)
+            || self.token.is_keyword(kw::Use)
+            || self.token.is_keyword(kw::Struct)
+            || self.token.is_keyword(kw::Enum)
+            || self.token.is_keyword(kw::Impl)
+            || self.token.is_keyword(kw::Trait)
+            || self.token.is_keyword(kw::Const)
+            || self.token.is_keyword(kw::Static)
+            || self.token.is_keyword(kw::Type)
+            || self.token == token::Pound
     }
 }
 
@@ -303,30 +422,6 @@ impl<'a> Parser<'a> {
             // Go-style short variable declaration: x := expr -> __walrus!(x = expr)
             // Only at module level (Free context), not inside impl/trait/blocks/macros
             return self.parse_walrus_assignment(lo, attrs);
-        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_let_statement() {
-            // Script mode: let x = expr; -> __let!(x = expr)
-            // Only at module level (Free context), not inside impl/trait/blocks/macros
-            return self.parse_script_let_statement(lo, attrs);
-        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_var_statement() {
-            // Script mode: var x = expr; -> __let!(x = expr) (var as alias for let)
-            // Only at module level (Free context), not inside impl/trait/blocks/macros
-            return self.parse_script_var_statement(lo, attrs);
-        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_for_statement() {
-            // Script mode: for i in x { } -> __for!(i in x { })
-            // Only at module level (Free context), not inside impl/trait/blocks
-            return self.parse_script_for_statement(lo, attrs);
-        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_while_statement() {
-            // Script mode: while cond { } -> __while!(cond { })
-            // Only at module level (Free context), not inside impl/trait/blocks
-            return self.parse_script_while_statement(lo, attrs);
-        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_if_statement() {
-            // Script mode: if cond { } [else { }] -> __if!(cond { } [else { }])
-            // Only at module level (Free context), not inside impl/trait/blocks
-            return self.parse_script_if_statement(lo, attrs);
-        } else if !fn_parse_mode.in_block && matches!(fn_parse_mode.context, FnContext::Free) && self.is_script_expr_statement() {
-            // Script mode: expression statements like `z#1 = 'X'` -> __expr!(z#1 = 'X')
-            // Only at module level (Free context), not inside impl/trait/blocks
-            return self.parse_script_expr_statement(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -566,438 +661,9 @@ impl<'a> Parser<'a> {
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
 
-    /// Check for script-mode let statement at item level
-    /// Any `let` at item level is invalid in normal Rust, so in script mode we convert it
-    fn is_script_let_statement(&self) -> bool {
-        self.token.is_keyword(kw::Let)
-    }
-
-    /// Parse script-mode let statement: `let pattern = expr;` or `let pattern: Type = expr;`
-    /// Transforms to `__let!(pattern = expr)` or `__let!(pattern: Type = expr)` macro call
-    fn parse_script_let_statement(
-        &mut self,
-        lo: Span,
-        _attrs: &mut AttrVec,
-    ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
-
-        let let_line = self.psess.source_map().lookup_char_pos(self.token.span.lo()).line;
-        self.bump(); // consume `let`
-
-        let stmt_lo = self.token.span;
-        let mut stmt_tokens = Vec::new();
-
-        // Collect all tokens until statement end, handling delimiters properly
-        loop {
-            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
-                break;
-            }
-
-            // Check for new statement on next line
-            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
-            if token_pos.line > let_line {
-                if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
-                   || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
-                   || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
-                   || self.token.is_keyword(kw::Use) || self.token.is_keyword(kw::Struct)
-                   || self.token == token::Pound {
-                    break;
-                }
-            }
-
-            if let Some(tt) = self.collect_token_tree() {
-                stmt_tokens.push(tt);
-            } else {
-                break;
-            }
-        }
-
-        // Consume optional semicolon
-        let _ = self.eat(exp!(Semi));
-
-        let stmt_hi = self.prev_token.span;
-
-        // Build __let!(stmt_tokens) macro call
-        let let_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__let, lo))],
-            tokens: None,
-        };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(stmt_tokens),
-        };
-
-        let mac = MacCall { path: let_path, args: Box::new(args) };
-
-        Ok(Some(ItemKind::MacCall(Box::new(mac))))
-    }
-
-    /// Check for script-mode var statement at item level (Go/JS style)
-    fn is_script_var_statement(&self) -> bool {
-        self.token.is_ident_named(sym::var)
-    }
-
-    /// Parse script-mode var statement: `var x = expr;` -> `__let!(x = expr)`
-    fn parse_script_var_statement(
-        &mut self,
-        lo: Span,
-        _attrs: &mut AttrVec,
-    ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
-
-        let var_line = self.psess.source_map().lookup_char_pos(self.token.span.lo()).line;
-        self.bump(); // consume `var`
-
-        let stmt_lo = self.token.span;
-        let mut stmt_tokens = Vec::new();
-
-        loop {
-            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
-                break;
-            }
-            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
-            if token_pos.line > var_line {
-                if self.token.is_ident() || self.token.is_keyword(kw::Let) || self.token.is_keyword(kw::Fn)
-                   || self.token.is_keyword(kw::If) || self.token.is_keyword(kw::For)
-                   || self.token.is_keyword(kw::While) || self.token.is_keyword(kw::Return)
-                   || self.token.is_keyword(kw::Use) || self.token.is_keyword(kw::Struct)
-                   || self.token == token::Pound {
-                    break;
-                }
-            }
-            if let Some(tt) = self.collect_token_tree() {
-                stmt_tokens.push(tt);
-            } else {
-                break;
-            }
-        }
-
-        let _ = self.eat(exp!(Semi));
-        let stmt_hi = self.prev_token.span;
-
-        // Use __let! macro (var is alias for let)
-        let let_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__let, lo))],
-            tokens: None,
-        };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(stmt_tokens),
-        };
-
-        let mac = MacCall { path: let_path, args: Box::new(args) };
-        Ok(Some(ItemKind::MacCall(Box::new(mac))))
-    }
-
-    /// Check for script-mode for statement at item level
-    /// Only matches `for x in ...` pattern, not `impl ... for ...` or `for<'a>`
-    fn is_script_for_statement(&self) -> bool {
-        self.token.is_keyword(kw::For)
-            && self.look_ahead(1, |t| t.is_ident() || *t == token::OpenParen)
-            && self.look_ahead(2, |t| t.is_keyword(kw::In) || *t == token::Comma || *t == token::Colon)
-    }
-
-    /// Parse script-mode for statement: `for i in x { }` -> `__for!(i in x { })`
-    fn parse_script_for_statement(
-        &mut self,
-        lo: Span,
-        _attrs: &mut AttrVec,
-    ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
-
-        self.bump(); // consume `for`
-
-        let stmt_lo = self.token.span;
-        let mut stmt_tokens = Vec::new();
-
-        // Collect tokens including the body block
-        let mut brace_depth = 0;
-        loop {
-            if self.check(exp!(Eof)) {
-                break;
-            }
-
-            // Track brace depth to know when we've finished the for body
-            if self.token == token::OpenBrace {
-                brace_depth += 1;
-            } else if self.token == token::CloseBrace {
-                if brace_depth == 0 {
-                    break;
-                }
-                brace_depth -= 1;
-                if brace_depth == 0 {
-                    // Include the closing brace and we're done
-                    if let Some(tt) = self.collect_token_tree() {
-                        stmt_tokens.push(tt);
-                    }
-                    break;
-                }
-            }
-
-            if let Some(tt) = self.collect_token_tree() {
-                stmt_tokens.push(tt);
-            } else {
-                break;
-            }
-        }
-
-        let stmt_hi = self.prev_token.span;
-
-        let for_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__for, lo))],
-            tokens: None,
-        };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(stmt_tokens),
-        };
-
-        let mac = MacCall { path: for_path, args: Box::new(args) };
-        Ok(Some(ItemKind::MacCall(Box::new(mac))))
-    }
-
-    /// Check for script-mode while statement at item level
-    fn is_script_while_statement(&self) -> bool {
-        self.token.is_keyword(kw::While)
-    }
-
-    /// Parse script-mode while statement: `while cond { }` -> `__while!(cond { })`
-    fn parse_script_while_statement(
-        &mut self,
-        lo: Span,
-        _attrs: &mut AttrVec,
-    ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
-
-        self.bump(); // consume `while`
-
-        let stmt_lo = self.token.span;
-        let mut stmt_tokens = Vec::new();
-
-        // Collect tokens including the body block
-        let mut brace_depth = 0;
-        loop {
-            if self.check(exp!(Eof)) {
-                break;
-            }
-
-            if self.token == token::OpenBrace {
-                brace_depth += 1;
-            } else if self.token == token::CloseBrace {
-                if brace_depth == 0 {
-                    break;
-                }
-                brace_depth -= 1;
-                if brace_depth == 0 {
-                    if let Some(tt) = self.collect_token_tree() {
-                        stmt_tokens.push(tt);
-                    }
-                    break;
-                }
-            }
-
-            if let Some(tt) = self.collect_token_tree() {
-                stmt_tokens.push(tt);
-            } else {
-                break;
-            }
-        }
-
-        let stmt_hi = self.prev_token.span;
-
-        let while_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__while, lo))],
-            tokens: None,
-        };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(stmt_tokens),
-        };
-
-        let mac = MacCall { path: while_path, args: Box::new(args) };
-        Ok(Some(ItemKind::MacCall(Box::new(mac))))
-    }
-
-    /// Check for script-mode if statement at item level
-    fn is_script_if_statement(&self) -> bool {
-        self.token.is_keyword(kw::If)
-    }
-
-    /// Parse script-mode if statement: `if cond { } [else { }]` -> `__if!(cond ; { } [else { }])`
-    /// Note: We insert a semicolon after the condition to work with macro_rules patterns
-    fn parse_script_if_statement(
-        &mut self,
-        lo: Span,
-        _attrs: &mut AttrVec,
-    ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, TokenStream, TokenTree};
-
-        self.bump(); // consume `if`
-
-        let stmt_lo = self.token.span;
-        let mut cond_tokens = Vec::new();
-        let mut body_tokens = Vec::new();
-
-        // First, collect condition tokens (everything before the first `{`)
-        while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
-            if let Some(tt) = self.collect_token_tree() {
-                cond_tokens.push(tt);
-            } else {
-                break;
-            }
-        }
-
-        // Collect the body block (collect_token_tree handles the balanced braces)
-        if self.token == token::OpenBrace {
-            if let Some(tt) = self.collect_token_tree() {
-                body_tokens.push(tt);
-            }
-        }
-
-        // Handle else clauses
-        while self.token.is_keyword(kw::Else) {
-            // Collect the `else` keyword
-            body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
-            self.bump();
-
-            // Check for else-if
-            if self.token.is_keyword(kw::If) {
-                // Collect the `if` keyword
-                body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
-                self.bump();
-
-                // Collect the condition for else-if
-                while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
-                    if let Some(tt) = self.collect_token_tree() {
-                        body_tokens.push(tt);
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            // Collect the else body block
-            if self.token == token::OpenBrace {
-                if let Some(tt) = self.collect_token_tree() {
-                    body_tokens.push(tt);
-                }
-            }
-        }
-
-        let stmt_hi = self.prev_token.span;
-
-        // Build: __if!(cond ; { body } [else { body2 }])
-        // The semicolon separates condition from body for macro pattern matching
-        let mut all_tokens = cond_tokens;
-        all_tokens.push(TokenTree::token_alone(token::TokenKind::Semi, lo));
-        all_tokens.extend(body_tokens);
-
-        let if_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__if, lo))],
-            tokens: None,
-        };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(all_tokens),
-        };
-
-        let mac = MacCall { path: if_path, args: Box::new(args) };
-        Ok(Some(ItemKind::MacCall(Box::new(mac))))
-    }
-
-    /// Check for script-mode expression statement at item level
-    /// Detects expressions like `z#1 = 'X'` that aren't macro calls
-    fn is_script_expr_statement(&self) -> bool {
-        // Only in script mode
-        if !self.is_script_mode() {
-            return false;
-        }
-        // Check for identifier followed by expression operators (not `!` which is macro call)
-        self.token.is_ident() && self.look_ahead(1, |t| {
-            matches!(t.kind,
-                token::Pound      // hash indexing: z#1
-                | token::OpenBracket  // array indexing: z[0]
-                | token::Dot          // method call: z.foo()
-                | token::Eq           // assignment: z = x
-                | token::PlusEq | token::MinusEq | token::StarEq | token::SlashEq  // compound assignment
-            )
-        })
-    }
-
-    /// Parse script-mode expression statement: `expr` -> `__expr!(expr)`
-    fn parse_script_expr_statement(
-        &mut self,
-        lo: Span,
-        _attrs: &mut AttrVec,
-    ) -> PResult<'a, Option<ItemKind>> {
-        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
-
-        let stmt_line = self.psess.source_map().lookup_char_pos(self.token.span.lo()).line;
-        let stmt_lo = self.token.span;
-        let mut stmt_tokens = Vec::new();
-
-        // Collect expression tokens until statement boundary
-        loop {
-            if self.check(exp!(Semi)) || self.check(exp!(Eof)) || self.token == token::CloseBrace {
-                break;
-            }
-
-            // Check for new statement on next line
-            let token_pos = self.psess.source_map().lookup_char_pos(self.token.span.lo());
-            if token_pos.line > stmt_line {
-                // If next line starts with something that looks like a new statement, stop
-                if self.token.is_ident() || self.token.is_keyword(kw::Let)
-                   || self.token.is_keyword(kw::Fn) || self.token.is_keyword(kw::If)
-                   || self.token.is_keyword(kw::For) || self.token.is_keyword(kw::While)
-                   || self.token.is_keyword(kw::Return) || self.token.is_keyword(kw::Use)
-                   || self.token.is_keyword(kw::Struct) || self.token == token::Pound {
-                    break;
-                }
-            }
-
-            if let Some(tt) = self.collect_token_tree() {
-                stmt_tokens.push(tt);
-            } else {
-                break;
-            }
-        }
-
-        // Consume optional semicolon
-        let _ = self.eat(exp!(Semi));
-
-        let stmt_hi = self.prev_token.span;
-
-        // Build __expr!(tokens) macro call
-        let expr_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__expr, lo))],
-            tokens: None,
-        };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(stmt_lo, stmt_hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(stmt_tokens),
-        };
-
-        let mac = MacCall { path: expr_path, args: Box::new(args) };
-        Ok(Some(ItemKind::MacCall(Box::new(mac))))
-    }
+    // Note: Script-mode statement handlers removed. Script mode now uses
+    // parse_script_statement_as_item() in parse_mod() which handles all
+    // statements generically via __stmt! macro.
 
     /// Recover on encountering a struct, enum, or method definition where the user
     /// forgot to add the `struct`, `enum`, or `fn` keyword

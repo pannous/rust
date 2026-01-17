@@ -666,9 +666,56 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     };
 
     items.push(Box::new(ast::Item {
-        attrs: vec![allow_unused].into(),
+        attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__expr, call_site), expr_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! __stmt { ($($t:tt)*) => { $($t)*; }; }
+    // For script-mode statements parsed as block - same as __expr but clearer name
+    let stmt_body = vec![
+        // ($($t:tt)*)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { $($t)*; }
+        delim(Delimiter::Brace, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("t"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let stmt_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(stmt_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__stmt, call_site), stmt_macro),
         vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
         span: def_site,
         tokens: None,
