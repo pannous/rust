@@ -442,10 +442,9 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                         _ => None,
                     } {
                         tok
-                    // Curly quotes as string/char delimiters in script mode
+                    // Curly quotes as string/char delimiters (global feature)
                     // U+201C/D (double) and U+2018/9 (single)
-                    } else if self.psess.script_mode()
-                        && matches!(c, '\u{201C}' | '\u{201D}' | '\u{2018}' | '\u{2019}')
+                    } else if matches!(c, '\u{201C}' | '\u{201D}' | '\u{2018}' | '\u{2019}')
                     {
                         if let Some((kind, sym, bytes_consumed)) = self.try_curly_quoted_literal(start, c) {
                             // Update position to end of curly-quoted string

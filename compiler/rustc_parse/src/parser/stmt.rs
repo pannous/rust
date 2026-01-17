@@ -451,11 +451,10 @@ impl<'a> Parser<'a> {
                     self.check_let_else_init_trailing_brace(&init);
                     LocalKind::InitElse(init, els)
                 } else {
-                    // In script mode, convert Unicode-quoted string literals ("...") to String
+                    // Convert Unicode-quoted string literals ("...") to String
                     // for let bindings without explicit type annotations.
-                    // Regular ASCII quotes ("...") remain as &str.
-                    let init = if self.is_script_mode()
-                        && ty.is_none()
+                    // Regular ASCII quotes ("...") remain as &str. (global feature)
+                    let init = if ty.is_none()
                         && matches!(
                             &init.kind,
                             ExprKind::Lit(lit)
