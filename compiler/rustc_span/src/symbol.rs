@@ -1288,6 +1288,7 @@ symbols! {
         inout,
         instant_now,
         instruction_set,
+        int,
         integer_: "integer", // underscore to avoid clashing with the function `sym::integer` below
         integral,
         internal,

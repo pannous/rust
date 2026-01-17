@@ -117,19 +117,50 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     // - call_site: for macro names (visible to user code)
     // Don't call fully_expand_fragment - let normal expansion handle node IDs
     // (This follows the pattern from standard_library_imports.rs)
+    let type_aliases = build_type_aliases(call_site);
     let script_macros = build_script_macros(def_site, call_site);
     let string_helpers = build_string_helpers(def_site, call_site);
     let truthy_helpers = build_truthy_helpers(def_site, call_site);
     let val_helpers = build_val_helpers(def_site, call_site);
     let main_fn = build_main(def_site, main_stmts);
 
-    // Rebuild crate with script macros + helpers + module items + main function
-    krate.items = script_macros;
+    // Rebuild crate with type aliases + script macros + helpers + module items + main function
+    krate.items = type_aliases;
+    krate.items.extend(script_macros);
     krate.items.extend(string_helpers);
     krate.items.extend(truthy_helpers);
     krate.items.extend(val_helpers);
     krate.items.extend(module_items);
     krate.items.push(main_fn);
+}
+
+/// Build type aliases for script mode: type int = i64;
+fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
+    let mut items = ThinVec::new();
+
+    // type int = i64;
+    let int_alias = Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::TyAlias(Box::new(ast::TyAlias {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(sym::int, span),
+            generics: ast::Generics::default(),
+            after_where_clause: ast::WhereClause {
+                has_where_token: false,
+                predicates: ThinVec::new(),
+                span,
+            },
+            bounds: Vec::new(),
+            ty: Some(build_simple_ty(span, sym::i64)),
+        })),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    });
+    items.push(int_alias);
+
+    items
 }
 
 /// Create #[allow(lint_name)] attribute for suppressing warnings
