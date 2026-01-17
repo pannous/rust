@@ -957,6 +957,7 @@ impl<'a> Parser<'a> {
                 e = match self.token.kind {
                     token::OpenParen => self.parse_expr_fn_call(lo, e),
                     token::OpenBracket => self.parse_expr_index(lo, e)?,
+                    token::Pound => self.parse_expr_hash_index(lo, e)?,
                     _ => return Ok(e),
                 }
             }
@@ -1370,6 +1371,37 @@ impl<'a> Parser<'a> {
         Ok(self.mk_expr(
             lo.to(self.prev_token.span),
             self.mk_index(base, index, open_delim_span.to(self.prev_token.span)),
+        ))
+    }
+
+    /// Parse hash indexing: `expr#index` (1-indexed access)
+    /// Transforms `z#1` to `z[(1-1)]` = `z[0]`
+    fn parse_expr_hash_index(&mut self, lo: Span, base: Box<Expr>) -> PResult<'a, Box<Expr>> {
+        let hash_span = self.token.span;
+        self.bump(); // consume `#`
+
+        // Parse index: literal, identifier, or parenthesized expression
+        // Use parse_expr_bottom to avoid consuming subsequent # operators
+        let index = self.parse_expr_bottom()?;
+
+        // Create: index - 1
+        let one = self.mk_expr(
+            hash_span,
+            ExprKind::Lit(token::Lit::new(token::Integer, sym::integer(1), None)),
+        );
+        let adjusted = self.mk_expr(
+            index.span.to(hash_span),
+            ExprKind::Binary(
+                BinOp { node: BinOpKind::Sub, span: hash_span },
+                index,
+                one,
+            ),
+        );
+
+        // Return: base[adjusted]
+        Ok(self.mk_expr(
+            lo.to(self.prev_token.span),
+            self.mk_index(base, adjusted, hash_span.to(self.prev_token.span)),
         ))
     }
 
