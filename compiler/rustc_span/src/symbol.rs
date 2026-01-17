@@ -609,6 +609,7 @@ symbols! {
         blocking,
         bool,
         bool_then,
+        boolean,
         borrowck_graphviz_format,
         borrowck_graphviz_postflow,
         box_new,
