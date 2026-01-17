@@ -1,4 +1,22 @@
-#!/usr/bin/env rust
-put!("Type of 42: %v\n", typeof(42)) // todo why 'untyped int
-put!(typeof(42))
-eq!( typeof(42) , "untyped int");
+#!/usr/bin/env -S rustc -Z script
+// Test typeid! macro
+
+let x = 42;
+put!(typeid!(x));  // i32
+
+let s = "hello";
+put!(typeid!(s));  // String (script mode auto-converts)
+
+let v = vec![1, 2, 3];
+put!(typeid!(v));  // Vec<i32>
+
+let f = 3.14;
+put!(typeid!(f));  // f64
+
+let owned = "test".to_string();
+put!(typeid!(owned));  // String
+
+// Test inline expressions
+put!(typeid!(100u8));  // u8
+put!(typeid!(true));   // bool
+put!(typeid!(&[1, 2, 3])); // slice

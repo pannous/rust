@@ -255,30 +255,134 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     };
 
     // macro_rules! put {
-    //     ($e:expr) => { println!("{}", $e) };           // put!(42) -> print with debug
-    //     ($($arg:tt)*) => { println!($($arg)*) };       // put!("fmt", args) -> format string
+    //     () => { println!() };                                           // put!() -> newline
+    //     ($e:expr $(,)?) => { println!("{:?}", $e) };                     // put!(42) -> single expr (Debug)
+    //     ($first:expr, $($rest:expr),+ $(,)?) => {                        // put!(a, b, c) -> Python style
+    //         print!("{:?}", $first);
+    //         $(print!(" {:?}", $rest);)+
+    //         println!();
+    //     };
     // }
+    // Uses {:?} (Debug) format for broader type support (Option, Vec, etc.)
     let put_body = vec![
-        // First arm: ($e:expr) => { println!("{}", $e) };
+        // First arm: () => { println!() };
+        delim(Delimiter::Parenthesis, vec![]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            ident_user("println"),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
+            delim(Delimiter::Parenthesis, vec![]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+        // Second arm: ($e:expr $(,)?) => { println!("{:?}", $e) };
         delim(Delimiter::Parenthesis, vec![
             TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("e"),
             TokenTree::token_alone(TokenKind::Colon, def_site),
             ident("expr"),
+            // $(,)?
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+            ]),
+            TokenTree::token_alone(TokenKind::Question, def_site),
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
         delim(Delimiter::Brace, vec![
             ident_user("println"),
             TokenTree::token_alone(TokenKind::Bang, def_site),
             delim(Delimiter::Parenthesis, vec![
-                str_lit("{}"),
+                str_lit("{:?}"),
                 TokenTree::token_alone(TokenKind::Comma, def_site),
                 TokenTree::token_alone(TokenKind::Dollar, def_site),
                 ident("e"),
             ]),
         ]),
         TokenTree::token_alone(TokenKind::Semi, def_site),
-        // Second arm: ($($arg:tt)*) => { println!($($arg)*) };
+        // Third arm: ($first:expr, $($rest:expr),+ $(,)?) => { print!("{:?}", $first); $(print!(" {:?}", $rest);)+ println!(); };
+        delim(Delimiter::Parenthesis, vec![
+            // $first:expr
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("first"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+            TokenTree::token_alone(TokenKind::Comma, def_site),
+            // $($rest:expr),+
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("rest"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("expr"),
+            ]),
+            TokenTree::token_alone(TokenKind::Comma, def_site),
+            TokenTree::token_alone(TokenKind::Plus, def_site),
+            // $(,)?
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+            ]),
+            TokenTree::token_alone(TokenKind::Question, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            // print!("{:?}", $first);
+            ident_user("print"),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                str_lit("{:?}"),
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("first"),
+            ]),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
+            // $(print!(" {:?}", $rest);)+
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                ident_user("print"),
+                TokenTree::token_alone(TokenKind::Bang, def_site),
+                delim(Delimiter::Parenthesis, vec![
+                    str_lit(" {:?}"),
+                    TokenTree::token_alone(TokenKind::Comma, def_site),
+                    TokenTree::token_alone(TokenKind::Dollar, def_site),
+                    ident("rest"),
+                ]),
+                TokenTree::token_alone(TokenKind::Semi, def_site),
+            ]),
+            TokenTree::token_alone(TokenKind::Plus, def_site),
+            // println!();
+            ident_user("println"),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
+            delim(Delimiter::Parenthesis, vec![]),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let put_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(put_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        // Use call_site for the macro name so it's visible to user code
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::put, call_site), put_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! printf { ($($arg:tt)*) => { println!($($arg)*) }; }
+    // Format string version of put - passes through to println!
+    let printf_body = vec![
+        // ($($arg:tt)*) => { println!($($arg)*) };
         delim(Delimiter::Parenthesis, vec![
             TokenTree::token_alone(TokenKind::Dollar, def_site),
             delim(Delimiter::Parenthesis, vec![
@@ -305,11 +409,11 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         TokenTree::token_alone(TokenKind::Semi, def_site),
     ];
 
-    let put_macro = ast::MacroDef {
+    let printf_macro = ast::MacroDef {
         body: Box::new(ast::DelimArgs {
             dspan: DelimSpan::from_single(def_site),
             delim: Delimiter::Brace,
-            tokens: TokenStream::new(put_body),
+            tokens: TokenStream::new(printf_body),
         }),
         macro_rules: true,
         eii_extern_target: None,
@@ -318,8 +422,7 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
     items.push(Box::new(ast::Item {
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
-        // Use call_site for the macro name so it's visible to user code
-        kind: ast::ItemKind::MacroDef(Ident::new(sym::put, call_site), put_macro),
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::printf, call_site), printf_macro),
         vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
         span: def_site,
         tokens: None,
@@ -424,6 +527,52 @@ fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::s, call_site), s_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
+    // macro_rules! typeid { ($e:expr) => { std::any::type_name_of_val(&$e) }; }
+    // Get the type name of an expression at runtime
+    let typeid_body = vec![
+        // ($e:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("e"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { std::any::type_name_of_val(&$e) }
+        delim(Delimiter::Brace, vec![
+            ident_user("std"),
+            TokenTree::token_alone(TokenKind::PathSep, call_site),
+            ident_user("any"),
+            TokenTree::token_alone(TokenKind::PathSep, call_site),
+            ident_user("type_name_of_val"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::And, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("e"),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let typeid_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(typeid_body),
+        }),
+        macro_rules: true,
+        eii_extern_target: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::typeid, call_site), typeid_macro),
         vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
         span: def_site,
         tokens: None,
