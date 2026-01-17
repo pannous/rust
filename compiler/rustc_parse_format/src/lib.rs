@@ -634,51 +634,51 @@ impl<'input> Parser<'input> {
         }
 
         // Parse type specifier
-        let (_, _, type_char) = self.peek()?;
-        let ty: &'static str = match type_char {
+        let (type_range, _, type_char) = self.peek()?;
+        let (ty, position_span_end): (&'static str, usize) = match type_char {
             'd' | 'i' | 'u' | 'f' | 'F' | 's' | 'c' => {
                 self.input_vec_index += 1;
-                "" // Display
+                ("", type_range.end) // Display
             }
             'x' => {
                 self.input_vec_index += 1;
-                "x" // LowerHex
+                ("x", type_range.end) // LowerHex
             }
             'X' => {
                 self.input_vec_index += 1;
-                "X" // UpperHex
+                ("X", type_range.end) // UpperHex
             }
             'o' => {
                 self.input_vec_index += 1;
-                "o" // Octal
+                ("o", type_range.end) // Octal
             }
             'e' => {
                 self.input_vec_index += 1;
-                "e" // LowerExp
+                ("e", type_range.end) // LowerExp
             }
             'E' => {
                 self.input_vec_index += 1;
-                "E" // UpperExp
+                ("E", type_range.end) // UpperExp
             }
             'p' => {
                 self.input_vec_index += 1;
-                "p" // Pointer
+                ("p", type_range.end) // Pointer
             }
             'b' => {
                 self.input_vec_index += 1;
-                "b" // Binary (extension)
+                ("b", type_range.end) // Binary (extension)
             }
             'g' => {
                 self.input_vec_index += 1;
-                "e" // Use LowerExp as approximation
+                ("e", type_range.end) // Use LowerExp as approximation
             }
             'G' => {
                 self.input_vec_index += 1;
-                "E" // Use UpperExp as approximation
+                ("E", type_range.end) // Use UpperExp as approximation
             }
             '?' => {
                 self.input_vec_index += 1;
-                "?" // Debug (extension)
+                ("?", type_range.end) // Debug (extension)
             }
             _ => {
                 // Not a valid printf type specifier, restore position
@@ -686,8 +686,6 @@ impl<'input> Parser<'input> {
                 return None;
             }
         };
-
-        let position_span_end = self.input_vec_index2range(self.input_vec_index).start;
 
         // Determine position
         let position = if let Some(p) = parameter {

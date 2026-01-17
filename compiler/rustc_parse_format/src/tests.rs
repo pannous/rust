@@ -595,3 +595,459 @@ fn diagnostic_format_mod() {
     assert_eq!(parser.line_spans, &[]);
     assert!(parser.errors.is_empty());
 }
+
+// ============================================================================
+// Printf-style format specifier tests
+// ============================================================================
+
+#[test]
+fn printf_basic_specifiers() {
+    // %d - integer (Display)
+    same(
+        "%d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %s - string (Display)
+    same(
+        "%s",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %x - lowercase hex
+    same(
+        "%x",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "x",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %X - uppercase hex
+    same(
+        "%X",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "X",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %o - octal
+    same(
+        "%o",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "o",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %e - lowercase exponential
+    same(
+        "%e",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "e",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %E - uppercase exponential
+    same(
+        "%E",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "E",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %b - binary (extension)
+    same(
+        "%b",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "b",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %p - pointer
+    same(
+        "%p",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "p",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %? - debug (extension)
+    same(
+        "%?",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..3,
+            format: FormatSpec {
+                ty: "?",
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_width() {
+    // %10d - width of 10
+    same(
+        "%10d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..5,
+            format: FormatSpec {
+                width: CountIs(10),
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_precision() {
+    // %.2f - precision of 2
+    same(
+        "%.2f",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..5,
+            format: FormatSpec {
+                precision: CountIs(2),
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_width_and_precision() {
+    // %10.2f - width 10, precision 2
+    same(
+        "%10.2f",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..7,
+            format: FormatSpec {
+                width: CountIs(10),
+                precision: CountIs(2),
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_flags() {
+    // %-d - left align
+    same(
+        "%-d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..4,
+            format: FormatSpec {
+                align: AlignLeft,
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %+d - show sign
+    same(
+        "%+d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..4,
+            format: FormatSpec {
+                sign: Some(Sign::Plus),
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %#x - alternate form
+    same(
+        "%#x",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..4,
+            format: FormatSpec {
+                alternate: true,
+                ty: "x",
+                ..fmtdflt()
+            },
+        }))],
+    );
+
+    // %05d - zero padding
+    same(
+        "%05d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..5,
+            format: FormatSpec {
+                zero_pad: true,
+                width: CountIs(5),
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_combined_flags() {
+    // %-+#010.5x - all flags combined
+    same(
+        "%-+#010.5x",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..11,
+            format: FormatSpec {
+                align: AlignLeft,
+                sign: Some(Sign::Plus),
+                alternate: true,
+                zero_pad: true,
+                width: CountIs(10),
+                precision: CountIs(5),
+                ty: "x",
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_positional() {
+    // %1$d - first argument (0-indexed in Rust)
+    same(
+        "%1$d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentIs(0),
+            position_span: 1..5,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %2$d - second argument
+    same(
+        "%2$d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentIs(1),
+            position_span: 1..5,
+            format: fmtdflt(),
+        }))],
+    );
+}
+
+#[test]
+fn printf_escape() {
+    // %% - literal percent
+    same("%%", &[Lit("%")]);
+
+    // Text with %% in the middle
+    same("50%% off", &[Lit("50"), Lit("% off")]);
+}
+
+#[test]
+fn printf_star_width() {
+    // %*d - width from argument
+    same(
+        "%*d",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(1),
+            position_span: 1..4,
+            format: FormatSpec {
+                width: CountIsStar(0),
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_star_precision() {
+    // %.*f - precision from argument
+    same(
+        "%.*f",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(1),
+            position_span: 1..5,
+            format: FormatSpec {
+                precision: CountIsStar(0),
+                ..fmtdflt()
+            },
+        }))],
+    );
+}
+
+#[test]
+fn printf_length_modifiers() {
+    // Length modifiers should be parsed but ignored
+    // %ld - long int
+    same(
+        "%ld",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..4,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %lld - long long int
+    same(
+        "%lld",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..5,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %hd - short int
+    same(
+        "%hd",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..4,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %hhd - char
+    same(
+        "%hhd",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..5,
+            format: fmtdflt(),
+        }))],
+    );
+
+    // %zd - size_t
+    same(
+        "%zd",
+        &[NextArgument(Box::new(Argument {
+            position: ArgumentImplicitlyIs(0),
+            position_span: 1..4,
+            format: fmtdflt(),
+        }))],
+    );
+}
+
+#[test]
+fn printf_mixed_with_rust() {
+    // Mix {} and %d in the same string
+    // Note: {} uses Rust-style span (inside braces), %d uses printf-style span (whole specifier)
+    same(
+        "{} and %d",
+        &[
+            NextArgument(Box::new(Argument {
+                position: ArgumentImplicitlyIs(0),
+                position_span: 2..2, // Rust-style: position inside braces (empty)
+                format: fmtdflt(),
+            })),
+            Lit(" and "),
+            NextArgument(Box::new(Argument {
+                position: ArgumentImplicitlyIs(1),
+                position_span: 8..10, // Printf-style: includes %d
+                format: fmtdflt(),
+            })),
+        ],
+    );
+}
+
+#[test]
+fn printf_multiple_args() {
+    // Multiple printf specifiers
+    same(
+        "%d %s %x",
+        &[
+            NextArgument(Box::new(Argument {
+                position: ArgumentImplicitlyIs(0),
+                position_span: 1..3,
+                format: fmtdflt(),
+            })),
+            Lit(" "),
+            NextArgument(Box::new(Argument {
+                position: ArgumentImplicitlyIs(1),
+                position_span: 4..6,
+                format: fmtdflt(),
+            })),
+            Lit(" "),
+            NextArgument(Box::new(Argument {
+                position: ArgumentImplicitlyIs(2),
+                position_span: 7..9,
+                format: FormatSpec {
+                    ty: "x",
+                    ..fmtdflt()
+                },
+            })),
+        ],
+    );
+}
+
+#[test]
+fn printf_with_text() {
+    // Printf specifier with surrounding text
+    same(
+        "Value: %d end",
+        &[
+            Lit("Value: "),
+            NextArgument(Box::new(Argument {
+                position: ArgumentImplicitlyIs(0),
+                position_span: 8..10,
+                format: fmtdflt(),
+            })),
+            Lit(" end"),
+        ],
+    );
+}
+
+#[test]
+fn printf_invalid_specifier_is_literal() {
+    // Invalid printf specifier should be treated as literal
+    // %q is not a valid specifier - becomes two literals due to string() stopping at %
+    same("%q", &[Lit("%q")]);
+
+    // Just % at end of string - splits into two literals
+    same("test%", &[Lit("test"), Lit("%")]);
+}
