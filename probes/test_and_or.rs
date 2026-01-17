@@ -1,14 +1,5 @@
 #!/usr/bin/env rust
-fn test() -> bool {
-    let a = true;
-    let b = false;
-    a and b
-}
-
-fn test2() -> bool {
-    let a = true;
-    let b = false;
-    a or b
-}
-
-fn main() {}
+let a = true;
+let b = false;
+eq!(a and b, false);
+eq!(a or b, true)

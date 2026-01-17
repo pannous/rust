@@ -18,10 +18,11 @@ Philosophy:
 • dynamic linking with wit like objects via dlsym C-ABI (rust ABI dependent on build!)
 • Optionals via '?' as in other sane languages
 • Optional chaining via ?. and ??
+• truthy and falsy values in conditions  if 1 { }
+• truthy optionals   let z : i32? = None; if z { ... } else { put!("🗸") }
 • Magic lists @["hello", 42, true] → auto-wrapped Vec<Val> with [Str("hello"), Int(42), Bool(true)]
 • Simple lists @[1, 2, 3] → homogeneous Vec<i32>
 • i++ and i--
-• truthy and falsy values in conditions  if 1 { }
 • modulo strings adn printf format specifiers "%d" % i
 • “strings”   no more .to_string()
 • as type casting

@@ -3,9 +3,9 @@
 
 // import "strconv"
 
-// Function that returns nothing - should use panic(err)
+// Function that returns nothing - should use panic!(err)
 def testVoidFunction() {
-    try val := strconv.Atoi("invalid")  // Should become: panic(err)
+    try val := strconv.Atoi("invalid")  // Should become: panic!(err)
     put!("Got value: %d", val)
 }
 

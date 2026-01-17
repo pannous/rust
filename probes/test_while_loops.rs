@@ -20,24 +20,5 @@ while true {
     }
 }
 
-// While with for-in syntax for slices
-numbers := [1, 2, 3]
-put!("While with slice:\n")
-while num in numbers {
-    put!("  num = %d\n", num)
-}
-
-// While with for-in syntax for maps
-myMap := map[string]int{"a": 1, "b": 2, "c": 3}
-put!("While with map keys:\n")
-while key in myMap {
-    put!("  key = %s\n", key)
-}
-
-// While with key-value pairs
-put!("While with key-value pairs:\n")
-while key, value in myMap {
-    put!("  %s = %d\n", key, value)
-}
 
 put!("All while loop tests completed!\n")

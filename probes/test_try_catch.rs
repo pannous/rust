@@ -1,6 +1,6 @@
 #!/usr/bin/env rust
 try {
-	panic("something went wrong")
+	panic!("something went wrong")
 } catch err {
 	put!("Caught error: %v\n",err)
 }

@@ -13,6 +13,6 @@ pub fn add(a: i32, b: i32) -> i32 {
 }
 
 #[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
+fn panic!(_info: &core::panic::PanicInfo) -> ! {
     loop {}
 }

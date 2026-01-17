@@ -1,6 +1,7 @@
 #!/usr/bin/env rust
 // Comprehensive as cast test
 val1 := 1 as string
+eq!( val1 , "1" )
 put!("1 as string: %q\n", val1) 
 
 val2 := 1 as rune

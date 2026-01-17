@@ -2,17 +2,17 @@
 
 // Test 1-indexed array access
 z := @['a', 'b', 'c']
-if z#1 != 'a' { panic("First element failed") } // First element
-if z#2 != 'b' { panic("Second element failed") } // Second element
-if z#3 != 'c' { panic("Third element failed") } // Third element
+if z#1 != 'a' { panic!("First element failed") } // First element
+if z#2 != 'b' { panic!("Second element failed") } // Second element
+if z#3 != 'c' { panic!("Third element failed") } // Third element
 
 // Test with numbers
 nums := @[10, 20, 30, 40]
-if nums#1 != 10 { panic("nums#1 failed") }
-if nums#4 != 40 { panic("nums#4 failed") }
+if nums#1 != 10 { panic!("nums#1 failed") }
+if nums#4 != 40 { panic!("nums#4 failed") }
 
 // Test with expressions
 idx := 2
-if z#idx != 'b' { panic("z#idx failed") }
+if z#idx != 'b' { panic!("z#idx failed") }
 
 put!("all tests passing")

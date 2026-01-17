@@ -5,7 +5,7 @@ z := @['a', 'b', 'c']
 
 // This should work
 if z#1 != 'a' {
-	panic("if failed")
+	panic!("if failed")
 }
 
 // Does assert!()work?
