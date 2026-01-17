@@ -1578,6 +1578,9 @@ impl<'a> Parser<'a> {
             } else if this.is_script_mode() && this.token == token::OpenParen && this.is_arrow_function() {
                 // JS-style arrow function with parens: (x, y) => expr
                 // Must check BEFORE tuple/paren expression parsing
+                // NOTE: Must stay script-mode only! Cannot make global because `=>` conflicts
+                // with match arms: `(pattern) => result` looks like `(params) => expr`.
+                // No way to disambiguate without deep context tracking.
                 this.parse_arrow_function()
             } else if this.check(exp!(OpenParen)) {
                 this.parse_expr_tuple_parens(restrictions)
@@ -1605,7 +1608,10 @@ impl<'a> Parser<'a> {
             } else if this.is_builtin() {
                 this.parse_expr_builtin()
             } else if this.is_script_mode() && this.is_arrow_function() {
-                // JS-style arrow function: x => expr or (x, y) => expr
+                // JS-style arrow function: x => expr
+                // NOTE: Must stay script-mode only! Cannot make global because `=>` conflicts
+                // with match guards: `_ if x => result` looks like `x => expr`.
+                // No way to disambiguate without deep context tracking.
                 this.parse_arrow_function()
             } else if this.check_path() {
                 this.parse_expr_path_start()
