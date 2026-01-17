@@ -1592,6 +1592,10 @@ impl<'a> Parser<'a> {
                 && this.look_ahead(1, |t| *t == token::OpenBracket)
             {
                 this.parse_expr_at_vec()
+            } else if this.token == token::At
+                && this.look_ahead(1, |t| *t == token::OpenBrace)
+            {
+                this.parse_expr_at_map()
             } else if this.check(exp!(OpenBracket)) {
                 this.parse_expr_array_or_repeat(exp!(CloseBracket))
             } else if this.is_builtin() {
@@ -1791,6 +1795,73 @@ impl<'a> Parser<'a> {
         let mac = Box::new(MacCall { path, args });
 
         Ok(self.mk_expr(lo.to(hi), ExprKind::MacCall(mac)))
+    }
+
+    /// Parse `@{k: v, ...}` as `HashMap::from([(k, v), ...])`
+    fn parse_expr_at_map(&mut self) -> PResult<'a, Box<Expr>> {
+        let lo = self.token.span;
+        self.bump(); // consume @
+        self.bump(); // consume {
+
+        // Handle empty map: @{}
+        if self.eat(exp!(CloseBrace)) {
+            let hi = self.prev_token.span;
+            // Generate: HashMap::new()
+            let hashmap_new_path = Path {
+                span: lo,
+                segments: thin_vec![
+                    PathSegment::from_ident(Ident::new(sym::HashMap, lo)),
+                    PathSegment::from_ident(Ident::new(sym::new, lo)),
+                ],
+                tokens: None,
+            };
+            let path_expr = self.mk_expr(lo, ExprKind::Path(None, hashmap_new_path));
+            let call = self.mk_expr(lo.to(hi), ExprKind::Call(path_expr, ThinVec::new()));
+            return Ok(call);
+        }
+
+        // Parse key-value pairs: key: value, ...
+        let mut pairs = Vec::new();
+        loop {
+            let key = self.parse_expr()?;
+            self.expect(exp!(Colon))?;
+            let value = self.parse_expr()?;
+            pairs.push((key, value));
+
+            if !self.eat(exp!(Comma)) {
+                break;
+            }
+            if self.check(exp!(CloseBrace)) {
+                break; // trailing comma
+            }
+        }
+        self.expect(exp!(CloseBrace))?;
+        let hi = self.prev_token.span;
+
+        // Build: HashMap::from([(k1, v1), (k2, v2), ...])
+        let hashmap_from_path = Path {
+            span: lo,
+            segments: thin_vec![
+                PathSegment::from_ident(Ident::new(sym::HashMap, lo)),
+                PathSegment::from_ident(Ident::new(sym::from, lo)),
+            ],
+            tokens: None,
+        };
+        let path_expr = self.mk_expr(lo, ExprKind::Path(None, hashmap_from_path));
+
+        // Build array of tuples: [(k1, v1), (k2, v2), ...]
+        let tuple_exprs: ThinVec<Box<Expr>> = pairs
+            .into_iter()
+            .map(|(k, v)| {
+                let tup = ExprKind::Tup(thin_vec![k, v]);
+                self.mk_expr(lo.to(hi), tup)
+            })
+            .collect();
+
+        let array_expr = self.mk_expr(lo.to(hi), ExprKind::Array(tuple_exprs));
+        let call = self.mk_expr(lo.to(hi), ExprKind::Call(path_expr, thin_vec![array_expr]));
+
+        Ok(call)
     }
 
     /// Detect if expressions have mixed literal types
