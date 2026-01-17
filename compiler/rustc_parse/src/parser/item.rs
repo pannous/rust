@@ -413,8 +413,8 @@ impl<'a> Parser<'a> {
         } else if self.eat_keyword_case(exp!(Struct), case) {
             // STRUCT ITEM
             self.parse_item_struct()?
-        } else if self.is_script_mode() && self.token.is_ident_named(sym::class) && self.look_ahead(1, |t| t.is_ident()) {
-            // CLASS as synonym for STRUCT in script mode
+        } else if self.token.is_ident_named(sym::class) && self.look_ahead(1, |t| t.is_ident()) {
+            // CLASS as synonym for STRUCT (global feature)
             self.bump(); // consume `class`
             self.parse_item_struct()?
         } else if self.is_kw_followed_by_ident(kw::Union) {
