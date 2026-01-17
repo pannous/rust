@@ -1575,6 +1575,10 @@ impl<'a> Parser<'a> {
                 // could be removed without changing functionality, but it's faster
                 // to have it here, especially for programs with large constants.
                 this.parse_expr_lit()
+            } else if this.is_script_mode() && this.token == token::OpenParen && this.is_arrow_function() {
+                // JS-style arrow function with parens: (x, y) => expr
+                // Must check BEFORE tuple/paren expression parsing
+                this.parse_arrow_function()
             } else if this.check(exp!(OpenParen)) {
                 this.parse_expr_tuple_parens(restrictions)
             } else if this.check(exp!(OpenBrace)) {
@@ -1600,6 +1604,9 @@ impl<'a> Parser<'a> {
                 this.parse_expr_array_or_repeat(exp!(CloseBracket))
             } else if this.is_builtin() {
                 this.parse_expr_builtin()
+            } else if this.is_script_mode() && this.is_arrow_function() {
+                // JS-style arrow function: x => expr or (x, y) => expr
+                this.parse_arrow_function()
             } else if this.check_path() {
                 this.parse_expr_path_start()
             } else if this.check_keyword(exp!(Move))
@@ -3993,6 +4000,130 @@ impl<'a> Parser<'a> {
 
     pub(crate) fn is_builtin(&self) -> bool {
         self.token.is_keyword(kw::Builtin) && self.look_ahead(1, |t| *t == token::Pound)
+    }
+
+    /// Checks if this looks like an arrow function (JS-style lambda): `x => expr` or `(x, y) => expr`
+    fn is_arrow_function(&self) -> bool {
+        // Pattern: ident => expr
+        if self.token.is_ident() && self.look_ahead(1, |t| *t == token::FatArrow) {
+            return true;
+        }
+        // Pattern: (params) => expr - check if token is open paren
+        if self.token == token::OpenParen {
+            // Look for closing paren followed by =>
+            let mut depth = 0;
+            let mut offset = 0;
+            loop {
+                offset += 1;
+                let found = self.look_ahead(offset, |t| {
+                    match &t.kind {
+                        token::OpenParen => { depth += 1; false }
+                        token::CloseParen if depth > 0 => { depth -= 1; false }
+                        token::CloseParen => true, // Found matching close paren
+                        token::Eof => true, // Stop at EOF
+                        _ => false,
+                    }
+                });
+                if found {
+                    break;
+                }
+                if offset > 100 {
+                    // Safety limit
+                    return false;
+                }
+            }
+            // Check if next token after close paren is =>
+            return self.look_ahead(offset + 1, |t| *t == token::FatArrow);
+        }
+        false
+    }
+
+    /// Parses an arrow function (JS-style lambda): `x => expr` or `(x, y) => expr`
+    fn parse_arrow_function(&mut self) -> PResult<'a, Box<Expr>> {
+        let lo = self.token.span;
+
+        // Parse parameters
+        let params = if self.check(exp!(OpenParen)) {
+            // Multiple params: (x, y) => expr
+            self.bump(); // consume '('
+            let mut params = Vec::new();
+            while !self.check(exp!(CloseParen)) {
+                let param_span = self.token.span;
+                let ident = self.parse_ident()?;
+                // Build a pattern for this param (simple ident pattern)
+                let pat = self.mk_pat(param_span, ast::PatKind::Ident(
+                    ast::BindingMode::NONE,
+                    ident,
+                    None,
+                ));
+                params.push(ast::Param {
+                    attrs: AttrVec::new(),
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::Infer,
+                        span: param_span,
+                        tokens: None,
+                    }),
+                    pat: Box::new(pat),
+                    id: ast::DUMMY_NODE_ID,
+                    span: param_span,
+                    is_placeholder: false,
+                });
+                if !self.eat(exp!(Comma)) {
+                    break;
+                }
+            }
+            self.expect(exp!(CloseParen))?;
+            params
+        } else {
+            // Single param: x => expr
+            let param_span = self.token.span;
+            let ident = self.parse_ident()?;
+            let pat = self.mk_pat(param_span, ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                ident,
+                None,
+            ));
+            vec![ast::Param {
+                attrs: AttrVec::new(),
+                ty: Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Infer,
+                    span: param_span,
+                    tokens: None,
+                }),
+                pat: Box::new(pat),
+                id: ast::DUMMY_NODE_ID,
+                span: param_span,
+                is_placeholder: false,
+            }]
+        };
+
+        // Expect and consume '=>'
+        self.expect(exp!(FatArrow))?;
+
+        // Parse the body expression
+        let body = self.parse_expr()?;
+
+        // Build the closure
+        let fn_decl = Box::new(ast::FnDecl {
+            inputs: params.into(),
+            output: ast::FnRetTy::Default(self.prev_token.span),
+        });
+
+        let closure = ast::Closure {
+            binder: ast::ClosureBinder::NotPresent,
+            capture_clause: ast::CaptureBy::Ref,
+            constness: ast::Const::No,
+            coroutine_kind: None,
+            movability: ast::Movability::Movable,
+            fn_decl,
+            body,
+            fn_decl_span: lo.to(self.prev_token.span),
+            fn_arg_span: lo,
+        };
+
+        Ok(self.mk_expr(lo.to(self.prev_token.span), ExprKind::Closure(Box::new(closure))))
     }
 
     /// Parses a `try {...}` or `try bikeshed Ty {...}` expression (`try` token already eaten).

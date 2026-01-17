@@ -691,6 +691,7 @@ symbols! {
         chars,
         child_id,
         child_kill,
+        class,
         client,
         clippy,
         clobber_abi,
