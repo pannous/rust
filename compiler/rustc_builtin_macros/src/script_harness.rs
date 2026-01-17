@@ -134,31 +134,34 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     krate.items.push(main_fn);
 }
 
-/// Build type aliases for script mode: type int = i64;
+/// Build type aliases for script mode: type int = i64; type float = f64;
 fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
-    // type int = i64;
-    let int_alias = Box::new(ast::Item {
-        attrs: ThinVec::new(),
-        id: ast::DUMMY_NODE_ID,
-        kind: ast::ItemKind::TyAlias(Box::new(ast::TyAlias {
-            defaultness: ast::Defaultness::Final,
-            ident: Ident::new(sym::int, span),
-            generics: ast::Generics::default(),
-            after_where_clause: ast::WhereClause {
-                has_where_token: false,
-                predicates: ThinVec::new(),
-                span,
-            },
-            bounds: Vec::new(),
-            ty: Some(build_simple_ty(span, sym::i64)),
-        })),
-        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
-        span,
-        tokens: None,
-    });
-    items.push(int_alias);
+    let make_alias = |name: rustc_span::Symbol, target: rustc_span::Symbol| -> Box<ast::Item> {
+        Box::new(ast::Item {
+            attrs: ThinVec::new(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::ItemKind::TyAlias(Box::new(ast::TyAlias {
+                defaultness: ast::Defaultness::Final,
+                ident: Ident::new(name, span),
+                generics: ast::Generics::default(),
+                after_where_clause: ast::WhereClause {
+                    has_where_token: false,
+                    predicates: ThinVec::new(),
+                    span,
+                },
+                bounds: Vec::new(),
+                ty: Some(build_simple_ty(span, target)),
+            })),
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            span,
+            tokens: None,
+        })
+    };
+
+    items.push(make_alias(sym::int, sym::i64));
+    items.push(make_alias(sym::float, sym::f64));
 
     items
 }
