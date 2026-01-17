@@ -571,10 +571,11 @@ impl<'input> Parser<'input> {
 
         // Parse width
         let width = if self.consume('*') {
-            // Width from next argument
+            // Width from next argument - use CountIsParam since Rust doesn't support
+            // CountIsStar for width (only for precision)
             let i = self.curarg;
             self.curarg += 1;
-            CountIsStar(i)
+            CountIsParam(i)
         } else if let Some(n) = self.printf_integer() {
             CountIs(n as u16)
         } else {

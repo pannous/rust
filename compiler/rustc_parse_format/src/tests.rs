@@ -889,14 +889,14 @@ fn printf_escape() {
 
 #[test]
 fn printf_star_width() {
-    // %*d - width from argument
+    // %*d - width from argument (uses CountIsParam since Rust format doesn't support CountIsStar for width)
     same(
         "%*d",
         &[NextArgument(Box::new(Argument {
             position: ArgumentImplicitlyIs(1),
             position_span: 1..4,
             format: FormatSpec {
-                width: CountIsStar(0),
+                width: CountIsParam(0),
                 ..fmtdflt()
             },
         }))],

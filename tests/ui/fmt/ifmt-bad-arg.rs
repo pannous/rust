@@ -53,7 +53,8 @@ fn main() {
     format!("foo } bar"); //~ ERROR: unmatched `}` found
     format!("foo }"); //~ ERROR: unmatched `}` found
 
-    format!("foo %s baz", "bar"); //~ ERROR: argument never used
+    // Note: printf-style %s is now supported, so this compiles successfully
+    // format!("foo %s baz", "bar"); // no longer an error
 
     format!(r##"
 

@@ -1,14 +1,11 @@
-// Regression test for #89173: Make sure a helpful note is issued for
-// printf-style format strings using `*` to specify the width.
+// Regression test for #89173: printf-style format strings now work!
+// This test verifies that printf-style format specifiers are supported.
+//@ run-pass
 
 fn main() {
     let num = 0x0abcde;
     let width = 6;
+    // Printf-style format: %0*x means zero-padded hex with width from argument
     print!("%0*x", width, num);
-    //~^ ERROR: multiple unused formatting arguments
-    //~| NOTE: multiple missing formatting specifiers
-    //~| NOTE: argument never used
-    //~| NOTE: argument never used
-    //~| NOTE: format specifiers use curly braces, and you have to use a positional or named parameter for the width
-    //~| NOTE: printf formatting is not supported
+    // Should print: 0abcde (6 chars, zero-padded hex)
 }
