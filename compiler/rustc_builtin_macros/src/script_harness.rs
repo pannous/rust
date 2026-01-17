@@ -163,6 +163,7 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
     items.push(make_alias(sym::int, sym::i64));
     items.push(make_alias(sym::float, sym::f64));
     items.push(make_alias(sym::boolean, sym::bool));
+    items.push(make_alias(sym::rune, sym::char));
 
     items
 }

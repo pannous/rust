@@ -1925,6 +1925,7 @@ symbols! {
         rt,
         rtm_target_feature,
         runtime,
+        rune,
         rust,
         rust_2015,
         rust_2018,
