@@ -1,5 +1,5 @@
+#!/usr/bin/env -S rustc -Z script
 //! Test the `in` operator for containment checking
-// NOTE: shebang removed due to a pre-existing script mode bug affecting string literal types
 
 fn main() {
     // Test with string contains

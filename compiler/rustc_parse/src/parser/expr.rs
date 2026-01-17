@@ -1693,14 +1693,6 @@ impl<'a> Parser<'a> {
         match self.parse_opt_token_lit() {
             Some((token_lit, _)) => {
                 let expr = self.mk_expr(lo.to(self.prev_token.span), ExprKind::Lit(token_lit));
-                // In script mode, automatically convert string literals to String
-                let expr = if self.is_script_mode()
-                    && matches!(token_lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_))
-                {
-                    self.wrap_in_to_string(expr)
-                } else {
-                    expr
-                };
                 self.maybe_recover_from_bad_qpath(expr)
             }
             None => self.try_macro_suggestion(),
