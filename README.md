@@ -22,6 +22,7 @@ Philosophy:
 • truthy optionals   let z : i32? = None; if z { ... } else { put!("🗸") }
 • Magic lists @["hello", 42, true] → auto-wrapped Vec<Val> with [Str("hello"), Int(42), Bool(true)]
 • Simple lists @[1, 2, 3] → homogeneous Vec<i32>
+• @{key: value} map literal syntax
 • i++ and i--
 • modulo strings adn printf format specifiers "%d" % i
 • “strings”   no more .to_string()
@@ -31,7 +32,8 @@ Philosophy:
 • := operator for let mut
 • var keyword for let mut
 • put!(...) macro for generous printing
-
+• int = i32   float = float64   bool = boolean
+• def add(a: int, b: int) int { a + b }     # no -> needed
 
 
 ## Future features

@@ -1,3 +1,10 @@
+Lambda expressions (x => x * 2) |x| x*2  easy  => is used for match arms and similar constructs:
+let add = |a, b| a + b;
+let factor = 3;
+let mul = |x| x * factor; // captures `factor`
+
+Go-style return type annotation (def foo() int)
+
 Go through all of the following failing tests and see which one should work with some small compiler modifications. Mark them as ☐ e.g.
 ✗ test_all_synonyms ☐
 

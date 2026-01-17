@@ -1,4 +1,4 @@
-#!/usr/bin/env -S rustc -Z script
+#!/usr/bin/env rust
 // Test typeid! macro
 
 let x = 42;

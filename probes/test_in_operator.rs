@@ -1,4 +1,4 @@
-#!/usr/bin/env -S rustc -Z script
+#!/usr/bin/env rust
 //! Test the `in` operator for containment checking
 
 fn main() {

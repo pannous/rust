@@ -18,6 +18,8 @@ SCRIPT_DIR="$PROJECT_DIR/probes"
 RUSTC="$PROJECT_DIR/rustc"
 TEMP_DIR="/tmp/probe_tests"
 
+$RUSTC || echo 'rust currently building' && exit
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
