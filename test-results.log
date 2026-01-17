@@ -1,192 +1,74 @@
-[0;32m✓[0m test_add
-[0;31m✗[0m test_all_synonyms (runtime)
-[0;32m✓[0m test_and_or
-[0;31m✗[0m test_array_1indexed (runtime)
-[0;31m✗[0m test_array_like_slice (runtime)
-[0;31m✗[0m test_as_cast_comprehensive (runtime)
-[0;31m✗[0m test_as_cast_convert (runtime)
-[0;31m✗[0m test_as_cast (runtime)
-[0;32m✓[0m test_assert
-[0;31m✗[0m test_assign_fetch (runtime)
-[0;31m✗[0m test_assign_fetch2 (runtime)
-[0;32m✓[0m test_at_map
-[0;31m✗[0m test_at_vec (runtime)
-[0;32m✓[0m test_auto_return
-[0;32m✓[0m test_box
-[0;31m✗[0m test_broken_fixed (runtime)
-[0;32m✓[0m test_byte
-[0;32m✓[0m test_check_reverse
-[0;31m✗[0m test_class_funcs (runtime)
-[0;31m✗[0m test_class_methods (runtime)
-[0;31m✗[0m test_class_parse (runtime)
-[0;31m✗[0m test_class_parse2 (runtime)
-[0;31m✗[0m test_class_parse3 (runtime)
-[0;31m✗[0m test_class (runtime)
-[0;31m✗[0m test_comma_compatibility (runtime)
-[0;32m✓[0m test_comments
-[0;31m✗[0m test_compound (runtime)
-[0;31m✗[0m test_comprehensive_units (runtime)
-[0;32m✓[0m test_const_pow
-[0;31m✗[0m test_continue (runtime)
-[0;32m✓[0m test_debug_imports
-[0;31m✗[0m test_debug (runtime)
-[0;31m✗[0m test_debug2 (runtime)
-[0;31m✗[0m test_debug3 (runtime)
-[0;31m✗[0m test_debug4 (runtime)
-[0;32m✓[0m test_def_simple
-[0;32m✓[0m test_def
-[0;31m✗[0m test_dynexport_lib (runtime)
-[0;31m✗[0m test_dynexport_linked (runtime)
-[0;31m✗[0m test_dynexport_nostd (runtime)
-[0;31m✗[0m test_dynexport_user (runtime)
-[0;31m✗[0m test_dynexport (runtime)
-[0;31m✗[0m test_dynload_complete (runtime)
-[0;31m✗[0m test_dynload_forked (runtime)
-[0;31m✗[0m test_dynload_prelude (runtime)
-[0;32m✓[0m test_ellipsis
-[0;31m✗[0m test_enum_string (runtime)
-[0;31m✗[0m test_enum (runtime)
-[0;31m✗[0m test_exclamation_syntax (runtime)
-[0;32m✓[0m test_explicit_main
-[0;31m✗[0m test_fetch_debug (runtime)
-[0;31m✗[0m test_fetch_debug2 (runtime)
-[0;31m✗[0m test_fetch_parse (runtime)
-[0;31m✗[0m test_fetch_simple (runtime)
-[0;31m✗[0m test_fib (runtime)
-[0;31m✗[0m test_filter_simple (runtime)
-[0;31m✗[0m test_filter_synonyms (runtime)
-[0;31m✗[0m test_float_add (runtime)
-[0;31m✗[0m test_fmt (runtime)
-[0;31m✗[0m test_fn (runtime)
-[0;31m✗[0m test_for_in_key_value (runtime)
-[0;31m✗[0m test_for_loop (runtime)
-[0;31m✗[0m test_global_debug (runtime)
-[0;31m✗[0m test_global (runtime)
-[0;32m✓[0m test_hash_index
-[0;32m✓[0m test_hash_minimal
-[0;31m✗[0m test_hash_with_if (runtime)
-[0;31m✗[0m test_if_parse (runtime)
-[0;32m✓[0m test_implicit_main
-[0;31m✗[0m test_import_bare_syntax (runtime)
-[0;31m✗[0m test_import_folder (runtime)
-[0;31m✗[0m test_in_operator_auto_import (runtime)
-[0;31m✗[0m test_in_operator_maps (runtime)
-[0;31m✗[0m test_in_operator_rune_strings (runtime)
-[0;31m✗[0m test_in_operator_slices (runtime)
-[0;32m✓[0m test_in_operator_strings
-[0;32m✓[0m test_in_operator
-[0;32m✓[0m test_increment_decrement
-[0;32m✓[0m test_int
-[0;31m✗[0m test_interpolation (runtime)
-[0;31m✗[0m test_is_operator (runtime)
-[0;31m✗[0m test_iterator (runtime)
-[0;31m✗[0m test_lambda_arg (runtime)
-[0;31m✗[0m test_lambda (runtime)
-[0;31m✗[0m test_list_comparison (runtime)
-[0;32m✓[0m test_list_comparison2
-[0;32m✓[0m test_list_equality
-[0;31m✗[0m test_list_filter (runtime)
-[0;31m✗[0m test_list_lambda (runtime)
-[0;31m✗[0m test_list_map (runtime)
-[0;31m✗[0m test_list_methods_broken (runtime)
-[0;31m✗[0m test_list_methods (runtime)
-[0;31m✗[0m test_list_synonyms_only (runtime)
-[0;31m✗[0m test_list_typed (runtime)
-[0;32m✓[0m test_list
-[0;32m✓[0m test_main
-[0;31m✗[0m test_manual_slices (runtime)
-[0;31m✗[0m test_manual_strings (runtime)
-[0;31m✗[0m test_map_dot_comprehensive (runtime)
-[0;31m✗[0m test_map_dot_nested (runtime)
-[0;31m✗[0m test_map_dot_notation (runtime)
-[0;31m✗[0m test_map_fields (runtime)
-[0;31m✗[0m test_map_type_inference (runtime)
-[0;31m✗[0m test_map (runtime)
-[0;32m✓[0m test_minimal_conflict
-[0;32m✓[0m test_mixed
-[0;31m✗[0m test_modify (runtime)
-[0;32m✓[0m test_nil
-[0;31m✗[0m test_non_modifying (runtime)
-[0;32m✓[0m test_normal_rust
-[0;31m✗[0m test_not_truthiness (runtime)
-[0;32m✓[0m test_not
-[0;32m✓[0m test_null_coalesce
-[0;31m✗[0m test_option_abi (runtime)
-[0;31m✗[0m test_option_debug (runtime)
-[0;31m✗[0m test_option_hashmap (runtime)
-[0;32m✓[0m test_optional_chain
-[0;32m✓[0m test_optional_syntax
-[0;31m✗[0m test_parse_if (runtime)
-[0;31m✗[0m test_parse_url (runtime)
-[0;31m✗[0m test_parse_url2 (runtime)
-[0;31m✗[0m test_parse (runtime)
-[0;31m✗[0m test_parse2 (runtime)
-[0;31m✗[0m test_parse3 (runtime)
-[0;31m✗[0m test_parse4 (runtime)
-[0;31m✗[0m test_pipe (runtime)
-[0;31m✗[0m test_pow (runtime)
-[0;32m✓[0m test_pow3
-[0;31m✗[0m test_power_basic (runtime)
-[0;32m✓[0m test_power
-[0;32m✓[0m test_precedence
-[0;31m✗[0m test_print_comparison (runtime)
-[0;32m✓[0m test_printf_format
-[0;31m✗[0m test_printf (runtime)
-[0;32m✓[0m test_put_eq
-[0;31m✗[0m test_put_no_import (runtime)
-[0;32m✓[0m test_put
-[0;31m✗[0m test_range_exclusive (runtime)
-[0;31m✗[0m test_range_inclusive (runtime)
-[0;31m✗[0m test_return_void (runtime)
-[0;32m✓[0m test_return_without_arrow
-[0;32m✓[0m test_rune
-[0;32m✓[0m test_script_complex
-[0;31m✗[0m test_shebang (runtime)
-[0;31m✗[0m test_simple_for_range (runtime)
-[0;31m✗[0m test_simple_hash_check (runtime)
-[0;31m✗[0m test_simple_printf (runtime)
-[0;32m✓[0m test_simple
-[0;31m✗[0m test_slice_inference_core (runtime)
-[0;31m✗[0m test_slice_inference_final (runtime)
-[0;32m✓[0m test_string_auto
-[0;31m✗[0m test_string_char_comparison (runtime)
-[0;31m✗[0m test_string_char_literal (runtime)
-[0;31m✗[0m test_string_comparison (runtime)
-[0;32m✓[0m test_string_concat
-[0;32m✓[0m test_string_format_chain
-[0;32m✓[0m test_string_format_simple
-[0;31m✗[0m test_string_interpolation (runtime)
-[0;32m✓[0m test_string_macro
-[0;31m✗[0m test_string_methods_todo (runtime)
-[0;31m✗[0m test_string_methods (runtime)
-[0;31m✗[0m test_string_ops_struct (runtime)
-[0;32m✓[0m test_string_ops
-[0;32m✓[0m test_string_replace
-[0;32m✓[0m test_string_reverse
-[0;32m✓[0m test_string_special
-[0;31m✗[0m test_string_var_spacing (runtime)
-[0;31m✗[0m test_strings_auto_import (runtime)
-[0;31m✗[0m test_struct (runtime)
-[0;31m✗[0m test_synonyms_simple (runtime)
-[0;31m✗[0m test_tau_pi_approx (runtime)
-[0;31m✗[0m test_transform_synonyms (runtime)
-[0;31m✗[0m test_truthy_and_working (runtime)
-[0;31m✗[0m test_truthy_and (runtime)
-[0;31m✗[0m test_truthy_simple (runtime)
-[0;31m✗[0m test_truthy (runtime)
-[0;31m✗[0m test_try_assign_context_aware (runtime)
-[0;31m✗[0m test_try_assign (runtime)
-[0;31m✗[0m test_try_assignment (runtime)
-[0;31m✗[0m test_try_catch (runtime)
-[0;31m✗[0m test_try_propagation (runtime)
-[0;32m✓[0m test_typeof
-[0;32m✓[0m test_unicode_ops
-[0;31m✗[0m test_unicode (runtime)
-[0;31m✗[0m test_units (runtime)
-[0;31m✗[0m test_unused_mut (runtime)
-[0;31m✗[0m test_user_defined_put (runtime)
-[0;32m✓[0m test_while_loops
-[0;31m✗[0m test_wit_discover (runtime)
-[0;31m✗[0m test_wit_lib (runtime)
-[0;32m✓[0m test_with_main
-[0;32m✓[0m test_xor
+Usage: rustc [OPTIONS] INPUT
+
+Options:
+    -h, --help          Display this message
+        --cfg <SPEC>    Configure the compilation environment.
+                        SPEC supports the syntax `<NAME>[="<VALUE>"]`.
+        --check-cfg <SPEC>
+                        Provide list of expected cfgs for checking
+    -L [<KIND>=]<PATH>  Add a directory to the library search path. The
+                        optional KIND can be one of
+                        <dependency|crate|native|framework|all> (default:
+                        all).
+    -l [<KIND>[:<MODIFIERS>]=]<NAME>[:<RENAME>]
+                        Link the generated crate(s) to the specified native
+                        library NAME. The optional KIND can be one of
+                        <static|framework|dylib> (default: dylib).
+                        Optional comma separated MODIFIERS
+                        <bundle|verbatim|whole-archive|as-needed>
+                        may be specified each with a prefix of either '+' to
+                        enable or '-' to disable.
+        --crate-type <bin|lib|rlib|dylib|cdylib|staticlib|proc-macro>
+                        Comma separated list of types of crates
+                        for the compiler to emit
+        --crate-name <NAME>
+                        Specify the name of the crate being built
+        --edition <2015|2018|2021|2024|future>
+                        Specify which edition of the compiler to use when
+                        compiling code. The default is 2015 and the latest
+                        stable edition is 2024.
+        --emit <TYPE>[=<FILE>]
+                        Comma separated list of types of output for the
+                        compiler to emit.
+                        Each TYPE has the default FILE name:
+                        * asm - CRATE_NAME.s
+                        * llvm-bc - CRATE_NAME.bc
+                        * dep-info - CRATE_NAME.d
+                        * link - (platform and crate-type dependent)
+                        * llvm-ir - CRATE_NAME.ll
+                        * metadata - libCRATE_NAME.rmeta
+                        * mir - CRATE_NAME.mir
+                        * obj - CRATE_NAME.o
+                        * thin-link-bitcode - CRATE_NAME.indexing.o
+        --print <INFO>[=<FILE>]
+                        Compiler information to print on stdout (or to a file)
+                        INFO may be one of
+                        <all-target-specs-json|backend-has-zstd|calling-conventions|cfg|check-cfg|code-models|crate-name|crate-root-lint-levels|deployment-target|file-names|host-tuple|link-args|native-static-libs|relocation-models|split-debuginfo|stack-protector-strategies|supported-crate-types|sysroot|target-cpus|target-features|target-libdir|target-list|target-spec-json|target-spec-json-schema|tls-models>.
+    -g                  Equivalent to -C debuginfo=2
+    -O                  Equivalent to -C opt-level=3
+    -o <FILENAME>       Write output to FILENAME
+        --out-dir <DIR> Write output to compiler-chosen filename in DIR
+        --explain <OPT> Provide a detailed explanation of an error message
+        --test          Build a test harness
+        --target <TARGET>
+                        Target tuple for which the code is compiled
+    -A, --allow <LINT>  Set lint allowed
+    -W, --warn <LINT>   Set lint warnings
+        --force-warn <LINT>
+                        Set lint force-warn
+    -D, --deny <LINT>   Set lint denied
+    -F, --forbid <LINT> Set lint forbidden
+        --cap-lints <LEVEL>
+                        Set the most restrictive lint level. More restrictive
+                        lints are capped at this level
+    -C, --codegen <OPT>[=<VALUE>]
+                        Set a codegen option
+    -V, --version       Print version info and exit
+    -v, --verbose       Use verbose output
+
+Additional help:
+    -C help             Print codegen options
+    -W help             Print 'lint' options and default settings
+    -Z help             Print unstable compiler options
+    --help -v           Print the full set of options rustc accepts
+

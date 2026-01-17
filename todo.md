@@ -1,9 +1,16 @@
+If you read @README.md You see all the features that we have implemented. Most of them are currently gated behind the
+  scripting harness, Let us find out which of these features are compatible with the whole codebase. First, we do
+  self-host-build.sh Which should be easy, because all features are disabled. Then we should enable them one-by-one and
+  see if we can still build the whole host.
+
+
 Lambda expressions (x => x * 2) |x| x*2  easy  => is used for match arms and similar constructs:
 let add = |a, b| a + b;
 let factor = 3;
 let mul = |x| x * factor; // captures `factor`
 
 Go-style return type annotation (def foo() int)
+optional -> return !!
 
 Go through all of the following failing tests and see which one should work with some small compiler modifications. Mark them as ☐ e.g.
 ✗ test_all_synonyms ☐
