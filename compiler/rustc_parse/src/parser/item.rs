@@ -628,16 +628,20 @@ impl<'a> Parser<'a> {
 
         let expr_hi = self.prev_token.span;
 
-        // Build __let!(mut ident = expr_tokens) macro call
+        // Build __stmt!(let mut ident = expr_tokens) macro call
         // This produces `let mut ident = expr;` after expansion
-        let let_path = ast::Path {
+        let stmt_path = ast::Path {
             span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__let, lo))],
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__stmt, lo))],
             tokens: None,
         };
 
-        // Build the macro arguments: mut ident = expr_tokens
+        // Build the macro arguments: let mut ident = expr_tokens
         let mut args_tokens = vec![
+            TokenTree::Token(
+                token::Token::new(token::Ident(kw::Let, IdentIsRaw::No), ident.span),
+                Spacing::Alone,
+            ),
             TokenTree::Token(
                 token::Token::new(token::Ident(kw::Mut, IdentIsRaw::No), ident.span),
                 Spacing::Alone,
@@ -656,7 +660,7 @@ impl<'a> Parser<'a> {
             tokens: TokenStream::new(args_tokens),
         };
 
-        let mac = MacCall { path: let_path, args: Box::new(args) };
+        let mac = MacCall { path: stmt_path, args: Box::new(args) };
 
         Ok(Some(ItemKind::MacCall(Box::new(mac))))
     }
