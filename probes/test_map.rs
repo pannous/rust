@@ -26,7 +26,7 @@ put!("Access z1[a]: %v\n", z1["a"])
 // Test map comparison  
 z5 := {a: 1, b: 2}
 put!("z2 == z5: %v\n", z2 == z5) // map can only be compared to nil HARD!
-#eq!( z2 , z5   TODO: fix this HARD?);
+// eq!( z2 , z5   TODO: fix this HARD?);
 
 // Test typeof
 put!("typeof(z1): %v\n", typeof(z1))

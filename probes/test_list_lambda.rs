@@ -10,5 +10,5 @@ eq!( ys , @[2, 4, 6]);
 
 nums := @[1, 2, 3, 4, 5]
 eq!( nums.filter(x => x%2,1) == @[1, 3, 5]);
-#eq!( nums.reduce((a,b)=>a+b, 0) , 15);
+// eq!( nums.reduce((a,b)=>a+b, 0) , 15);
 put!("All tests passed")

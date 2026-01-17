@@ -1,9 +1,10 @@
 #!/usr/bin/env rust
+#![allow(mixed_script_confusables)]
 // import math
 // Test Unicode identifiers
 let δ = 42
 let 变量 = "Chinese variable 变量"
-#eq!( 变量#-1 , '量');
+// eq!( 变量#-1 , '量');
 let переменная = "Russian variable"
 let π = 3.14159
 
@@ -12,10 +13,11 @@ fn 函数() string {
 }
 
 fn αβγ() int {
+	let δ = 42
     return δ + 10
 }
 
-println("Testing Unicode identifiers:")
+put!("Testing Unicode identifiers:")
 put!("δ = %d\n", δ)
 put!("变量 = %s\n", 变量)
 put!("переменная = %s\n", переменная)

@@ -21,8 +21,8 @@ fn testFunction() error {
 fn main() {
 	err := testFunction()
 	if err != nil {
-		println("Success! Error propagated:", err.Error())
+		put!("Success! Error propagated:", err.Error())
 	} else {
-		println("No error returned")
+		put!("No error returned")
 	}
 }

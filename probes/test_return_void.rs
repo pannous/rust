@@ -1,9 +1,9 @@
 #!/usr/bin/env rust
 def ignore() {
 	if 1 {
-		return println("OK")  //  (no value) used as value
+		return put!("OK")  //  (no value) used as value
 	}
-	println("NO")
+	put!("NO")
 }
 
 ignore()

@@ -40,7 +40,7 @@ eq!( "42".toInt(2) , 0 ); // 42 in binary is 101010, which is not a valid binary
 eq!( "101010".toInt(2) , 42 ); // 101010 in binary is 42
 eq!( "42".toFloat() , 42.0);
 eq!( "42.5".toFloat() , 42.5);
-#eq!( "a" , 'a');
+// eq!( "a" , 'a');
 
 put!("All checks passed!\n")
 }

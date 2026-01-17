@@ -1,11 +1,11 @@
 #!/usr/bin/env rust
 let sum = 0
 // for i in 0...5 {
-// println(i)
+// put!(i)
 // sum+=i
 // }
 for i in 0…5 {
-println(i)
+put!(i)
 sum+=i
 }
 eq!( sum,1+2+3+4+5);

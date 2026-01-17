@@ -3,10 +3,10 @@
 
 fn testAssignment() error {
 	try val := strconv.Atoi("42")
-	println("Converted value:", val)
+	put!("Converted value:", val)
 	
 	try val2 := strconv.Atoi("invalid")
-	println("This should not print:", val2)
+	put!("This should not print:", val2)
 	
 	return nil
 }
@@ -14,8 +14,8 @@ fn testAssignment() error {
 fn main() {
 	err := testAssignment()
 	if err != nil {
-		println("Error caught:", err.Error())
+		put!("Error caught:", err.Error())
 	} else {
-		println("No error - unexpected!")
+		put!("No error - unexpected!")
 	}
 }

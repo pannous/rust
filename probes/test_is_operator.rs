@@ -14,15 +14,15 @@
 x := 1
 ok := x is int
 assert!()ok
-println("1 is int:", ok)
+put!("1 is int:", ok)
 
 str := "hello"  
 ok2 := str is string
 assert!()ok2
-println("hello is string:", ok2)
+put!("hello is string:", ok2)
 
 arr := [1, 2, 3]
 ok3 := arr is []int
 assert!()ok3
-println("[1,2,3] is []int:", ok3)
+put!("[1,2,3] is []int:", ok3)
 

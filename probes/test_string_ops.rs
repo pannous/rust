@@ -12,4 +12,4 @@ eq!( "hi".length() , 2);
 // #		age  int
 // #}
 // #p := Person{name: "Alice", age: 30}
-// #eq!( "Name: " + p.name + ", Age: " + p.age , "Name: Alice, Age: 30");
+// // eq!( "Name: " + p.name + ", Age: " + p.age , "Name: Alice, Age: 30");

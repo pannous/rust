@@ -5,5 +5,5 @@
 // 	if i == 2 {
 // 		continue
 // 	}
-// 	println(i)
+// 	put!(i)
 // }

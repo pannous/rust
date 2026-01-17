@@ -7,14 +7,14 @@ struct Tee{
 }
 
 fn sum(t:Tee) -> int{ return t.x + t.y }
-fn display(t:Tee){ println("x:", t.x, "y:", t.y) }
+fn display(t:Tee){ put!("x:", t.x, "y:", t.y) }
 
 fn tee(x:int, y:int) -> Tee { return Tee{x, y} }
 
 fn test_struct() {
 	t := tee(3, 4)
 	t.display()
-	println("Sum:", t.sum())
+	put!("Sum:", t.sum())
 }
 
 fn main() {

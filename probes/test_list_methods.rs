@@ -8,15 +8,15 @@ eq!( aList[1] , 2);
 eq!( aList#2 , 2);
 eq!( aList[1:] , [2, 3]);
 eq!( aList[:2] , [1, 2]);
-#eq!( aList[1:2] , 2       ); // slice(start, end)
+// eq!( aList[1:2] , 2       ); // slice(start, end)
 eq!( aList[1:2] , [2,]       ); // slice(start, end)
 
 eq!( aList.first() , 1);
 eq!( aList.last() , 3);
 eq!( aList.size() , 3);
 eq!( aList.length() , 3);
-#eq!( len([]) , 0);
-#eq!( len([1]) , 1);
+// eq!( len([]) , 0);
+// eq!( len([1]) , 1);
 eq!( len(@[]) , 0);
 eq!( len(@[1]) , 1);
 
@@ -46,7 +46,7 @@ eq!( aList.first() , 1);
 stringList := ["3", "2", "1"]
 eq!( stringList.join("-") , "3-2-1" ); // join
 eq!( stringList.join("") , "321" ); // join
-#eq!( strings.Join(stringList, "-") , "3-2-1" ); // join
+// eq!( strings.Join(stringList, "-") , "3-2-1" ); // join
 
 put!("All list method tests passed!\n")
 

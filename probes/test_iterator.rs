@@ -16,5 +16,5 @@ fn main() {
 	}
 	put!("\n")
 	
-	println("Iterator tests completed!")
+	put!("Iterator tests completed!")
 }

@@ -5,4 +5,4 @@ for i in 0…5 {
 	sum += i
 }
 eq!( sum , 0+1+2+3+4+5  ); // 0…5 includes 5
-println("Inclusive range works correctly")
+put!("Inclusive range works correctly")

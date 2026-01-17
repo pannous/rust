@@ -2,18 +2,18 @@
 // import "slices"
 
 numbers := @[3, 1, 4, 1, 5]
-println("Original:", numbers)
+put!("Original:", numbers)
 
 // Test modifying methods with ! syntax
 numbers.sort!()  // should modify in-place
-println("After sort!():", numbers)
+put!("After sort!():", numbers)
 
 numbers.reverse!()  // should modify in-place  
-println("After reverse!():", numbers)
+put!("After reverse!():", numbers)
 
 // Test non-modifying methods (return new slice)
 sorted := @[5, 2, 8, 1].sorted()  // should return new sorted slice
-println("Sorted (new slice):", sorted)
+put!("Sorted (new slice):", sorted)
 
 reversed := @[1, 2, 3, 4].reversed()  // should return new reversed slice  
-println("Reversed (new slice):", reversed)
+put!("Reversed (new slice):", reversed)
