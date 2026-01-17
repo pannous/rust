@@ -141,6 +141,8 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
 
 /// Build type aliases for script mode: type int = i64; type float = f64;
 fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
+    use rustc_span::kw;
+
     let mut items = ThinVec::new();
 
     let make_alias = |name: rustc_span::Symbol, target: rustc_span::Symbol| -> Box<ast::Item> {
@@ -165,12 +167,55 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
         })
     };
 
+    // Build type string = &'static str
+    let make_str_ref_alias = || -> Box<ast::Item> {
+        let str_ref_ty = Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Ref(
+                Some(ast::Lifetime {
+                    id: ast::DUMMY_NODE_ID,
+                    ident: Ident::new(kw::StaticLifetime, span),
+                }),
+                ast::MutTy {
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, span))),
+                        span,
+                        tokens: None,
+                    }),
+                    mutbl: ast::Mutability::Not,
+                },
+            ),
+            span,
+            tokens: None,
+        });
+        Box::new(ast::Item {
+            attrs: ThinVec::new(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::ItemKind::TyAlias(Box::new(ast::TyAlias {
+                defaultness: ast::Defaultness::Final,
+                ident: Ident::new(sym::string, span),
+                generics: ast::Generics::default(),
+                after_where_clause: ast::WhereClause {
+                    has_where_token: false,
+                    predicates: ThinVec::new(),
+                    span,
+                },
+                bounds: Vec::new(),
+                ty: Some(str_ref_ty),
+            })),
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            span,
+            tokens: None,
+        })
+    };
+
     items.push(make_alias(sym::int, sym::i64));
     items.push(make_alias(sym::float, sym::f64));
     items.push(make_alias(sym::boolean, sym::bool));
     items.push(make_alias(sym::rune, sym::char));
     items.push(make_alias(sym::byte, sym::u8));
-    items.push(make_alias(sym::string, sym::String));
+    items.push(make_str_ref_alias());
 
     items
 }
