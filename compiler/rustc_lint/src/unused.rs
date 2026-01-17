@@ -163,7 +163,8 @@ impl<'tcx> LateLintPass<'tcx> for UnusedResults {
                 | hir::BinOpKind::Le
                 | hir::BinOpKind::Ne
                 | hir::BinOpKind::Ge
-                | hir::BinOpKind::Gt => Some("comparison"),
+                | hir::BinOpKind::Gt
+                | hir::BinOpKind::In => Some("comparison"),
                 hir::BinOpKind::Add
                 | hir::BinOpKind::Sub
                 | hir::BinOpKind::Div

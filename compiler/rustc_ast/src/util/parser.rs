@@ -71,6 +71,7 @@ impl AssocOp {
             token::LArrow => Some(Binary(BinOpKind::Lt)),
             token::QuestionQuestion => Some(NullCoalesce),
             _ if t.is_keyword(kw::As) => Some(Cast),
+            _ if t.is_keyword(kw::In) => Some(Binary(BinOpKind::In)),
             _ => None,
         }
     }
@@ -133,7 +134,8 @@ impl AssocOp {
                 Shr | // `{ 42 } >> 2`
                 Le | // `{ 42 } <= 3`
                 Gt | // `{ 42 } > 3`
-                Ge   // `{ 42 } >= 3`
+                Ge | // `{ 42 } >= 3`
+                In   // `{ 42 } in [1, 2, 3]`
             ) |
             AssignOp(_) | // `{ 42 } +=`
             // Equal | // `{ 42 } == { 42 }`    Accepting these here would regress incorrect

@@ -568,7 +568,22 @@ impl<'tcx> ThirBuildCx<'tcx> {
             hir::ExprKind::Lit(lit) => ExprKind::Literal { lit, neg: false },
 
             hir::ExprKind::Binary(op, lhs, rhs) => {
-                if self.typeck_results.is_method_call(expr) {
+                // Special handling for `in` operator: `a in b` -> `b.contains(&a)`
+                if op.node == hir::BinOpKind::In {
+                    // The `in` operator is desugared to a method call on the RHS
+                    // This should have been recorded as a method call during type checking
+                    if self.typeck_results.is_method_call(expr) {
+                        // lhs = what we're looking for, rhs = the collection
+                        // For `a in b` -> `b.contains(&a)`, the receiver is rhs
+                        let rhs_mirror = self.mirror_expr(rhs);
+                        let lhs_mirror = self.mirror_expr(lhs);
+                        self.overloaded_operator(expr, Box::new([rhs_mirror, lhs_mirror]))
+                    } else {
+                        // Fallback: create a simple boolean expression
+                        // This path shouldn't be reached if type checking worked correctly
+                        span_bug!(expr.span, "`in` operator should have been desugared to method call")
+                    }
+                } else if self.typeck_results.is_method_call(expr) {
                     let lhs = self.mirror_expr(lhs);
                     let rhs = self.mirror_expr(rhs);
                     self.overloaded_operator(expr, Box::new([lhs, rhs]))

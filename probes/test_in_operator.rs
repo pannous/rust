@@ -1,0 +1,45 @@
+//! Test the `in` operator for containment checking
+// NOTE: shebang removed due to a pre-existing script mode bug affecting string literal types
+
+fn main() {
+    // Test with string contains
+    let result1 = "hello" in "hello world";
+    println!("'hello' in 'hello world': {}", result1);
+    assert!(result1);
+
+    let result2 = "xyz" in "hello world";
+    println!("'xyz' in 'hello world': {}", result2);
+    assert!(!result2);
+
+    // Test with Vec contains (Vec::contains takes &T)
+    let numbers = vec![1, 2, 3, 4, 5];
+    let result3 = &3 in numbers;
+    println!("3 in [1,2,3,4,5]: {}", result3);
+    assert!(result3);
+
+    let result4 = &10 in numbers;
+    println!("10 in [1,2,3,4,5]: {}", result4);
+    assert!(!result4);
+
+    // Test with array slice
+    let arr = [1, 2, 3];
+    let result5 = &2 in &arr[..];
+    println!("2 in [1,2,3]: {}", result5);
+    assert!(result5);
+
+    // Test in if condition
+    if "rust" in "hello rust world" {
+        println!("Found 'rust' in the string!");
+    } else {
+        panic!("Should have found 'rust'!");
+    }
+
+    // Test in if condition with Vec
+    if &5 in &numbers {
+        println!("Found 5 in numbers!");
+    } else {
+        panic!("Should have found 5!");
+    }
+
+    println!("All tests passed!");
+}

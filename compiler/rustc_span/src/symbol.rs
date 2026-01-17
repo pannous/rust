@@ -739,6 +739,7 @@ symbols! {
         concat_idents,
         conservative_impl_trait,
         console,
+        contains,
         const_allocate,
         const_async_blocks,
         const_closures,

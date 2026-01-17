@@ -1023,6 +1023,8 @@ pub enum BinOpKind {
     Ge,
     /// The `>` operator (greater than)
     Gt,
+    /// The `in` operator (containment check)
+    In,
 }
 
 impl BinOpKind {
@@ -1048,6 +1050,7 @@ impl BinOpKind {
             Ne => "!=",
             Ge => ">=",
             Gt => ">",
+            In => "in",
         }
     }
 
@@ -1065,7 +1068,7 @@ impl BinOpKind {
             BitAnd => ExprPrecedence::BitAnd,
             BitXor => ExprPrecedence::BitXor,
             BitOr => ExprPrecedence::BitOr,
-            Lt | Gt | Le | Ge | Eq | Ne => ExprPrecedence::Compare,
+            Lt | Gt | Le | Ge | Eq | Ne | In => ExprPrecedence::Compare,
             And => ExprPrecedence::LAnd,
             Or => ExprPrecedence::LOr,
         }
@@ -1074,7 +1077,7 @@ impl BinOpKind {
     pub fn fixity(&self) -> Fixity {
         use BinOpKind::*;
         match self {
-            Eq | Ne | Lt | Le | Gt | Ge => Fixity::None,
+            Eq | Ne | Lt | Le | Gt | Ge | In => Fixity::None,
             Pow => Fixity::Right,  // 2**3**4 = 2**(3**4)
             Add | Sub | Mul | Div | Rem | And | Or | BitXor | BitAnd | BitOr | Shl | Shr => {
                 Fixity::Left
@@ -1085,7 +1088,7 @@ impl BinOpKind {
     pub fn is_comparison(self) -> bool {
         use BinOpKind::*;
         match self {
-            Eq | Ne | Lt | Le | Gt | Ge => true,
+            Eq | Ne | Lt | Le | Gt | Ge | In => true,
             Add | Sub | Mul | Pow | Div | Rem | And | Or | BitXor | BitAnd | BitOr | Shl | Shr => false,
         }
     }

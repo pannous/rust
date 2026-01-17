@@ -4864,5 +4864,6 @@ fn binop_to_token(op: BinOpKind) -> token::TokenKind {
         BinOpKind::Ge => token::TokenKind::Ge,
         BinOpKind::Gt => token::TokenKind::Gt,
         BinOpKind::Pow => token::TokenKind::Star, // Fallback - Pow is handled specially elsewhere
+        BinOpKind::In => token::TokenKind::Ident(kw::In, token::IdentIsRaw::No),
     }
 }

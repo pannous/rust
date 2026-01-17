@@ -12,7 +12,7 @@ use rustc_middle::ty::print::with_no_trimmed_paths;
 use rustc_middle::ty::{self, IsSuggestable, Ty, TyCtxt, TypeVisitableExt};
 use rustc_session::errors::ExprParenthesesNeeded;
 use rustc_span::source_map::Spanned;
-use rustc_span::{Span, Symbol, sym};
+use rustc_span::{Ident, Span, Symbol, sym};
 use rustc_trait_selection::infer::InferCtxtExt;
 use rustc_trait_selection::traits::{FulfillmentError, Obligation, ObligationCtxt};
 use tracing::debug;
@@ -104,6 +104,11 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             expr.hir_id, expr, op, lhs_expr, rhs_expr
         );
 
+        // Special handling for `in` operator: `a in b` desugars to `b.contains(&a)`
+        if op.node == hir::BinOpKind::In {
+            return self.check_in_operator(expr, lhs_expr, rhs_expr);
+        }
+
         match BinOpCategory::from(op.node) {
             BinOpCategory::Shortcircuit => {
                 // && and || are a simple case.
@@ -152,6 +157,60 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
                 } else {
                     return_ty
                 }
+            }
+        }
+    }
+
+    /// Check the `in` operator: `a in b` desugars to `b.contains(&a)`.
+    /// This is a Python-like containment check.
+    fn check_in_operator(
+        &self,
+        expr: &'tcx hir::Expr<'tcx>,
+        lhs_expr: &'tcx hir::Expr<'tcx>,
+        rhs_expr: &'tcx hir::Expr<'tcx>,
+    ) -> Ty<'tcx> {
+        let tcx = self.tcx;
+
+        // Type-check the RHS (container) first
+        let rhs_ty = self.check_expr(rhs_expr);
+        let rhs_ty = self.try_structurally_resolve_type(rhs_expr.span, rhs_ty);
+
+        // Look up the `contains` method on the RHS type
+        // For `a in b`, we want to call `b.contains(a)` (or `b.contains(&a)`)
+        let method_name = Ident::new(sym::contains, expr.span);
+
+        // Create a path segment for method lookup - allocate in arena for 'tcx lifetime
+        let segment = tcx.arena.alloc(hir::PathSegment::new(method_name, expr.hir_id, hir::def::Res::Err));
+
+        // Use the full method lookup which handles type inference properly
+        // We pass an empty slice for args since lookup_method only uses them for lints
+        match self.lookup_method(rhs_ty, segment, expr.span, expr, rhs_expr, &[]) {
+            Ok(method) => {
+                // Record the method call
+                self.write_method_call_and_enforce_effects(expr.hir_id, expr.span, method);
+
+                // Type-check the argument (lhs), coercing to expected type
+                // inputs[0] is self, inputs[1] is the argument
+                let expected_arg_ty = method.sig.inputs()[1];
+                self.check_expr_coercible_to_type(lhs_expr, expected_arg_ty, None);
+
+                method.sig.output()
+            }
+            Err(_) => {
+                // Also check the lhs to avoid cascading errors
+                let _lhs_ty = self.check_expr(lhs_expr);
+
+                // No `contains` method found, emit an error
+                let guar = struct_span_code_err!(
+                    self.dcx(),
+                    expr.span,
+                    E0369,
+                    "cannot apply `in` operator to type `{}`",
+                    rhs_ty
+                )
+                .with_note(format!("`in` operator requires RHS type `{}` to have a `contains` method", rhs_ty))
+                .emit();
+                Ty::new_error(tcx, guar)
             }
         }
     }
@@ -1081,6 +1140,10 @@ fn lang_item_for_binop(tcx: TyCtxt<'_>, op: Op) -> (Symbol, Option<hir::def_id::
             hir::BinOpKind::And | hir::BinOpKind::Or => {
                 bug!("&& and || are not overloadable")
             }
+            hir::BinOpKind::In => {
+                // `in` operator desugars to .contains() method call, not a trait
+                (sym::contains, None)
+            }
         },
     }
 }
@@ -1136,7 +1199,7 @@ impl From<hir::BinOpKind> for BinOpCategory {
             Shl | Shr => BinOpCategory::Shift,
             Add | Sub | Mul | Pow | Div | Rem => BinOpCategory::Math,
             BitXor | BitAnd | BitOr => BinOpCategory::Bitwise,
-            Eq | Ne | Lt | Le | Ge | Gt => BinOpCategory::Comparison,
+            Eq | Ne | Lt | Le | Ge | Gt | In => BinOpCategory::Comparison,
             And | Or => BinOpCategory::Shortcircuit,
         }
     }
