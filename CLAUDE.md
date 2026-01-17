@@ -4,6 +4,7 @@ See @README.md for features of our custom build
 
 Rebuild in 5 seconds with 
 ./rebuild.sh
+use `./rebuild.sh cache` for sccache instead of INCREMENTAL build!
 
 for now we can put some extensions into
 ./compiler/rustc_builtin_macros/src/script_harness.rs

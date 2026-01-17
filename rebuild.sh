@@ -9,6 +9,7 @@ if [[ "$*" == *"cache"* ]]; then
     export CARGO_INCREMENTAL=""
     env -u RUSTC_WRAPPER ./x.py build --stage 1
 else
+	echo "use ./rebuild.sh cache   for sccache instead of INCREMENTAL build!"
     ./x.py build --stage 1 compiler
     ./x.py build --stage 1 library
 fi
