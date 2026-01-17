@@ -8,47 +8,7 @@ use rustc_ast as ast;
 use rustc_span::{Ident, Span, kw, sym};
 use thin_vec::ThinVec;
 
-/// Create #[allow(lint_name)] attribute
-fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
-
-    let path = Path {
-        span,
-        segments: vec![
-            PathSegment::from_ident(Ident::new(sym::allow, span)),
-        ]
-        .into(),
-        tokens: None,
-    };
-
-    let args = AttrArgs::Delimited(ast::DelimArgs {
-        dspan: rustc_ast::tokenstream::DelimSpan::from_single(span),
-        delim: rustc_ast::token::Delimiter::Parenthesis,
-        tokens: {
-            use rustc_ast::token::{IdentIsRaw, TokenKind};
-            use rustc_ast::tokenstream::{TokenStream, TokenTree};
-            TokenStream::new(vec![TokenTree::token_alone(
-                TokenKind::Ident(lint_name, IdentIsRaw::No),
-                span,
-            )])
-        },
-    });
-
-    ast::Attribute {
-        kind: AttrKind::Normal(Box::new(NormalAttr {
-            item: ast::AttrItem {
-                unsafety: Safety::Default,
-                path,
-                args: AttrItemKind::Unparsed(args),
-                tokens: None
-            },
-            tokens: None
-        })),
-        id: ast::AttrId::from_u32(0),
-        style: AttrStyle::Outer,
-        span,
-    }
-}
+use super::create_allow_attr;
 
 /// Build helper trait and impl for slice methods: filter()
 /// Generates:
