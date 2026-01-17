@@ -1,12 +1,12 @@
 #!/usr/bin/env rust
-def meaning() int {return 42}
-#def meaning() int {42}
-#def meaning(){return 42}
+def meaning() -> i32 {return 42}
+# def meaning() -> i32 {42} // alternative with implicit return
+# def meaning(){return 42} // without explicit return type
 def hello() {
-	put!("Hello from def")
+	println!("Hello from def");
 }
 
 def main(){
-	hello()
-	put!("Meaning of life is %d\n", meaning())
+	hello();
+	println!("Meaning of life is {}", meaning());
 }

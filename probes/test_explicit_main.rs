@@ -5,5 +5,5 @@ package main
 // import "fmt"
 
 fn main() {
-	put!("Explicit main still works!")
+	println!("Explicit main still works!");
 }

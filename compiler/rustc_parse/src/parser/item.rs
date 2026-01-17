@@ -93,6 +93,14 @@ impl<'a> Parser<'a> {
                     }
                 }
 
+                // Skip `package <ident>` statements (Go-style package declarations)
+                if self.token.is_ident_named(sym::package) && self.look_ahead(1, |t| t.is_ident()) {
+                    self.bump(); // consume `package`
+                    self.bump(); // consume the identifier (e.g., `main`)
+                    let _ = self.eat(exp!(Semi)); // consume optional semicolon
+                    continue;
+                }
+
                 // Not an item - parse as statement and wrap in __stmt!
                 if let Some(stmt_item) = self.parse_script_statement_as_item()? {
                     items.push(Box::new(stmt_item));
@@ -3004,12 +3012,16 @@ impl<'a> Parser<'a> {
         } else {
             &[exp!(Gen), exp!(Const), exp!(Async), exp!(Unsafe), exp!(Safe), exp!(Extern)]
         };
-        self.check_keyword_case(exp!(Fn), case) // Definitely an `fn`.
+        // In script mode, also accept `def` as synonym for `fn`
+        let is_fn_kw = self.check_keyword_case(exp!(Fn), case)
+            || (self.is_script_mode() && self.token.is_ident_named(sym::def));
+        is_fn_kw // Definitely an `fn` or `def`.
             // `$qual fn` or `$qual $qual`:
             || quals.iter().any(|&exp| self.check_keyword_case(exp, case))
                 && self.look_ahead(1, |t| {
-                    // `$qual fn`, e.g. `const fn` or `async fn`.
+                    // `$qual fn` or `$qual def`, e.g. `const fn` or `async fn`.
                     t.is_keyword_case(kw::Fn, case)
+                        || (self.is_script_mode() && t.is_ident_named(sym::def))
                     // Two qualifiers `$qual $qual` is enough, e.g. `async unsafe`.
                     || (
                         (
@@ -3130,7 +3142,16 @@ impl<'a> Parser<'a> {
             Some(CoroutineKind::Async { .. }) | None => {}
         }
 
-        if !self.eat_keyword_case(exp!(Fn), case) {
+        // In script mode, also accept `def` as synonym for `fn`
+        let ate_fn = if self.eat_keyword_case(exp!(Fn), case) {
+            true
+        } else if self.is_script_mode() && self.token.is_ident_named(sym::def) {
+            self.bump(); // consume `def`
+            true
+        } else {
+            false
+        };
+        if !ate_fn {
             // It is possible for `expect_one_of` to recover given the contents of
             // `self.expected_token_types`, therefore, do not use `self.unexpected()` which doesn't
             // account for this.
@@ -3312,9 +3333,13 @@ impl<'a> Parser<'a> {
 
                     // FIXME(gen_blocks): add keyword recovery logic for genness
 
+                    let is_fn_ahead = self.look_ahead(1, |tok| {
+                        tok.is_keyword_case(kw::Fn, case)
+                            || (self.is_script_mode() && tok.is_ident_named(sym::def))
+                    });
                     if let Some(wrong_kw) = wrong_kw
                         && self.may_recover()
-                        && self.look_ahead(1, |tok| tok.is_keyword_case(kw::Fn, case))
+                        && is_fn_ahead
                     {
                         // Advance past the misplaced keyword and `fn`
                         self.bump();

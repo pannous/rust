@@ -10,15 +10,15 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_as_cast_comprehensive (compile)
 [0;31m✗[0m test_as_cast_convert (compile)
 [0;31m✗[0m test_as_cast (compile)
-[0;31m✗[0m test_assert (compile)
+[0;32m✓[0m test_assert
 [0;31m✗[0m test_assign_fetch (compile)
 [0;31m✗[0m test_assign_fetch2 (compile)
 [0;32m✓[0m test_at_map
 [0;31m✗[0m test_at_vec (compile)
-[0;31m✗[0m test_auto_return (compile)
+[0;32m✓[0m test_auto_return
 [0;32m✓[0m test_box
 [0;31m✗[0m test_broken_fixed (compile)
-[0;31m✗[0m test_byte (compile)
+[0;32m✓[0m test_byte
 [0;32m✓[0m test_check_reverse
 [0;31m✗[0m test_class_funcs (compile)
 [0;31m✗[0m test_class_methods (compile)
@@ -37,8 +37,8 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_debug2 (compile)
 [0;31m✗[0m test_debug3 (compile)
 [0;31m✗[0m test_debug4 (compile)
-[0;31m✗[0m test_def_simple (compile)
-[0;31m✗[0m test_def (compile)
+[0;32m✓[0m test_def_simple
+[0;32m✓[0m test_def
 [0;31m✗[0m test_dynexport_lib (compile)
 [0;31m✗[0m test_dynexport_linked (compile)
 [0;31m✗[0m test_dynexport_nostd (compile)
@@ -47,11 +47,11 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_dynload_complete (compile)
 [0;31m✗[0m test_dynload_forked (compile)
 [0;31m✗[0m test_dynload_prelude (compile)
-[0;31m✗[0m test_ellipsis (compile)
+[0;32m✓[0m test_ellipsis
 [0;31m✗[0m test_enum_string (compile)
 [0;31m✗[0m test_enum (compile)
 [0;31m✗[0m test_exclamation_syntax (compile)
-[0;31m✗[0m test_explicit_main (compile)
+[0;32m✓[0m test_explicit_main
 [0;31m✗[0m test_fetch_debug (compile)
 [0;31m✗[0m test_fetch_debug2 (compile)
 [0;31m✗[0m test_fetch_parse (compile)
@@ -70,7 +70,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_hash_minimal
 [0;31m✗[0m test_hash_with_if (compile)
 [0;31m✗[0m test_if_parse (compile)
-[0;31m✗[0m test_implicit_main (compile)
+[0;32m✓[0m test_implicit_main
 [0;31m✗[0m test_import_bare_syntax (compile)
 [0;31m✗[0m test_import_folder (compile)
 [0;31m✗[0m test_in_operator_auto_import (compile)
@@ -80,7 +80,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_in_operator_strings
 [0;32m✓[0m test_in_operator
 [0;32m✓[0m test_increment_decrement
-[0;31m✗[0m test_int (compile)
+[0;32m✓[0m test_int
 [0;31m✗[0m test_interpolation (compile)
 [0;31m✗[0m test_is_operator (compile)
 [0;31m✗[0m test_iterator_for_in (compile)
@@ -109,7 +109,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_map_type_inference (compile)
 [0;31m✗[0m test_map (compile)
 [0;32m✓[0m test_minimal_conflict
-[0;31m✗[0m test_mixed (compile)
+[0;32m✓[0m test_mixed
 [0;31m✗[0m test_modify (compile)
 [0;32m✓[0m test_nil
 [0;31m✗[0m test_non_modifying (compile)
@@ -144,7 +144,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_range_exclusive (compile)
 [0;31m✗[0m test_range_inclusive (compile)
 [0;31m✗[0m test_return_void (compile)
-[0;31m✗[0m test_rune (compile)
+[0;32m✓[0m test_rune
 [0;32m✓[0m test_script_complex
 [0;31m✗[0m test_shebang (compile)
 [0;31m✗[0m test_simple_for_range (compile)
@@ -197,5 +197,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m46 passed[0m, [0;31m147 failed[0m, 0 skipped
+Results: [0;32m57 passed[0m, [0;31m136 failed[0m, 0 skipped
 ========================================

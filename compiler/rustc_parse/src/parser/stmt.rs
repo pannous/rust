@@ -113,14 +113,33 @@ impl<'a> Parser<'a> {
                 errors::InvalidVariableDeclarationSub::UseLetNotAuto,
                 force_collect,
             )?
-        } else if self.is_kw_followed_by_ident(sym::var) && self.may_recover() {
+        } else if self.is_kw_followed_by_ident(sym::var) {
+            // In script mode, silently accept `var` as synonym for `let`
+            // In normal mode, recover but emit an error
             self.bump(); // `var`
-            self.recover_stmt_local_after_let(
-                lo,
-                attrs,
-                errors::InvalidVariableDeclarationSub::UseLetNotVar,
-                force_collect,
-            )?
+            if self.is_script_mode() {
+                // Silent conversion in script mode
+                self.collect_tokens(None, attrs, force_collect, |this, attrs| {
+                    let local = this.parse_local(None, attrs)?;
+                    Ok((
+                        this.mk_stmt(lo.to(this.prev_token.span), StmtKind::Let(local)),
+                        Trailing::No,
+                        UsePreAttrPos::No,
+                    ))
+                })?
+            } else if self.may_recover() {
+                self.recover_stmt_local_after_let(
+                    lo,
+                    attrs,
+                    errors::InvalidVariableDeclarationSub::UseLetNotVar,
+                    force_collect,
+                )?
+            } else {
+                return Err(self.dcx().create_err(errors::InvalidVariableDeclaration {
+                    span: lo,
+                    sub: errors::InvalidVariableDeclarationSub::UseLetNotVar(lo),
+                }));
+            }
         } else if self.check_path()
             && !self.token.is_qpath_start()
             && !self.is_path_start_item()
