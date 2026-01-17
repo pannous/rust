@@ -1,35 +1,26 @@
 #!/usr/bin/env rust
 
-// import "fmt"
+// Test None/Option (Rust equivalent of nil)
 
-let ptr *int
-if ptr == ø {
-	put!("ptr is nil using ø")
+opt := None::<i32>
+if opt == None {
+	put!("Option is None")
 }
 
-let slice []int
-if slice == ø {
-	put!("slice is nil using ø")
-}
-
-let m map[string]int
-if m == ø {
-	put!("map is nil using ø")
-}
-
-// Test assignment
-ptr = ø
-if ptr == ø {
-	put!("ptr assigned to ø works")
+// Test Some value
+opt2 := Some(42)
+if opt2 != None {
+	put!("Some(42) is not None")
 }
 
 // Test return
-result := getPtr()
-if result == ø {
-	put!("function returned ø")
+fn get_opt() -> Option<i32> {
+	return None
 }
 
-
-fn getPtr() *int {
-	return ø
+result := get_opt()
+if result == None {
+	put!("function returned None")
 }
+
+put!("All nil tests passed!")

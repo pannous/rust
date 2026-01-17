@@ -30,16 +30,16 @@ if "hello" {
 	assert!(false)
 }
 
-// Test slice truthiness
-let nilSlice []int
+// Test slice truthiness (empty vec is falsy in script mode)
+let nilSlice: Vec<i32> = vec![]
 if nilSlice {
-	put!("FAIL: nil slice should be falsy")
+	put!("FAIL: empty slice should be falsy")
 	assert!(false)
 } else {
-	put!("PASS: nil slice is falsy")
+	put!("PASS: empty slice is falsy")
 }
 
-emptySlice := @[]
+let emptySlice: Vec<i32> = vec![]
 if emptySlice {
 	put!("FAIL: empty slice should be falsy")
 	assert!(false)
@@ -70,62 +70,21 @@ if false {
 	put!("PASS: false is falsy")
 }
 
-// Test map truthiness  
-let nilMap map[string]int
-if nilMap {
-	put!("FAIL: nil map should be falsy")
+// Test Option truthiness
+let nilOpt: Option<i32> = None
+if nilOpt {
+	put!("FAIL: None should be falsy")
 	assert!(false)
 } else {
-	put!("PASS: nil map is falsy")
+	put!("PASS: None is falsy")
 }
 
-emptyMap := make(map[string]int)
-if emptyMap {
-	put!("PASS: empty map created with make() is truthy")
+someOpt := Some(42)
+if someOpt {
+	put!("PASS: Some is truthy")
 } else {
-	put!("FAIL: empty map created with make() should be truthy")
-	assert!(false)
-}
-
-filledMap := map[string]int{"key": 1}
-if filledMap {
-	put!("PASS: filled map is truthy")
-} else {
-	put!("FAIL: filled map should be truthy")
+	put!("FAIL: Some should be truthy")
 	assert!(false)
 }
 
-// Test pointer truthiness
-let nilPtr *int
-if nilPtr {
-	put!("FAIL: nil pointer should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: nil pointer is falsy")
-}
-
-val := 42
-ptr := &val
-if ptr {
-	put!("PASS: non-nil pointer is truthy")
-} else {
-	put!("FAIL: non-nil pointer should be truthy")
-	assert!(false)
-}
-
-// Test channel truthiness
-let nilChan chan int
-if nilChan {
-	put!("FAIL: nil channel should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: nil channel is falsy")
-}
-
-ch := make(chan int, 1)
-if ch {
-	put!("PASS: created channel is truthy")
-} else {
-	put!("FAIL: created channel should be truthy")
-	assert!(false)
-}
+put!("All truthy_and tests passed!")

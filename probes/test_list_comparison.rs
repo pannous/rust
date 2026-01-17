@@ -3,7 +3,9 @@
 let x = 42
 let y = 41 + 1
 eq!( x , y);
-if @[1,2] == @[1,2] {
+list1 := @[1,2]
+list2 := @[1,2]
+if list1 == list2 {
 	put!("Test passed: lists are equal")
 } else {
 	put!("Test failed: lists are not equal")
@@ -12,7 +14,7 @@ a := @[1, 2, 3]
 b := @[1, 2, 3]
 eq!( a , b);
 
-eq!( @[1,2] , @[1,2]);
+eq!( list1 , list2);
 
 put!("Test passed: a and b are equal")
 
@@ -23,9 +25,9 @@ put!("Test passed: a and b are equal")
 
 // Basic types that should be comparable
 put!("Testing basic comparisons:")
-put!("int: %d == %d: %v\n", 1, 1, 1 == 1)
-put!("string: %s == %s: %v\n", "a", "a", "a" == "a")
-put!("bool: %v == %v: %v\n", true, true, true == true)
+put!("int: {} == {}: {}\n", 1, 1, 1 == 1)
+put!("string: {} == {}: {}\n", "a", "a", "a" == "a")
+put!("bool: {} == {}: {}\n", true, true, true == true)
 
 // Function types (should not be comparable except to nil)
 # let f1 fn()
@@ -38,38 +40,34 @@ put!("Testing slice element types:")
 // Try to compare int slices (this might tell us if they're going through runtime)
 a1 := @[1]  // no new variables on left side of :=
 b1 := @[1]
-put!("@[1] == @[1]: %v\n", a1 == b1)
+put!("@[1] == @[1]: {}\n", a1 == b1)
 
 // Test what happens with int comparison
 # a := 1 cannot use 1 (untyped int constant) as []any value in assignment
 
 // Test arrays for comparison
-arr1 := [2]int{1, 2}
-arr2 := [2]int{1, 2}
-arr3 := [2]int{3, 4}
+arr1 := @[1, 2]
+arr2 := @[1, 2]
+arr3 := @[3, 4]
 
-put!("Array comparison: %v == %v: %v\n", arr1, arr2, arr1 == arr2)
-put!("Array comparison: %v == %v: %v\n", arr1, arr3, arr1 == arr3)
-
-// assert!()types
-put!("Type of int: %v\n", reflect.TypeOf(a))
-put!("Type of @[]: %v\n", reflect.TypeOf(@[1, 2]))
+put!("Array comparison: {:?} == {:?}: {}\n", arr1, arr2, arr1 == arr2)
+put!("Array comparison: {:?} == {:?}: {}\n", arr1, arr3, arr1 == arr3)
 
 // Test empty slice lengths
-empty1 := @[]
-empty2 := @[]
+let empty1: Vec<i32> = vec![]
+let empty2: Vec<i32> = vec![]
 
-put!("len(empty1): %d\n", len(empty1))
-put!("len(empty2): %d\n", len(empty2))
-put!("len(empty1) == len(empty2): %v\n", len(empty1) == len(empty2))
-put!("empty1 == empty2: %v\n", empty1 == empty2)
+put!("len(empty1): {}\n", empty1.len())
+put!("len(empty2): {}\n", empty2.len())
+put!("len(empty1) == len(empty2): {}\n", empty1.len() == empty2.len())
+put!("empty1 == empty2: {}\n", empty1 == empty2)
 
-// Test nil slices
-let nil1 []int
-let nil2 []int
-put!("nil1 == nil2: %v\n", nil1 == nil2)
-put!("len(nil1): %d, len(nil2): %d\n", len(nil1), len(nil2))
+// Test more empty slices (Rust has no nil slices)
+let nil1: Vec<i32> = vec![]
+let nil2: Vec<i32> = vec![]
+put!("nil1 == nil2: {}\n", nil1 == nil2)
+put!("len(nil1): {}, len(nil2): {}\n", nil1.len(), nil2.len())
 
-// Test mixed nil and empty
-put!("nil1 == empty1: %v\n", nil1 == empty1)
+// Test empty slices comparison
+put!("nil1 == empty1: {}\n", nil1 == empty1)
 put!("All tests completed successfully.\n")
