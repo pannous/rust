@@ -5,7 +5,7 @@ class User {
 		Name string;
 		Age number;
 }
-users := []User{{ Name: "Bob", Age: 17 }, { Name: "Charlie", Age: 22 }, { Name: "Alice", Age: 20 }, { Name: "Diana", Age: 15 }}
+users := @[User{ Name: "Bob", Age: 17 }, User{ Name: "Charlie", Age: 22 }, User{ Name: "Alice", Age: 20 }, User{ Name: "Diana", Age: 15 }]
 
 // Option 1: Single expression (current working approach)
 /*

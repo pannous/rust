@@ -2,13 +2,13 @@
 // import os
 
 // Test 1-indexed array access
-z := []rune{'a', 'b', 'c'}
+z := @['a', 'b', 'c']
 if z#1 ≠ 'a' { put!("First element via #1 fails"); exit() }
 // eq!( z#2 , 'b' ); // Second element
 // eq!( z#3 , 'c' );
 
 // Test with numbers
-nums := []int{10, 20, 30, 40}
+nums := @[10, 20, 30, 40]
 // eq!( nums#1 , 10);
 // eq!( nums#4 , 40);
 

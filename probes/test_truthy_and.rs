@@ -39,7 +39,7 @@ if nilSlice {
 	put!("PASS: nil slice is falsy")
 }
 
-emptySlice := []int{}
+emptySlice := @[]
 if emptySlice {
 	put!("FAIL: empty slice should be falsy")
 	assert!(false)
@@ -47,7 +47,7 @@ if emptySlice {
 	put!("PASS: empty slice is falsy")
 }
 
-nonEmptySlice := []int{1, 2, 3}
+nonEmptySlice := @[1, 2, 3]
 if nonEmptySlice {
 	put!("PASS: non-empty slice is truthy")
 } else {

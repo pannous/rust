@@ -1,13 +1,13 @@
 #!/usr/bin/env rust
 
 // Test 1-indexed array access
-z := []rune{'a', 'b', 'c'}
+z := @['a', 'b', 'c']
 if z#1 != 'a' { panic("First element failed") } // First element
 if z#2 != 'b' { panic("Second element failed") } // Second element
 if z#3 != 'c' { panic("Third element failed") } // Third element
 
 // Test with numbers
-nums := []int{10, 20, 30, 40}
+nums := @[10, 20, 30, 40]
 if nums#1 != 10 { panic("nums#1 failed") }
 if nums#4 != 40 { panic("nums#4 failed") }
 

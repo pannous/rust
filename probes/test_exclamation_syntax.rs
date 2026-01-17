@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
 // import "slices"
 
-numbers := []int{3, 1, 4, 1, 5}
+numbers := @[3, 1, 4, 1, 5]
 println("Original:", numbers)
 
 // Test modifying methods with ! syntax
@@ -12,8 +12,8 @@ numbers.reverse!()  // should modify in-place
 println("After reverse!():", numbers)
 
 // Test non-modifying methods (return new slice)
-sorted := []int{5, 2, 8, 1}.sorted()  // should return new sorted slice
+sorted := @[5, 2, 8, 1].sorted()  // should return new sorted slice
 println("Sorted (new slice):", sorted)
 
-reversed := []int{1, 2, 3, 4}.reversed()  // should return new reversed slice  
+reversed := @[1, 2, 3, 4].reversed()  // should return new reversed slice  
 println("Reversed (new slice):", reversed)

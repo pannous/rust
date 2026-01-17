@@ -17,8 +17,8 @@ eq!( aList.size() , 3);
 eq!( aList.length() , 3);
 #eq!( len([]) , 0);
 #eq!( len([1]) , 1);
-eq!( len([]int{}) , 0);
-eq!( len([]int{1}) , 1);
+eq!( len(@[]) , 0);
+eq!( len(@[1]) , 1);
 
 eq!( aList.contains(2) , true);
 eq!( aList.contains(5) , false);

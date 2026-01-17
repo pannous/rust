@@ -22,17 +22,17 @@ fn main() {
 //eq!( "你" , '你');
 //eq!( "你好"#2 , '好' ); // charAt returns a rune at the given index
 //eq!( "你好"#i , '好');
-bytos := []byte{104, 101, 108, 108, 111}
+bytos := @[104, 101, 108, 108, 111]
 eq!( "hello".bytes() , bytos ); // returns a list of bytes (ASCII values)
 
 //byts := []int("你好") // nah, ok
 byts := []byte("你好") // [228 189 160 229 165 189] OK
 put!(byts) // prints [104 101 108 108 111]
-eq!( "你好".bytes() , []byte{228, 189, 160, 229, 165, 189} ); // returns a list of bytes (UTF-8 encoded values)
+eq!( "你好".bytes() , @[228, 189, 160, 229, 165, 189] ); // returns a list of bytes (UTF-8 encoded values)
 
 //invalid use of [...] array (outside a composite literal)
-eq!( "hello".codePoints() , []int{104, 101, 108, 108, 111} ); // returns a list of code points (Unicode values)
-eq!( "hello".runes() , []rune{'h', 'e', 'l', 'l', 'o'});
+eq!( "hello".codePoints() , @[104, 101, 108, 108, 111] ); // returns a list of code points (Unicode values)
+eq!( "hello".runes() , @['h', 'e', 'l', 'l', 'o']);
 eq!( "42".toInt() , 42);
 eq!( "42".toInt(10) , 42);
 eq!( "42".toInt(16) , 66 ); // 42 in hex is

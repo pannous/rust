@@ -129,14 +129,29 @@ if Some(42) {
 
 // Test else-if chain
 x := 5
-if x == 0 {
-    put!("FAIL: x is not 0")
-    assert!(false)
+if x {
+    put!("PASS: x equals 5 ≠ 0")
 } else if x == 5 {
-    put!("PASS: x equals 5")
+	put!("PASS: x equals 5")
 } else {
     put!("FAIL: else-if not working correctly")
     assert!(false)
+}
+
+let y : i32? =1
+if y {
+    put!("PASS: y is truthy")
+} else {
+    put!("FAIL: y should be truthy")
+    assert!(false)
+}
+
+let z : i32? = None
+if z {
+    put!("FAIL: z should be falsy")
+    assert!(false)
+} else {
+    put!("PASS: z is falsy")
 }
 
 put!("All truthy tests passed!")

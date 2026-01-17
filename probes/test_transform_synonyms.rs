@@ -8,7 +8,7 @@ result1 := nums.apply(x => x*2)
 result2 := nums.transform(x => x*2) 
 result3 := nums.convert(x => x*2)
 
-expected := []int{2, 4, 6}
+expected := @[2, 4, 6]
 
 eq!( result1 , expected);
 eq!( result2 , expected  );

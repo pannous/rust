@@ -10,7 +10,7 @@ evens3 := nums.chose(x => x%2 == 0)
 evens4 := nums.that(x => x%2 == 0)
 evens5 := nums.which(x => x%2 == 0)
 
-expected := []int{2, 4, 6}
+expected := @[2, 4, 6]
 
 eq!( evens1 , expected);
 eq!( evens2 , expected);

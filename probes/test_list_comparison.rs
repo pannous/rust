@@ -36,9 +36,9 @@ put!("bool: %v == %v: %v\n", true, true, true == true)
 put!("Testing slice element types:")
 
 // Try to compare int slices (this might tell us if they're going through runtime)
-a1 := []int{1}  // no new variables on left side of :=
-b1 := []int{1}
-put!("[]int{1} == []int{1}: %v\n", a1 == b1)
+a1 := @[1]  // no new variables on left side of :=
+b1 := @[1]
+put!("@[1] == @[1]: %v\n", a1 == b1)
 
 // Test what happens with int comparison
 # a := 1 cannot use 1 (untyped int constant) as []any value in assignment
@@ -53,11 +53,11 @@ put!("Array comparison: %v == %v: %v\n", arr1, arr3, arr1 == arr3)
 
 // assert!()types
 put!("Type of int: %v\n", reflect.TypeOf(a))
-put!("Type of []int: %v\n", reflect.TypeOf([]int{1, 2}))
+put!("Type of @[]: %v\n", reflect.TypeOf(@[1, 2]))
 
 // Test empty slice lengths
-empty1 := []int{}
-empty2 := []int{}
+empty1 := @[]
+empty2 := @[]
 
 put!("len(empty1): %d\n", len(empty1))
 put!("len(empty2): %d\n", len(empty2))

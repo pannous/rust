@@ -6,8 +6,8 @@
 put!("OK") // ok
 
 // Test arrays and slices with 1-indexed access
-z := []rune{'a', 'b', 'c'}
-nums := []int{10, 20, 30, 40}
+z := @['a', 'b', 'c']
+nums := @[10, 20, 30, 40]
 
 // Basic 1-indexed access
 eq!( z#1 , 'a');

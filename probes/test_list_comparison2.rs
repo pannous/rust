@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
 
-a := []int{1, 2}
-b := []int{1, 2}
+a := @[1, 2]
+b := @[1, 2]
 
 // This should trigger the generation of slice equality function
 result := a == b
@@ -9,13 +9,13 @@ put!("Result: %v\n", result)
 
 
 // Test different slices with same content
-c := []int{1, 2}
-d := []int{1, 2}
+c := @[1, 2]
+d := @[1, 2]
 put!("Different slices, same content: %v\n", c == d)
 
 // Test empty slices
-e := []int{}
-f := []int{}
+e := @[]
+f := @[]
 put!("Empty slices: %v\n", e == f)
 
 // Test nil slices

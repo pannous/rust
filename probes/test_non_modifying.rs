@@ -2,7 +2,7 @@
 // import "slices"
 // import "fmt"
 
-original := []int{3, 1, 4, 1, 5}
+original := @[3, 1, 4, 1, 5]
 fmt.put!("Original: %v\n", original)
 
 // Test non-modifying sort (should return new slice)

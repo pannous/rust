@@ -3,8 +3,8 @@
 eq!( not 0 , true);
 eq!( not "" , true);
 eq!( not "x" , false);
-eq!( not []int{} , true);
-eq!( not []int{1,2} , false);
+eq!( not @[] , true);
+eq!( not @[1,2] , false);
 eq!( not true , false);
 eq!( not false , true);
 
@@ -18,10 +18,10 @@ eq!( not s , false);
 empty := ""
 eq!( not empty , true);
 
-slice := []int{1,2,3}
+slice := @[1,2,3]
 eq!( not slice , false);
 
-empty_slice := []int{}
+empty_slice := @[]
 eq!( not empty_slice , true);
 
 // Test with floats (literals work)
