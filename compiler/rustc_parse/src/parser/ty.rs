@@ -268,6 +268,21 @@ impl<'a> Parser<'a> {
                 RecoverQuestionMark::Yes,
             )?;
             FnRetTy::Ty(ty)
+        } else if self.is_script_mode()
+            && self.token.can_begin_type()
+            && self.token.kind != token::OpenBrace
+            && !self.token.is_keyword(kw::Where)
+        {
+            // Go-style return type: `def foo() int { ... }` without `->`
+            let ty = self.parse_ty_common(
+                allow_plus,
+                AllowCVariadic::No,
+                recover_qpath,
+                recover_return_sign,
+                None,
+                RecoverQuestionMark::Yes,
+            )?;
+            FnRetTy::Ty(ty)
         } else {
             FnRetTy::Default(self.prev_token.span.shrink_to_hi())
         })
