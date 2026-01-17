@@ -7,6 +7,12 @@
 - Safe because parser requires `class <ident>` pattern
 - `let class = ...` still works (different parse context)
 
+### Curly quote strings ("..." and '...')
+- Location: `compiler/rustc_parse/src/lexer/mod.rs:447`, `parser/stmt.rs:457`
+- Unicode curly quotes U+201C/D (double) and U+2018/9 (single) as string delimiters
+- Produces `String` type (not `&str`)
+- Safe because curly quotes never appear in standard Rust code
+
 ## Cannot Make Global
 
 ### Go-style return types (`fn foo() int` without `->`)
