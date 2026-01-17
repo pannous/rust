@@ -4,19 +4,36 @@ Rust is a conceptually beautiful language with sometimes horrible syntax.
 We take the power of Rust and just make it more beautiful by removing avoidable bloat wherever we see it. 
 
 Philosophy:
-• beauty without compromising correctness
+• 𓃀 𓄤 𓏤 Beauty without compromising correctness
 
-Features working:
+# Features 
+## working features
 • optional trailing semicolon;
 • and, or, not, xor, ¬, ∧, ∨ synonyms for archaic symbols && || !
+• ≤ ≥ ≠ and … range operators
 • shebang support: #!/usr/bin/env rust
 • run rust as scripts with implicit main
 • ./probes/test_main.rs
+• # comments
 • dynamic linking with wit like objects via dlsym C-ABI (rust ABI dependent on build!)
 • Optionals via '?' as in other sane languages
-
-Future:
 • Optional chaining via ?. and ??
+• Magic lists @["hello", 42, true] → auto-wrapped Vec<Val> with [Str("hello"), Int(42), Bool(true)]
+• Simple lists @[1, 2, 3] → homogeneous Vec<i32>
+• i++ and i--
+• truthy and falsy values in conditions  if 1 { }
+• modulo strings adn printf format specifiers "%d" % i
+• “strings”   no more .to_string()
+• as type casting
+• 100 convenience functions "hello".reverse() = "olleh" ...
+• "year "+2026  string concatenation with + operator for various types
+• := operator for let mut
+• var keyword for let mut
+• put!(...) macro for generous printing
+
+
+
+## Future features
 • functions return Results, yes, no need to write it
 • dynamic linking Swift ABI ...
 
