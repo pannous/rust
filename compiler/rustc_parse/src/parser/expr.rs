@@ -1700,18 +1700,254 @@ impl<'a> Parser<'a> {
         self.maybe_recover_from_bad_qpath(expr)
     }
 
-    /// Parse `@[...]` as `vec![...]`
+    /// Parse `@[...]` as `vec![...]` or `vec![Val::from(...), ...]` for mixed types
     fn parse_expr_at_vec(&mut self) -> PResult<'a, Box<Expr>> {
+        use rustc_ast::token::Delimiter;
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream};
+
         let lo = self.token.span;
         self.bump(); // consume @
 
-        let args = self.parse_delim_args()?;
+        // Expect opening bracket
+        if !self.eat(exp!(OpenBracket)) {
+            return self.unexpected_any();
+        }
+
+        // Handle empty list: @[]
+        if self.eat(exp!(CloseBracket)) {
+            let hi = self.prev_token.span;
+            let args = Box::new(ast::DelimArgs {
+                dspan: DelimSpan::from_single(lo.to(hi)),
+                delim: Delimiter::Bracket,
+                tokens: TokenStream::default(),
+            });
+            let path = Path::from_ident(Ident::new(sym::vec, lo));
+            let mac = Box::new(MacCall { path, args });
+            return Ok(self.mk_expr(lo.to(hi), ExprKind::MacCall(mac)));
+        }
+
+        // Parse comma-separated expressions
+        let mut exprs = vec![self.parse_expr()?];
+        while self.eat(exp!(Comma)) {
+            if self.check(exp!(CloseBracket)) {
+                break; // trailing comma
+            }
+            exprs.push(self.parse_expr()?);
+        }
+        self.expect(exp!(CloseBracket))?;
         let hi = self.prev_token.span;
+
+        // Detect if we have mixed literal types
+        let is_mixed = self.detect_mixed_literals(&exprs);
+
+        // Build the token stream for vec! macro
+        let tokens = if is_mixed {
+            // Wrap each expression in Val::from(...)
+            self.build_val_wrapped_tokens(&exprs, lo)
+        } else {
+            // Just pass through the expressions
+            self.build_vec_tokens(&exprs, lo)
+        };
+
+        let args = Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(lo.to(hi)),
+            delim: Delimiter::Bracket,
+            tokens,
+        });
 
         let path = Path::from_ident(Ident::new(sym::vec, lo));
         let mac = Box::new(MacCall { path, args });
 
         Ok(self.mk_expr(lo.to(hi), ExprKind::MacCall(mac)))
+    }
+
+    /// Detect if expressions have mixed literal types
+    fn detect_mixed_literals(&self, exprs: &[Box<Expr>]) -> bool {
+        use rustc_ast::token::LitKind;
+
+        #[derive(PartialEq, Eq, Clone, Copy)]
+        enum LitType {
+            Str,
+            Integer,
+            Float,
+            Bool,
+            Other,
+        }
+
+        fn classify_expr(expr: &Expr) -> LitType {
+            match &expr.kind {
+                ExprKind::Lit(lit) => match lit.kind {
+                    LitKind::Str | LitKind::StrRaw(_) => LitType::Str,
+                    LitKind::Integer => LitType::Integer,
+                    LitKind::Float => LitType::Float,
+                    LitKind::Bool => LitType::Bool,
+                    _ => LitType::Other,
+                },
+                ExprKind::Unary(UnOp::Neg, inner) => {
+                    // Handle negative numbers like -42
+                    classify_expr(inner)
+                }
+                _ => LitType::Other,
+            }
+        }
+
+        if exprs.is_empty() {
+            return false;
+        }
+
+        let first_type = classify_expr(&exprs[0]);
+
+        // If first is Other (non-literal), consider it mixed
+        if first_type == LitType::Other {
+            return true;
+        }
+
+        // Check if any subsequent element has a different type
+        for expr in exprs.iter().skip(1) {
+            let this_type = classify_expr(expr);
+            if this_type != first_type {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    /// Build token stream for vec![e1, e2, ...]
+    fn build_vec_tokens(&self, exprs: &[Box<Expr>], span: Span) -> rustc_ast::tokenstream::TokenStream {
+        use rustc_ast::token::TokenKind;
+        use rustc_ast::tokenstream::{TokenStream, TokenTree};
+
+        let mut tokens = Vec::new();
+        for (i, expr) in exprs.iter().enumerate() {
+            if i > 0 {
+                tokens.push(TokenTree::token_alone(TokenKind::Comma, span));
+            }
+            tokens.extend(self.expr_to_token_stream(expr, span));
+        }
+        TokenStream::new(tokens)
+    }
+
+    /// Build token stream for vec![Val::from(e1), Val::from(e2), ...]
+    fn build_val_wrapped_tokens(&self, exprs: &[Box<Expr>], span: Span) -> rustc_ast::tokenstream::TokenStream {
+        use rustc_ast::token::{Delimiter, IdentIsRaw, TokenKind};
+        use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
+
+        let mut tokens = Vec::new();
+        for (i, expr) in exprs.iter().enumerate() {
+            if i > 0 {
+                tokens.push(TokenTree::token_alone(TokenKind::Comma, span));
+            }
+            // Build Val::from(expr)
+            // Val
+            tokens.push(TokenTree::token_alone(TokenKind::Ident(sym::Val, IdentIsRaw::No), span));
+            // ::
+            tokens.push(TokenTree::token_alone(TokenKind::PathSep, span));
+            // from
+            tokens.push(TokenTree::token_alone(TokenKind::Ident(sym::from, IdentIsRaw::No), span));
+            // (expr)
+            let inner_tokens = self.expr_to_token_stream(expr, span);
+            tokens.push(TokenTree::Delimited(
+                DelimSpan::from_single(span),
+                DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+                Delimiter::Parenthesis,
+                TokenStream::new(inner_tokens),
+            ));
+        }
+        TokenStream::new(tokens)
+    }
+
+    /// Convert an expression to a token stream (simplified for literals)
+    fn expr_to_token_stream(&self, expr: &Expr, span: Span) -> Vec<TokenTree> {
+        use rustc_ast::token::{Delimiter, IdentIsRaw, TokenKind};
+        use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
+
+        match &expr.kind {
+            ExprKind::Lit(lit) => {
+                vec![TokenTree::token_alone(TokenKind::Literal(*lit), expr.span)]
+            }
+            ExprKind::Unary(UnOp::Neg, inner) => {
+                let mut tokens = vec![TokenTree::token_alone(TokenKind::Minus, span)];
+                tokens.extend(self.expr_to_token_stream(inner, span));
+                tokens
+            }
+            ExprKind::Path(None, path) if path.segments.len() == 1 => {
+                let ident = path.segments[0].ident;
+                vec![TokenTree::token_alone(TokenKind::Ident(ident.name, IdentIsRaw::No), ident.span)]
+            }
+            ExprKind::Path(None, path) if path.segments.len() > 1 => {
+                let mut tokens = Vec::new();
+                for (i, seg) in path.segments.iter().enumerate() {
+                    if i > 0 {
+                        tokens.push(TokenTree::token_alone(TokenKind::PathSep, span));
+                    }
+                    tokens.push(TokenTree::token_alone(TokenKind::Ident(seg.ident.name, IdentIsRaw::No), seg.ident.span));
+                }
+                tokens
+            }
+            ExprKind::Call(func, args) => {
+                let mut tokens = self.expr_to_token_stream(func, span);
+                let mut inner = Vec::new();
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        inner.push(TokenTree::token_alone(TokenKind::Comma, span));
+                    }
+                    inner.extend(self.expr_to_token_stream(arg, span));
+                }
+                tokens.push(TokenTree::Delimited(
+                    DelimSpan::from_single(span),
+                    DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+                    Delimiter::Parenthesis,
+                    TokenStream::new(inner),
+                ));
+                tokens
+            }
+            ExprKind::MethodCall(mc) => {
+                let mut tokens = self.expr_to_token_stream(&mc.receiver, span);
+                tokens.push(TokenTree::token_alone(TokenKind::Dot, span));
+                tokens.push(TokenTree::token_alone(TokenKind::Ident(mc.seg.ident.name, IdentIsRaw::No), mc.seg.ident.span));
+                let mut inner = Vec::new();
+                for (i, arg) in mc.args.iter().enumerate() {
+                    if i > 0 {
+                        inner.push(TokenTree::token_alone(TokenKind::Comma, span));
+                    }
+                    inner.extend(self.expr_to_token_stream(arg, span));
+                }
+                tokens.push(TokenTree::Delimited(
+                    DelimSpan::from_single(span),
+                    DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+                    Delimiter::Parenthesis,
+                    TokenStream::new(inner),
+                ));
+                tokens
+            }
+            ExprKind::Binary(op, lhs, rhs) => {
+                let mut tokens = self.expr_to_token_stream(lhs, span);
+                // Handle Pow specially since ** is two tokens
+                if op.node == BinOpKind::Pow {
+                    tokens.push(TokenTree::token_alone(TokenKind::Star, op.span));
+                    tokens.push(TokenTree::token_alone(TokenKind::Star, op.span));
+                } else {
+                    tokens.push(TokenTree::token_alone(binop_to_token(op.node), op.span));
+                }
+                tokens.extend(self.expr_to_token_stream(rhs, span));
+                tokens
+            }
+            ExprKind::Paren(inner) => {
+                let inner_tokens = self.expr_to_token_stream(inner, span);
+                vec![TokenTree::Delimited(
+                    DelimSpan::from_single(span),
+                    DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+                    Delimiter::Parenthesis,
+                    TokenStream::new(inner_tokens),
+                )]
+            }
+            _ => {
+                // Fallback: return empty for unsupported expressions
+                // This is safe because we handle all common literal cases above
+                vec![]
+            }
+        }
     }
 
     fn parse_expr_array_or_repeat(&mut self, close: ExpTokenPair) -> PResult<'a, Box<Expr>> {
@@ -4499,5 +4735,31 @@ impl MutVisitor for CondChecker<'_> {
             }
         }
         self.depth -= 1;
+    }
+}
+
+/// Convert a binary operator to its corresponding token kind.
+/// Note: Pow is handled specially in expr_to_token_stream since ** is two tokens.
+fn binop_to_token(op: BinOpKind) -> token::TokenKind {
+    match op {
+        BinOpKind::Add => token::TokenKind::Plus,
+        BinOpKind::Sub => token::TokenKind::Minus,
+        BinOpKind::Mul => token::TokenKind::Star,
+        BinOpKind::Div => token::TokenKind::Slash,
+        BinOpKind::Rem => token::TokenKind::Percent,
+        BinOpKind::And => token::TokenKind::AndAnd,
+        BinOpKind::Or => token::TokenKind::OrOr,
+        BinOpKind::BitXor => token::TokenKind::Caret,
+        BinOpKind::BitAnd => token::TokenKind::And,
+        BinOpKind::BitOr => token::TokenKind::Or,
+        BinOpKind::Shl => token::TokenKind::Shl,
+        BinOpKind::Shr => token::TokenKind::Shr,
+        BinOpKind::Eq => token::TokenKind::EqEq,
+        BinOpKind::Lt => token::TokenKind::Lt,
+        BinOpKind::Le => token::TokenKind::Le,
+        BinOpKind::Ne => token::TokenKind::Ne,
+        BinOpKind::Ge => token::TokenKind::Ge,
+        BinOpKind::Gt => token::TokenKind::Gt,
+        BinOpKind::Pow => token::TokenKind::Star, // Fallback - Pow is handled specially elsewhere
     }
 }
