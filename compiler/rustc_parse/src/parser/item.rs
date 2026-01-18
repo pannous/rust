@@ -232,9 +232,9 @@ impl<'a> Parser<'a> {
         }))
     }
 
-    /// Parse script-mode if statement: `if cond { } [else { }]` -> `__if!(cond ; { } [else { }])`
-    /// The semicolon separates condition from body for macro pattern matching.
-    /// This enables truthy semantics where non-bool values can be used in conditions.
+    /// Parse script-mode if statement with truthy semantics.
+    /// For simple conditions: `if cond { }` -> `__if!(cond ; { })`
+    /// For `and`/`or`: `if a and b { }` -> `__stmt!(if (&a).is_truthy() && (&b).is_truthy() { })`
     fn parse_script_if_statement_as_item(&mut self) -> PResult<'a, Option<Item>> {
         use rustc_ast::tokenstream::{DelimSpan, TokenStream, TokenTree};
 
@@ -253,6 +253,9 @@ impl<'a> Parser<'a> {
             }
         }
 
+        // Check if condition has `and`/`or` that needs special handling
+        let has_logical_ops = Self::cond_has_and_or(&cond_tokens);
+
         // Collect the body block
         if self.token == token::OpenBrace {
             if let Some(tt) = self.collect_token_tree() {
@@ -262,17 +265,13 @@ impl<'a> Parser<'a> {
 
         // Handle else clauses
         while self.token.is_keyword(kw::Else) {
-            // Collect the `else` keyword
             body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
             self.bump();
 
-            // Check for else-if
             if self.token.is_keyword(kw::If) {
-                // Collect the `if` keyword
                 body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
                 self.bump();
 
-                // Collect the condition for else-if
                 while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
                     if let Some(tt) = self.collect_token_tree() {
                         body_tokens.push(tt);
@@ -282,7 +281,6 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // Collect the else body block
             if self.token == token::OpenBrace {
                 if let Some(tt) = self.collect_token_tree() {
                     body_tokens.push(tt);
@@ -290,30 +288,45 @@ impl<'a> Parser<'a> {
             }
         }
 
-        // Consume optional semicolon
         let _ = self.eat(exp!(Semi));
-
         let hi = self.prev_token.span;
 
-        // Build: __if!(cond ; { body } [else { body2 }])
-        // The semicolon separates condition from body for macro pattern matching
-        let mut all_tokens = cond_tokens;
-        all_tokens.push(TokenTree::token_alone(token::TokenKind::Semi, lo));
-        all_tokens.extend(body_tokens);
+        let mac = if has_logical_ops {
+            // Transform `and`/`or` operands with truthy and wrap in __stmt!
+            let cond_tokens = Self::transform_and_or_truthy(cond_tokens, lo);
+            let mut all = vec![TokenTree::token_alone(token::Ident(kw::If, token::IdentIsRaw::No), lo)];
+            all.extend(cond_tokens);
+            all.extend(body_tokens);
 
-        let if_path = ast::Path {
-            span: lo,
-            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__if, lo))],
-            tokens: None,
+            let path = ast::Path {
+                span: lo,
+                segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__stmt, lo))],
+                tokens: None,
+            };
+            let args = ast::DelimArgs {
+                dspan: DelimSpan::from_pair(lo, hi),
+                delim: Delimiter::Parenthesis,
+                tokens: TokenStream::new(all),
+            };
+            MacCall { path, args: Box::new(args) }
+        } else {
+            // Simple case: use __if! for truthy semantics
+            let mut all = cond_tokens;
+            all.push(TokenTree::token_alone(token::TokenKind::Semi, lo));
+            all.extend(body_tokens);
+
+            let path = ast::Path {
+                span: lo,
+                segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__if, lo))],
+                tokens: None,
+            };
+            let args = ast::DelimArgs {
+                dspan: DelimSpan::from_pair(lo, hi),
+                delim: Delimiter::Parenthesis,
+                tokens: TokenStream::new(all),
+            };
+            MacCall { path, args: Box::new(args) }
         };
-
-        let args = ast::DelimArgs {
-            dspan: DelimSpan::from_pair(lo, hi),
-            delim: Delimiter::Parenthesis,
-            tokens: TokenStream::new(all_tokens),
-        };
-
-        let mac = MacCall { path: if_path, args: Box::new(args) };
 
         Ok(Some(Item {
             attrs: ThinVec::new(),
@@ -323,6 +336,113 @@ impl<'a> Parser<'a> {
             span: lo.to(hi),
             tokens: None,
         }))
+    }
+
+    /// Check if tokens contain `and` or `or` at top level (not inside parens)
+    fn cond_has_and_or(tokens: &[TokenTree]) -> bool {
+        let mut depth = 0i32;
+        for tt in tokens {
+            match tt {
+                TokenTree::Delimited(..) => {}
+                TokenTree::Token(tok, _) => {
+                    if matches!(tok.kind, token::OpenParen | token::OpenBracket | token::OpenBrace) {
+                        depth += 1;
+                    } else if matches!(tok.kind, token::CloseParen | token::CloseBracket | token::CloseBrace) {
+                        depth = depth.saturating_sub(1);
+                    } else if depth == 0 {
+                        if matches!(&tok.kind, token::Ident(n, _) if *n == sym::and || *n == sym::or) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Transform `a and b or c` to `(&a).is_truthy() && (&b).is_truthy() || (&c).is_truthy()`
+    fn transform_and_or_truthy(tokens: Vec<TokenTree>, span: Span) -> Vec<TokenTree> {
+        use rustc_ast::tokenstream::TokenTree;
+
+        let mut segments: Vec<(Vec<TokenTree>, Option<token::TokenKind>)> = Vec::new();
+        let mut current = Vec::new();
+        let mut depth = 0i32;
+
+        for tt in tokens {
+            match &tt {
+                TokenTree::Delimited(..) => current.push(tt),
+                TokenTree::Token(tok, _) => {
+                    if matches!(tok.kind, token::OpenParen | token::OpenBracket | token::OpenBrace) {
+                        depth += 1;
+                        current.push(tt);
+                    } else if matches!(tok.kind, token::CloseParen | token::CloseBracket | token::CloseBrace) {
+                        depth = depth.saturating_sub(1);
+                        current.push(tt);
+                    } else if depth == 0 {
+                        let is_and = matches!(&tok.kind, token::Ident(n, _) if *n == sym::and);
+                        let is_or = matches!(&tok.kind, token::Ident(n, _) if *n == sym::or);
+                        if is_and {
+                            segments.push((std::mem::take(&mut current), Some(token::AndAnd)));
+                        } else if is_or {
+                            segments.push((std::mem::take(&mut current), Some(token::OrOr)));
+                        } else {
+                            current.push(tt);
+                        }
+                    } else {
+                        current.push(tt);
+                    }
+                }
+            }
+        }
+        if !current.is_empty() {
+            segments.push((current, None));
+        }
+
+        let mut result = Vec::new();
+        for (seg, op) in segments {
+            result.extend(Self::wrap_with_is_truthy(seg, span));
+            if let Some(op_kind) = op {
+                result.push(TokenTree::token_alone(op_kind, span));
+            }
+        }
+        result
+    }
+
+    /// Wrap tokens with `(&...).is_truthy()`
+    /// Produces: Delimited((&tokens)) . is_truthy Delimited(())
+    fn wrap_with_is_truthy(tokens: Vec<TokenTree>, span: Span) -> Vec<TokenTree> {
+        use rustc_ast::tokenstream::{DelimSpacing, DelimSpan, Spacing, TokenStream, TokenTree};
+
+        if tokens.is_empty() {
+            return tokens;
+        }
+
+        // Build the inner content: & followed by tokens
+        let mut inner = vec![TokenTree::token_alone(token::And, span)];
+        inner.extend(tokens);
+
+        // Create (&...) as a single delimited group
+        let ref_group = TokenTree::Delimited(
+            DelimSpan::from_single(span),
+            DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+            Delimiter::Parenthesis,
+            TokenStream::new(inner),
+        );
+
+        // Create () for method call
+        let call_parens = TokenTree::Delimited(
+            DelimSpan::from_single(span),
+            DelimSpacing::new(Spacing::Alone, Spacing::Alone),
+            Delimiter::Parenthesis,
+            TokenStream::new(vec![]),
+        );
+
+        vec![
+            ref_group,
+            TokenTree::token_alone(token::Dot, span),
+            TokenTree::token_alone(token::Ident(sym::is_truthy, token::IdentIsRaw::No), span),
+            call_parens,
+        ]
     }
 
     /// Check if current token could start a new statement
