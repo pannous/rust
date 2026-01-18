@@ -8,9 +8,10 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_and_or
 [0;32m✓[0m test_array_1indexed
 [0;31m✗[0m test_array_like_slice (compile)
-[0;31m✗[0m test_as_cast_comprehensive (compile)
-[0;31m✗[0m test_as_cast_convert (compile)
-[0;31m✗[0m test_as_cast (compile)
+[0;32m✓[0m test_as_cast_comprehensive
+[0;32m✓[0m test_as_cast_convert
+[0;31m✗[0m test_as_cast_list (compile)
+[0;32m✓[0m test_as_cast
 [0;32m✓[0m test_assert
 [0;31m✗[0m test_assign_fetch (compile)
 [0;31m✗[0m test_assign_fetch2 (compile)
@@ -49,7 +50,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_dynload_complete (exit 101)
 [0;31m✗[0m test_dynload_forked (exit 101)
 [0;31m✗[0m test_dynload_prelude (exit 101)
-[0;32m✓[0m test_ellipsis
+[0;31m✗[0m test_ellipsis (exit 101)
 [0;31m✗[0m test_enum_string (compile)
 [0;31m✗[0m test_enum (compile)
 [0;31m✗[0m test_exclamation_syntax (compile)
@@ -94,7 +95,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_list_equality
 [0;31m✗[0m test_list_filter (compile)
 [0;31m✗[0m test_list_lambda (compile)
-[0;31m✗[0m test_list_map (compile)
+[0;32m✓[0m test_list_map
 [0;31m✗[0m test_list_methods_broken (compile)
 [0;31m✗[0m test_list_methods (compile)
 [0;31m✗[0m test_list_synonyms_only (compile)
@@ -149,9 +150,8 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_rune
 [0;32m✓[0m test_script_complex
 [0;31m✗[0m test_shebang (compile)
-[0;31m✗[0m test_simple_for_range (compile)
+[0;32m✓[0m test_simple_for_range
 [0;32m✓[0m test_simple_hash_check
-[0;32m✓[0m test_simple_printf
 [0;32m✓[0m test_simple
 [0;31m✗[0m test_slice_inference_core (compile)
 [0;31m✗[0m test_slice_inference_final (compile)
@@ -172,7 +172,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_string_reverse
 [0;32m✓[0m test_string_special
 [0;31m✗[0m test_string_var_spacing (compile)
-[0;31m✗[0m test_strings_auto_import (compile)
+[0;32m✓[0m test_strings_auto_import
 [0;32m✓[0m test_struct
 [0;32m✓[0m test_synonyms_simple
 [0;32m✓[0m test_tau_pi_approx
@@ -187,7 +187,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_try_catch (compile)
 [0;31m✗[0m test_try_propagation (compile)
 [0;32m✓[0m test_typeof
-[0;32m✓[0m test_unicode_ops
+[0;31m✗[0m test_unicode_ops (exit 101)
 [0;32m✓[0m test_unicode
 [0;31m✗[0m test_units (compile)
 [0;32m✓[0m test_unused_mut
@@ -199,5 +199,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m79 passed[0m, [0;31m115 failed[0m, 0 skipped
+Results: [0;32m82 passed[0m, [0;31m112 failed[0m, 0 skipped
 ========================================
