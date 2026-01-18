@@ -7,7 +7,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_all_synonyms
 [0;32m✓[0m test_and_or
 [0;32m✓[0m test_array_1indexed
-[0;32m✓[0m test_array_like_slice
+[0;31m✗[0m test_array_like_slice (compile)
 [0;31m✗[0m test_as_cast_comprehensive (compile)
 [0;31m✗[0m test_as_cast_convert (compile)
 [0;31m✗[0m test_as_cast (compile)
@@ -79,7 +79,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_in_operator_maps (compile)
 [0;31m✗[0m test_in_operator_rune_strings (compile)
 [0;31m✗[0m test_in_operator_slices (compile)
-[0;32m✓[0m test_in_operator_strings
+[0;31m✗[0m test_in_operator_strings (compile)
 [0;32m✓[0m test_in_operator
 [0;32m✓[0m test_increment_decrement
 [0;32m✓[0m test_int
@@ -185,7 +185,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_try_assignment (compile)
 [0;31m✗[0m test_try_catch (compile)
 [0;31m✗[0m test_try_propagation (compile)
-[0;32m✓[0m test_typeof
+[0;31m✗[0m test_typeof (exit 101)
 [0;32m✓[0m test_unicode_ops
 [0;32m✓[0m test_unicode
 [0;31m✗[0m test_units (compile)
@@ -198,5 +198,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m66 passed[0m, [0;31m127 failed[0m, 0 skipped
+Results: [0;32m63 passed[0m, [0;31m130 failed[0m, 0 skipped
 ========================================

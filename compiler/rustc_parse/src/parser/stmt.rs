@@ -451,19 +451,28 @@ impl<'a> Parser<'a> {
                     self.check_let_else_init_trailing_brace(&init);
                     LocalKind::InitElse(init, els)
                 } else {
-                    // Convert Unicode-quoted string literals ("...") to String
-                    // for let bindings without explicit type annotations.
-                    // Regular ASCII quotes ("...") remain as &str. (global feature)
-                    let init = if ty.is_none()
-                        && matches!(
-                            &init.kind,
-                            ExprKind::Lit(lit)
-                                if matches!(lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_))
-                        )
-                        && self.psess.source_map()
-                            .span_to_snippet(init.span)
-                            .is_ok_and(|s| s.starts_with('\u{201C}') || s.starts_with('\u{201D}'))  // curly quotes
-                    {
+                    // Convert string literals to String for let bindings.
+                    // In script mode: all string literals become String (no more .to_string()!)
+                    // Also converts when target type is explicitly `String`.
+                    // In normal mode: only curly-quoted strings ("...") become String
+                    let is_string_lit = matches!(
+                        &init.kind,
+                        ExprKind::Lit(lit)
+                            if matches!(lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_))
+                    );
+                    let ty_is_string = ty.as_ref().is_some_and(|t| {
+                        matches!(&t.kind, ast::TyKind::Path(None, path)
+                            if path.segments.len() == 1
+                                && path.segments[0].ident.name == sym::String)
+                    });
+                    let should_convert = is_string_lit
+                        && (ty_is_string
+                            || (ty.is_none()
+                                && (self.is_script_mode()
+                                    || self.psess.source_map()
+                                        .span_to_snippet(init.span)
+                                        .is_ok_and(|s| s.starts_with('\u{201C}') || s.starts_with('\u{201D}')))));
+                    let init = if should_convert {
                         self.wrap_in_to_string(init)
                     } else {
                         init
