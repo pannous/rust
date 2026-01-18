@@ -144,7 +144,7 @@ declare_lint! {
     /// Beware that if you "forbid" this lint that existing code may fail in
     /// the future.
     pub MIXED_SCRIPT_CONFUSABLES,
-    Warn,
+    Allow,
     "detects Unicode scripts whose mixed script confusables codepoints are solely used",
     crate_level_only
 }

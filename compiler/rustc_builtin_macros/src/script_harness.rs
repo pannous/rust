@@ -18,7 +18,7 @@ use thin_vec::ThinVec;
 
 use rustc_parse::transformer;
 
-/// Inject a main function wrapper for script mode.
+/// Inject script mode helpers and optionally wrap in main.
 pub fn inject(
     krate: &mut ast::Crate,
     sess: &Session,
@@ -28,16 +28,6 @@ pub fn inject(
     // Activate if -Z script is enabled OR file has a shebang
     let script_mode = sess.opts.unstable_opts.script || has_shebang(&sess.io.input);
     if !script_mode {
-        return;
-    }
-
-    // Check if file already has a main function or #[rustc_main]
-    if has_entry_point(krate) {
-        return;
-    }
-
-    // Check if there's anything to wrap
-    if !has_executable_content(krate) {
         return;
     }
 
@@ -51,7 +41,11 @@ pub fn inject(
     let def_site = DUMMY_SP.with_def_site_ctxt(expn_id.to_expn_id());
     let call_site = DUMMY_SP.with_call_site_ctxt(expn_id.to_expn_id());
 
-    wrap_in_main(krate, def_site, call_site);
+    // Check if file already has a main function
+    let has_main = has_entry_point(krate);
+
+    // Always inject helpers in script mode, optionally wrap in main
+    inject_helpers(krate, def_site, call_site, has_main);
 }
 
 /// Check if the input source starts with a shebang (`#!`).
@@ -98,27 +92,11 @@ fn has_entry_point(krate: &ast::Crate) -> bool {
     false
 }
 
-/// Check if the crate has content that should be wrapped in main.
-/// Returns true if there are macro calls or other executable items.
-fn has_executable_content(krate: &ast::Crate) -> bool {
-    for item in &krate.items {
-        if let ast::ItemKind::MacCall(_) = &item.kind {
-            return true;
-        }
-    }
-    false
-}
-
-/// Wrap executable items in a generated main function.
-fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
-    // Partition items: module-level items stay, macro calls go into main
-    let (module_items, main_stmts) = partition_items(&krate.items);
-
+/// Inject script mode helpers and optionally generate main function.
+fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_main: bool) {
     // Build items with proper hygiene contexts:
     // - def_site: for internal macro implementation (invisible to user)
     // - call_site: for macro names (visible to user code)
-    // Don't call fully_expand_fragment - let normal expansion handle node IDs
-    // (This follows the pattern from standard_library_imports.rs)
     let type_aliases = build_type_aliases(call_site);
     let script_macros = transformer::build_script_macros(def_site, call_site);
     let string_helpers = transformer::build_string_helpers(def_site, call_site);
@@ -128,9 +106,11 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     let exit_fn = transformer::build_exit_function(def_site, call_site);
     let approx_eq_fn = transformer::build_approx_eq_function(def_site, call_site);
     let math_constants = transformer::build_math_constants(def_site, call_site);
-    let main_fn = build_main(def_site, main_stmts);
 
-    // Rebuild crate with type aliases + script macros + helpers + module items + main function
+    // Partition items and optionally build main
+    let (module_items, main_stmts) = partition_items(&krate.items);
+
+    // Rebuild crate: helpers first, then module items
     krate.items = type_aliases;
     krate.items.extend(script_macros);
     krate.items.extend(string_helpers);
@@ -141,7 +121,12 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     krate.items.push(approx_eq_fn);
     krate.items.extend(math_constants);
     krate.items.extend(module_items);
-    krate.items.push(main_fn);
+
+    // Only generate main if file doesn't have one
+    if !has_main && !main_stmts.is_empty() {
+        let main_fn = build_main(def_site, main_stmts);
+        krate.items.push(main_fn);
+    }
 }
 
 /// Build type aliases for script mode: type int = i64; type float = f64;

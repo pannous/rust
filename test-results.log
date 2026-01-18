@@ -44,11 +44,11 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_dynexport_lib (compile)
 [0;31m✗[0m test_dynexport_linked (compile)
 [0;31m✗[0m test_dynexport_nostd (compile)
-[0;31m✗[0m test_dynexport_user (compile)
-[0;31m✗[0m test_dynexport (compile)
-[0;31m✗[0m test_dynload_complete (compile)
-[0;31m✗[0m test_dynload_forked (compile)
-[0;31m✗[0m test_dynload_prelude (compile)
+[0;31m✗[0m test_dynexport_user (exit 1)
+[0;32m✓[0m test_dynexport
+[0;31m✗[0m test_dynload_complete (exit 101)
+[0;31m✗[0m test_dynload_forked (exit 101)
+[0;31m✗[0m test_dynload_prelude (exit 101)
 [0;32m✓[0m test_ellipsis
 [0;31m✗[0m test_enum_string (compile)
 [0;31m✗[0m test_enum (compile)
@@ -63,7 +63,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_filter_simple (compile)
 [0;31m✗[0m test_filter_synonyms (compile)
 [0;31m✗[0m test_float_add (compile)
-[0;31m✗[0m test_fmt (compile)
+[0;32m✓[0m test_fmt
 [0;31m✗[0m test_fn (compile)
 [0;31m✗[0m test_for_in_key_value (compile)
 [0;31m✗[0m test_for_loop (compile)
@@ -120,7 +120,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_null_coalesce
 [0;31m✗[0m test_option_abi (exit 139)
 [0;31m✗[0m test_option_debug (exit 139)
-[0;31m✗[0m test_option_hashmap (compile)
+[0;31m✗[0m test_option_hashmap (exit 101)
 [0;32m✓[0m test_optional_chain
 [0;32m✓[0m test_optional_syntax
 [0;31m✗[0m test_parse_if (compile)
@@ -133,7 +133,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_pipe (compile)
 [0;31m✗[0m test_pow (compile)
 [0;32m✓[0m test_pow3
-[0;31m✗[0m test_power_basic (compile)
+[0;32m✓[0m test_power_basic
 [0;32m✓[0m test_power
 [0;32m✓[0m test_precedence
 [0;31m✗[0m test_print_comparison (compile)
@@ -151,7 +151,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_shebang (compile)
 [0;31m✗[0m test_simple_for_range (compile)
 [0;32m✓[0m test_simple_hash_check
-[0;31m✗[0m test_simple_printf (compile)
+[0;32m✓[0m test_simple_printf
 [0;32m✓[0m test_simple
 [0;31m✗[0m test_slice_inference_core (compile)
 [0;31m✗[0m test_slice_inference_final (compile)
@@ -199,5 +199,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m72 passed[0m, [0;31m122 failed[0m, 0 skipped
+Results: [0;32m76 passed[0m, [0;31m118 failed[0m, 0 skipped
 ========================================
