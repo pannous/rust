@@ -1,10 +1,10 @@
-//! Slice extension methods for script mode: map, filter, etc.
+//! Slice extension methods for script mode: map, filter synonyms.
 //!
 //! Generates:
 //! ```ignore
 //! trait ScriptSliceExt<T: Clone> {
-//!     fn map<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
-//!     fn filter<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
+//!     fn mapped<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;  // + apply, transform, convert
+//!     fn filtered<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;  // + select, chose, that, which
 //! }
 //! impl<T: Clone, S: AsRef<[T]>> ScriptSliceExt<T> for S { ... }
 //! ```
@@ -25,18 +25,16 @@ pub fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
     let t_ident = Ident::new(sym::T, call_site);
 
     // Clone bound for T
-    let clone_bound = ast::GenericBound::Trait(
-        ast::PolyTraitRef {
-            bound_generic_params: ThinVec::new(),
-            modifiers: ast::TraitBoundModifiers::NONE,
-            trait_ref: ast::TraitRef {
-                path: ast::Path::from_ident(Ident::new(sym::Clone, call_site)),
-                ref_id: ast::DUMMY_NODE_ID,
-            },
-            span: call_site,
-            parens: ast::Parens::No,
+    let clone_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path::from_ident(Ident::new(sym::Clone, call_site)),
+            ref_id: ast::DUMMY_NODE_ID,
         },
-    );
+        span: call_site,
+        parens: ast::Parens::No,
+    });
 
     let t_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
@@ -91,17 +89,26 @@ pub fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
     }));
 
     // Build blanket impl for anything that AsRef<[T]>
-    items.push(build_blanket_impl(def_site, call_site, trait_name, t_ident, clone_bound));
+    items.push(build_blanket_impl(
+        def_site,
+        call_site,
+        trait_name,
+        t_ident,
+        clone_bound,
+    ));
 
     items
 }
 
 /// Build: fn <name><U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
-fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
+fn build_map_trait_item(
+    span: Span,
+    t_ident: Ident,
+    method_name: rustc_span::Symbol,
+) -> Box<ast::AssocItem> {
     let u_ident = Ident::new(sym::U, span);
     let f_ident = Ident::new(sym::F, span);
 
-    // T type
     let t_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
@@ -109,7 +116,6 @@ fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Sym
         tokens: None,
     });
 
-    // U type
     let u_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(u_ident)),
@@ -117,32 +123,31 @@ fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Sym
         tokens: None,
     });
 
-    // Fn(T) -> U bound
-    let fn_bound = ast::GenericBound::Trait(
-        ast::PolyTraitRef {
-            bound_generic_params: ThinVec::new(),
-            modifiers: ast::TraitBoundModifiers::NONE,
-            trait_ref: ast::TraitRef {
-                path: ast::Path {
-                    span,
-                    segments: ThinVec::from([ast::PathSegment {
-                        ident: Ident::new(sym::Fn, span),
-                        id: ast::DUMMY_NODE_ID,
-                        args: Some(Box::new(ast::GenericArgs::Parenthesized(ast::ParenthesizedArgs {
+    let fn_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Fn, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::Parenthesized(
+                        ast::ParenthesizedArgs {
                             span,
                             inputs: ThinVec::from([t_ty.clone()]),
                             inputs_span: span,
                             output: ast::FnRetTy::Ty(u_ty.clone()),
-                        }))),
-                    }]),
-                    tokens: None,
-                },
-                ref_id: ast::DUMMY_NODE_ID,
+                        },
+                    ))),
+                }]),
+                tokens: None,
             },
-            span,
-            parens: ast::Parens::No,
+            ref_id: ast::DUMMY_NODE_ID,
         },
-    );
+        span,
+        parens: ast::Parens::No,
+    });
 
     let u_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
@@ -174,7 +179,6 @@ fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Sym
         span,
     };
 
-    // Vec<U> return type
     let vec_u_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(
@@ -184,10 +188,14 @@ fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Sym
                 segments: ThinVec::from([ast::PathSegment {
                     ident: Ident::new(sym::Vec, span),
                     id: ast::DUMMY_NODE_ID,
-                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
-                        span,
-                        args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(u_ty))]),
-                    }))),
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(u_ty),
+                            )]),
+                        },
+                    ))),
                 }]),
                 tokens: None,
             },
@@ -196,10 +204,7 @@ fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Sym
         tokens: None,
     });
 
-    // &self parameter
     let self_param = build_self_param(span);
-
-    // f: F parameter
     let f_param_decl = ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
@@ -248,10 +253,13 @@ fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Sym
 }
 
 /// Build: fn <name><F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
-fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
+fn build_filter_trait_item(
+    span: Span,
+    t_ident: Ident,
+    method_name: rustc_span::Symbol,
+) -> Box<ast::AssocItem> {
     let f_ident = Ident::new(sym::F, span);
 
-    // &T type
     let t_ref_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Ref(
@@ -270,7 +278,6 @@ fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::
         tokens: None,
     });
 
-    // bool type
     let bool_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, span))),
@@ -278,32 +285,31 @@ fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::
         tokens: None,
     });
 
-    // Fn(&T) -> bool bound
-    let fn_bound = ast::GenericBound::Trait(
-        ast::PolyTraitRef {
-            bound_generic_params: ThinVec::new(),
-            modifiers: ast::TraitBoundModifiers::NONE,
-            trait_ref: ast::TraitRef {
-                path: ast::Path {
-                    span,
-                    segments: ThinVec::from([ast::PathSegment {
-                        ident: Ident::new(sym::Fn, span),
-                        id: ast::DUMMY_NODE_ID,
-                        args: Some(Box::new(ast::GenericArgs::Parenthesized(ast::ParenthesizedArgs {
+    let fn_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Fn, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::Parenthesized(
+                        ast::ParenthesizedArgs {
                             span,
                             inputs: ThinVec::from([t_ref_ty]),
                             inputs_span: span,
                             output: ast::FnRetTy::Ty(bool_ty),
-                        }))),
-                    }]),
-                    tokens: None,
-                },
-                ref_id: ast::DUMMY_NODE_ID,
+                        },
+                    ))),
+                }]),
+                tokens: None,
             },
-            span,
-            parens: ast::Parens::No,
+            ref_id: ast::DUMMY_NODE_ID,
         },
-    );
+        span,
+        parens: ast::Parens::No,
+    });
 
     let f_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
@@ -325,7 +331,6 @@ fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::
         span,
     };
 
-    // T type
     let t_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
@@ -333,7 +338,6 @@ fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::
         tokens: None,
     });
 
-    // Vec<T> return type
     let vec_t_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(
@@ -343,10 +347,14 @@ fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::
                 segments: ThinVec::from([ast::PathSegment {
                     ident: Ident::new(sym::Vec, span),
                     id: ast::DUMMY_NODE_ID,
-                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
-                        span,
-                        args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(t_ty))]),
-                    }))),
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(t_ty),
+                            )]),
+                        },
+                    ))),
                 }]),
                 tokens: None,
             },
@@ -356,7 +364,6 @@ fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::
     });
 
     let self_param = build_self_param(span);
-
     let f_param_decl = ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
@@ -414,7 +421,6 @@ fn build_blanket_impl(
 ) -> Box<ast::Item> {
     let s_ident = Ident::new(sym::S, call_site);
 
-    // T param with Clone bound
     let t_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
         ident: t_ident,
@@ -432,7 +438,6 @@ fn build_blanket_impl(
         tokens: None,
     });
 
-    // [T] slice type for AsRef bound
     let slice_t_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Slice(t_ty.clone()),
@@ -440,32 +445,32 @@ fn build_blanket_impl(
         tokens: None,
     });
 
-    // Build AsRef<[T]> bound for S
-    let asref_bound = ast::GenericBound::Trait(
-        ast::PolyTraitRef {
-            bound_generic_params: ThinVec::new(),
-            modifiers: ast::TraitBoundModifiers::NONE,
-            trait_ref: ast::TraitRef {
-                path: ast::Path {
-                    span: call_site,
-                    segments: ThinVec::from([ast::PathSegment {
-                        ident: Ident::new(sym::AsRef, call_site),
-                        id: ast::DUMMY_NODE_ID,
-                        args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+    let asref_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path {
+                span: call_site,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::AsRef, call_site),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
                             span: call_site,
-                            args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(slice_t_ty))]),
-                        }))),
-                    }]),
-                    tokens: None,
-                },
-                ref_id: ast::DUMMY_NODE_ID,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(slice_t_ty),
+                            )]),
+                        },
+                    ))),
+                }]),
+                tokens: None,
             },
-            span: call_site,
-            parens: ast::Parens::No,
+            ref_id: ast::DUMMY_NODE_ID,
         },
-    );
+        span: call_site,
+        parens: ast::Parens::No,
+    });
 
-    // S param with AsRef<[T]> bound
     let s_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
         ident: s_ident,
@@ -486,7 +491,6 @@ fn build_blanket_impl(
         span: call_site,
     };
 
-    // S type for self_ty
     let s_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(s_ident)),
@@ -499,21 +503,21 @@ fn build_blanket_impl(
         segments: ThinVec::from([ast::PathSegment {
             ident: Ident::new(trait_name, call_site),
             id: ast::DUMMY_NODE_ID,
-            args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
-                span: call_site,
-                args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(t_ty))]),
-            }))),
+            args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                ast::AngleBracketedArgs {
+                    span: call_site,
+                    args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(t_ty))]),
+                },
+            ))),
         }]),
         tokens: None,
     };
 
     let mut impl_items = ThinVec::new();
-    // Map synonyms
     impl_items.push(build_map_impl_item(call_site, t_ident, sym::mapped));
     impl_items.push(build_map_impl_item(call_site, t_ident, sym::apply));
     impl_items.push(build_map_impl_item(call_site, t_ident, sym::transform));
     impl_items.push(build_map_impl_item(call_site, t_ident, sym::convert));
-    // Filter synonyms
     impl_items.push(build_filter_impl_item(call_site, t_ident, sym::filtered));
     impl_items.push(build_filter_impl_item(call_site, t_ident, sym::select));
     impl_items.push(build_filter_impl_item(call_site, t_ident, sym::chose));
@@ -543,8 +547,12 @@ fn build_blanket_impl(
     })
 }
 
-/// Build map impl: self.iter().cloned().map(f).collect()
-fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
+/// Build map impl: self.as_ref().iter().cloned().map(f).collect()
+fn build_map_impl_item(
+    span: Span,
+    t_ident: Ident,
+    method_name: rustc_span::Symbol,
+) -> Box<ast::AssocItem> {
     let u_ident = Ident::new(sym::U, span);
     let f_ident = Ident::new(sym::F, span);
 
@@ -554,7 +562,6 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
         span,
         tokens: None,
     });
-
     let u_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(u_ident)),
@@ -562,31 +569,31 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
         tokens: None,
     });
 
-    let fn_bound = ast::GenericBound::Trait(
-        ast::PolyTraitRef {
-            bound_generic_params: ThinVec::new(),
-            modifiers: ast::TraitBoundModifiers::NONE,
-            trait_ref: ast::TraitRef {
-                path: ast::Path {
-                    span,
-                    segments: ThinVec::from([ast::PathSegment {
-                        ident: Ident::new(sym::Fn, span),
-                        id: ast::DUMMY_NODE_ID,
-                        args: Some(Box::new(ast::GenericArgs::Parenthesized(ast::ParenthesizedArgs {
+    let fn_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Fn, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::Parenthesized(
+                        ast::ParenthesizedArgs {
                             span,
                             inputs: ThinVec::from([t_ty]),
                             inputs_span: span,
                             output: ast::FnRetTy::Ty(u_ty.clone()),
-                        }))),
-                    }]),
-                    tokens: None,
-                },
-                ref_id: ast::DUMMY_NODE_ID,
+                        },
+                    ))),
+                }]),
+                tokens: None,
             },
-            span,
-            parens: ast::Parens::No,
+            ref_id: ast::DUMMY_NODE_ID,
         },
-    );
+        span,
+        parens: ast::Parens::No,
+    });
 
     let u_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
@@ -597,7 +604,6 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
         kind: ast::GenericParamKind::Type { default: None },
         colon_span: None,
     };
-
     let f_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
         ident: f_ident,
@@ -627,10 +633,14 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
                 segments: ThinVec::from([ast::PathSegment {
                     ident: Ident::new(sym::Vec, span),
                     id: ast::DUMMY_NODE_ID,
-                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
-                        span,
-                        args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(u_ty))]),
-                    }))),
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(u_ty),
+                            )]),
+                        },
+                    ))),
                 }]),
                 tokens: None,
             },
@@ -640,7 +650,6 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
     });
 
     let self_param = build_self_param(span);
-
     let f_param_decl = ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
@@ -669,7 +678,6 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
         span,
     };
 
-    // Body: self.iter().cloned().map(f).collect()
     let body = build_map_body(span);
 
     Box::new(ast::AssocItem {
@@ -692,7 +700,11 @@ fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symb
 }
 
 /// Build filter impl: self.as_ref().iter().filter(|x| f(x)).cloned().collect()
-fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
+fn build_filter_impl_item(
+    span: Span,
+    t_ident: Ident,
+    method_name: rustc_span::Symbol,
+) -> Box<ast::AssocItem> {
     let f_ident = Ident::new(sym::F, span);
 
     let t_ref_ty = Box::new(ast::Ty {
@@ -712,7 +724,6 @@ fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::S
         span,
         tokens: None,
     });
-
     let bool_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, span))),
@@ -720,31 +731,31 @@ fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::S
         tokens: None,
     });
 
-    let fn_bound = ast::GenericBound::Trait(
-        ast::PolyTraitRef {
-            bound_generic_params: ThinVec::new(),
-            modifiers: ast::TraitBoundModifiers::NONE,
-            trait_ref: ast::TraitRef {
-                path: ast::Path {
-                    span,
-                    segments: ThinVec::from([ast::PathSegment {
-                        ident: Ident::new(sym::Fn, span),
-                        id: ast::DUMMY_NODE_ID,
-                        args: Some(Box::new(ast::GenericArgs::Parenthesized(ast::ParenthesizedArgs {
+    let fn_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Fn, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::Parenthesized(
+                        ast::ParenthesizedArgs {
                             span,
                             inputs: ThinVec::from([t_ref_ty]),
                             inputs_span: span,
                             output: ast::FnRetTy::Ty(bool_ty),
-                        }))),
-                    }]),
-                    tokens: None,
-                },
-                ref_id: ast::DUMMY_NODE_ID,
+                        },
+                    ))),
+                }]),
+                tokens: None,
             },
-            span,
-            parens: ast::Parens::No,
+            ref_id: ast::DUMMY_NODE_ID,
         },
-    );
+        span,
+        parens: ast::Parens::No,
+    });
 
     let f_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
@@ -772,7 +783,6 @@ fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::S
         span,
         tokens: None,
     });
-
     let vec_t_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(
@@ -782,10 +792,14 @@ fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::S
                 segments: ThinVec::from([ast::PathSegment {
                     ident: Ident::new(sym::Vec, span),
                     id: ast::DUMMY_NODE_ID,
-                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
-                        span,
-                        args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(t_ty))]),
-                    }))),
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(t_ty),
+                            )]),
+                        },
+                    ))),
                 }]),
                 tokens: None,
             },
@@ -795,7 +809,6 @@ fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::S
     });
 
     let self_param = build_self_param(span);
-
     let f_param_decl = ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
@@ -824,7 +837,6 @@ fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::S
         span,
     };
 
-    // Body: self.iter().filter(|x| f(x)).cloned().collect()
     let body = build_filter_body(span);
 
     Box::new(ast::AssocItem {
@@ -857,7 +869,11 @@ fn build_self_param(span: Span) -> ast::Param {
         }),
         pat: Box::new(ast::Pat {
             id: ast::DUMMY_NODE_ID,
-            kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(kw::SelfLower, span), None),
+            kind: ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                Ident::new(kw::SelfLower, span),
+                None,
+            ),
             span,
             tokens: None,
         }),
@@ -865,96 +881,6 @@ fn build_self_param(span: Span) -> ast::Param {
         span,
         is_placeholder: false,
     }
-}
-
-/// Build: self.as_ref().iter().cloned().map(f).collect()
-fn build_map_body(span: Span) -> Box<ast::Block> {
-    // self
-    let self_expr = Box::new(ast::Expr {
-        id: ast::DUMMY_NODE_ID,
-        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(kw::SelfLower, span))),
-        span,
-        attrs: ThinVec::new(),
-        tokens: None,
-    });
-
-    // self.as_ref()
-    let as_ref_expr = build_method_call(self_expr, sym::as_ref, ThinVec::new(), span);
-
-    // self.as_ref().iter()
-    let iter_expr = build_method_call(as_ref_expr, sym::iter, ThinVec::new(), span);
-
-    // .cloned()
-    let cloned_expr = build_method_call(iter_expr, sym::cloned, ThinVec::new(), span);
-
-    // f path
-    let f_expr = Box::new(ast::Expr {
-        id: ast::DUMMY_NODE_ID,
-        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::f, span))),
-        span,
-        attrs: ThinVec::new(),
-        tokens: None,
-    });
-
-    // .map(f)
-    let map_expr = build_method_call(cloned_expr, sym::map, ThinVec::from([f_expr]), span);
-
-    // .collect()
-    let collect_expr = build_method_call(map_expr, sym::collect, ThinVec::new(), span);
-
-    Box::new(ast::Block {
-        stmts: ThinVec::from([ast::Stmt {
-            id: ast::DUMMY_NODE_ID,
-            kind: ast::StmtKind::Expr(collect_expr),
-            span,
-        }]),
-        id: ast::DUMMY_NODE_ID,
-        rules: ast::BlockCheckMode::Default,
-        span,
-        tokens: None,
-    })
-}
-
-/// Build: self.as_ref().iter().filter(|x| f(x)).cloned().collect()
-fn build_filter_body(span: Span) -> Box<ast::Block> {
-    // self
-    let self_expr = Box::new(ast::Expr {
-        id: ast::DUMMY_NODE_ID,
-        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(kw::SelfLower, span))),
-        span,
-        attrs: ThinVec::new(),
-        tokens: None,
-    });
-
-    // self.as_ref()
-    let as_ref_expr = build_method_call(self_expr, sym::as_ref, ThinVec::new(), span);
-
-    // self.as_ref().iter()
-    let iter_expr = build_method_call(as_ref_expr, sym::iter, ThinVec::new(), span);
-
-    // Build closure |x| f(x)
-    let closure = build_filter_closure(span);
-
-    // .filter(|x| f(x))
-    let filter_expr = build_method_call(iter_expr, sym::filter, ThinVec::from([closure]), span);
-
-    // .cloned()
-    let cloned_expr = build_method_call(filter_expr, sym::cloned, ThinVec::new(), span);
-
-    // .collect()
-    let collect_expr = build_method_call(cloned_expr, sym::collect, ThinVec::new(), span);
-
-    Box::new(ast::Block {
-        stmts: ThinVec::from([ast::Stmt {
-            id: ast::DUMMY_NODE_ID,
-            kind: ast::StmtKind::Expr(collect_expr),
-            span,
-        }]),
-        id: ast::DUMMY_NODE_ID,
-        rules: ast::BlockCheckMode::Default,
-        span,
-        tokens: None,
-    })
 }
 
 fn build_method_call(
@@ -977,9 +903,72 @@ fn build_method_call(
     })
 }
 
+/// Build: self.as_ref().iter().cloned().map(f).collect()
+fn build_map_body(span: Span) -> Box<ast::Block> {
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(kw::SelfLower, span))),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let as_ref_expr = build_method_call(self_expr, sym::as_ref, ThinVec::new(), span);
+    let iter_expr = build_method_call(as_ref_expr, sym::iter, ThinVec::new(), span);
+    let cloned_expr = build_method_call(iter_expr, sym::cloned, ThinVec::new(), span);
+    let f_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::f, span))),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let map_expr = build_method_call(cloned_expr, sym::map, ThinVec::from([f_expr]), span);
+    let collect_expr = build_method_call(map_expr, sym::collect, ThinVec::new(), span);
+
+    Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(collect_expr),
+            span,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span,
+        tokens: None,
+    })
+}
+
+/// Build: self.as_ref().iter().filter(|x| f(x)).cloned().collect()
+fn build_filter_body(span: Span) -> Box<ast::Block> {
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(kw::SelfLower, span))),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let as_ref_expr = build_method_call(self_expr, sym::as_ref, ThinVec::new(), span);
+    let iter_expr = build_method_call(as_ref_expr, sym::iter, ThinVec::new(), span);
+    let closure = build_filter_closure(span);
+    let filter_expr = build_method_call(iter_expr, sym::filter, ThinVec::from([closure]), span);
+    let cloned_expr = build_method_call(filter_expr, sym::cloned, ThinVec::new(), span);
+    let collect_expr = build_method_call(cloned_expr, sym::collect, ThinVec::new(), span);
+
+    Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(collect_expr),
+            span,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span,
+        tokens: None,
+    })
+}
+
 /// Build closure: |x| f(x)
 fn build_filter_closure(span: Span) -> Box<ast::Expr> {
-    // f(x)
     let f_path = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
         kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::f, span))),
@@ -987,7 +976,6 @@ fn build_filter_closure(span: Span) -> Box<ast::Expr> {
         attrs: ThinVec::new(),
         tokens: None,
     });
-
     let x_path = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
         kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::x, span))),
@@ -995,7 +983,6 @@ fn build_filter_closure(span: Span) -> Box<ast::Expr> {
         attrs: ThinVec::new(),
         tokens: None,
     });
-
     let f_call = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
         kind: ast::ExprKind::Call(f_path, ThinVec::from([x_path])),
@@ -1004,7 +991,6 @@ fn build_filter_closure(span: Span) -> Box<ast::Expr> {
         tokens: None,
     });
 
-    // |x|
     let x_param = ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
