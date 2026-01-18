@@ -186,7 +186,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_try_propagation (compile)
 [0;32m✓[0m test_typeof
 [0;32m✓[0m test_unicode_ops
-[0;31m✗[0m test_unicode (compile)
+[0;32m✓[0m test_unicode
 [0;31m✗[0m test_units (compile)
 [0;31m✗[0m test_unused_mut (compile)
 [0;31m✗[0m test_user_defined_put (compile)
@@ -197,5 +197,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m58 passed[0m, [0;31m134 failed[0m, 0 skipped
+Results: [0;32m59 passed[0m, [0;31m133 failed[0m, 0 skipped
 ========================================

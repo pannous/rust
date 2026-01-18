@@ -160,7 +160,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             tokens: TokenStream::new(put_body),
         }),
         macro_rules: true,
-        eii_extern_target: None,
+        eii_declaration: None,
     };
 
     items.push(Box::new(ast::Item {
@@ -210,7 +210,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             tokens: TokenStream::new(printf_body),
         }),
         macro_rules: true,
-        eii_extern_target: None,
+        eii_declaration: None,
     };
 
     items.push(Box::new(ast::Item {
@@ -259,7 +259,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             tokens: TokenStream::new(eq_body),
         }),
         macro_rules: true,
-        eii_extern_target: None,
+        eii_declaration: None,
     };
 
     items.push(Box::new(ast::Item {
@@ -314,7 +314,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             tokens: TokenStream::new(s_body),
         }),
         macro_rules: true,
-        eii_extern_target: None,
+        eii_declaration: None,
     };
 
     items.push(Box::new(ast::Item {
@@ -360,7 +360,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             tokens: TokenStream::new(typeid_body),
         }),
         macro_rules: true,
-        eii_extern_target: None,
+        eii_declaration: None,
     };
 
     items.push(Box::new(ast::Item {
@@ -407,7 +407,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             tokens: TokenStream::new(stmt_body),
         }),
         macro_rules: true,
-        eii_extern_target: None,
+        eii_declaration: None,
     };
 
     items.push(Box::new(ast::Item {

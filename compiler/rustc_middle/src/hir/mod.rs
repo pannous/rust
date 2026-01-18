@@ -38,7 +38,7 @@ pub struct ModuleItems {
     // only filled with hir_crate_items, not with hir_module_items
     delayed_lint_items: Box<[OwnerId]>,
 
-    /// Statics and functions with an `EiiImpls` or `EiiExternTarget` attribute
+    /// Statics and functions with an `EiiImpls` or `EiiDeclaration` attribute
     eiis: Box<[LocalDefId]>,
 }
 

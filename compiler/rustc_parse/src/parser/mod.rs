@@ -1219,10 +1219,9 @@ impl<'a> Parser<'a> {
         let mut token = Token::dummy();
         while i < dist {
             token = cursor.next().0;
-            if matches!(
-                token.kind,
-                token::OpenInvisible(origin) | token::CloseInvisible(origin) if origin.skip()
-            ) {
+            if let token::OpenInvisible(origin) | token::CloseInvisible(origin) = token.kind
+                && origin.skip()
+            {
                 continue;
             }
             i += 1;

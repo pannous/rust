@@ -2284,6 +2284,8 @@ pub(crate) struct UnknownTokenStart {
     pub null: Option<UnknownTokenNull>,
     #[subdiagnostic]
     pub repeat: Option<UnknownTokenRepeat>,
+    #[subdiagnostic]
+    pub invisible: Option<InvisibleCharacter>,
 }
 
 #[derive(Subdiagnostic)]
@@ -2323,6 +2325,10 @@ pub(crate) enum TokenSubstitution {
 pub(crate) struct UnknownTokenRepeat {
     pub repeats: usize,
 }
+
+#[derive(Subdiagnostic)]
+#[help(parse_help_invisible_char)]
+pub(crate) struct InvisibleCharacter;
 
 #[derive(Subdiagnostic)]
 #[help(parse_help_null)]

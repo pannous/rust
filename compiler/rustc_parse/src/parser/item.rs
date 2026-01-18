@@ -691,6 +691,7 @@ impl<'a> Parser<'a> {
         let insert_span = ident_span.shrink_to_lo();
 
         let ident = if self.token.is_ident()
+            && self.token.is_non_reserved_ident()
             && (!is_const || self.look_ahead(1, |t| *t == token::OpenParen))
             && self.look_ahead(1, |t| {
                 matches!(t.kind, token::Lt | token::OpenBrace | token::OpenParen)
@@ -2568,7 +2569,7 @@ impl<'a> Parser<'a> {
         self.psess.gated_spans.gate(sym::decl_macro, lo.to(self.prev_token.span));
         Ok(ItemKind::MacroDef(
             ident,
-            ast::MacroDef { body, macro_rules: false, eii_extern_target: None },
+            ast::MacroDef { body, macro_rules: false, eii_declaration: None },
         ))
     }
 
@@ -2618,7 +2619,7 @@ impl<'a> Parser<'a> {
 
         Ok(ItemKind::MacroDef(
             ident,
-            ast::MacroDef { body, macro_rules: true, eii_extern_target: None },
+            ast::MacroDef { body, macro_rules: true, eii_declaration: None },
         ))
     }
 
