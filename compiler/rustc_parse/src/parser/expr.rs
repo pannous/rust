@@ -689,7 +689,15 @@ impl<'a> Parser<'a> {
         // LessThan comparison after this cast.
         let parser_snapshot_before_type = self.clone();
         let cast_expr = match self.parse_as_cast_ty() {
-            Ok(rhs) => mk_expr(self, lhs, rhs),
+            Ok(rhs) => {
+                // Script mode: transform conversion casts like `x as string` to method calls
+                if self.is_script_mode() {
+                    if let Some(converted) = self.try_script_cast_conversion(&lhs, &rhs, lhs_span, op_span) {
+                        return Ok(converted);
+                    }
+                }
+                mk_expr(self, lhs, rhs)
+            }
             Err(type_err) => {
                 if !self.may_recover() {
                     return Err(type_err);
@@ -4784,6 +4792,296 @@ impl<'a> Parser<'a> {
                 || this.token == token::Comma,
             );
             Ok((res, trailing, UsePreAttrPos::No))
+        })
+    }
+
+    /// Script mode: Try to convert a cast expression like `x as string` into a method call.
+    /// Returns Some(expr) if converted, None if it should remain a normal cast.
+    fn try_script_cast_conversion(
+        &self,
+        lhs: &Box<Expr>,
+        target_ty: &Box<Ty>,
+        lhs_span: Span,
+        op_span: Span,
+    ) -> Option<Box<Expr>> {
+        // Extract the type name from simple path types like `string`, `int`, `float`
+        let type_name = match &target_ty.kind {
+            TyKind::Path(None, path) if path.segments.len() == 1 => {
+                path.segments[0].ident.name
+            }
+            _ => return None,
+        };
+
+        let span = lhs_span.to(op_span).to(target_ty.span);
+
+        // `x as string` → `x.to_string()`
+        if type_name == sym::string {
+            return Some(self.mk_method_call(lhs.clone(), sym::to_string, ThinVec::new(), span));
+        }
+
+        // String literal `as int` → parse to integer
+        // e.g., `"42" as int` → `"42".parse::<i64>().unwrap_or(0)`
+        if type_name == sym::int {
+            if let ExprKind::Lit(lit) = &lhs.kind {
+                if matches!(lit.kind, ast::token::LitKind::Str | ast::token::LitKind::StrRaw(_)) {
+                    return Some(self.mk_string_parse_int(lhs.clone(), span));
+                }
+            }
+        }
+
+        // String literal `as float` → parse to float
+        if type_name == sym::float {
+            if let ExprKind::Lit(lit) = &lhs.kind {
+                if matches!(lit.kind, ast::token::LitKind::Str | ast::token::LitKind::StrRaw(_)) {
+                    return Some(self.mk_string_parse_float(lhs.clone(), span));
+                }
+            }
+        }
+
+        // Integer `as rune` for digit conversion: `1 as rune` → '1'
+        // Only for small integer literals 0-9
+        if type_name == sym::rune {
+            if let ExprKind::Lit(lit) = &lhs.kind {
+                if lit.kind == ast::token::LitKind::Integer {
+                    // Parse the symbol to get the integer value
+                    if let Ok(val) = lit.symbol.as_str().parse::<u64>() {
+                        if val <= 9 {
+                            return Some(self.mk_digit_to_char(lhs.clone(), span));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Char `as int` for digit value: `'5' as int` → 5 (not 53)
+        // Only for digit characters '0'-'9'
+        if type_name == sym::int {
+            if let ExprKind::Lit(lit) = &lhs.kind {
+                if lit.kind == ast::token::LitKind::Char {
+                    // Get the char from the symbol
+                    let s = lit.symbol.as_str();
+                    if let Some(c) = s.chars().next() {
+                        if c.is_ascii_digit() {
+                            return Some(self.mk_char_to_digit(lhs.clone(), span));
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Build `receiver.method(args)` expression
+    fn mk_method_call(
+        &self,
+        receiver: Box<Expr>,
+        method: Symbol,
+        args: ThinVec<Box<Expr>>,
+        span: Span,
+    ) -> Box<Expr> {
+        Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg: PathSegment::from_ident(Ident::new(method, span)),
+                receiver,
+                args,
+                span,
+            })),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        })
+    }
+
+    /// Build `str_expr.parse::<i64>().unwrap_or(0)`
+    fn mk_string_parse_int(&self, str_expr: Box<Expr>, span: Span) -> Box<Expr> {
+        // Build: str_expr.parse::<i64>()
+        let parse_seg = PathSegment {
+            ident: Ident::new(sym::parse, span),
+            id: DUMMY_NODE_ID,
+            args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+                span,
+                args: thin_vec![ast::AngleBracketedArg::Arg(ast::GenericArg::Type(
+                    Box::new(Ty {
+                        id: DUMMY_NODE_ID,
+                        kind: TyKind::Path(None, Path::from_ident(Ident::new(sym::i64, span))),
+                        span,
+                        tokens: None,
+                    })
+                ))],
+            }))),
+        };
+        let parse_call = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg: parse_seg,
+                receiver: str_expr,
+                args: ThinVec::new(),
+                span,
+            })),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Build: .unwrap_or(0)
+        let zero = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(ast::token::Lit::new(ast::token::LitKind::Integer, sym::integer(0), None)),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+        self.mk_method_call(parse_call, sym::unwrap_or, thin_vec![zero], span)
+    }
+
+    /// Build `str_expr.parse::<f64>().unwrap_or(0.0)`
+    fn mk_string_parse_float(&self, str_expr: Box<Expr>, span: Span) -> Box<Expr> {
+        // Build: str_expr.parse::<f64>()
+        let parse_seg = PathSegment {
+            ident: Ident::new(sym::parse, span),
+            id: DUMMY_NODE_ID,
+            args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+                span,
+                args: thin_vec![ast::AngleBracketedArg::Arg(ast::GenericArg::Type(
+                    Box::new(Ty {
+                        id: DUMMY_NODE_ID,
+                        kind: TyKind::Path(None, Path::from_ident(Ident::new(sym::f64, span))),
+                        span,
+                        tokens: None,
+                    })
+                ))],
+            }))),
+        };
+        let parse_call = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg: parse_seg,
+                receiver: str_expr,
+                args: ThinVec::new(),
+                span,
+            })),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Build: .unwrap_or(0.0)
+        let zero_f = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(ast::token::Lit::new(ast::token::LitKind::Float, sym::float_zero, None)),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+        self.mk_method_call(parse_call, sym::unwrap_or, thin_vec![zero_f], span)
+    }
+
+    /// Build `char::from_digit(n as u32, 10).unwrap_or('0')`
+    fn mk_digit_to_char(&self, int_expr: Box<Expr>, span: Span) -> Box<Expr> {
+        // Build: n as u32
+        let as_u32 = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Cast(
+                int_expr,
+                Box::new(Ty {
+                    id: DUMMY_NODE_ID,
+                    kind: TyKind::Path(None, Path::from_ident(Ident::new(sym::u32, span))),
+                    span,
+                    tokens: None,
+                }),
+            ),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Build: 10
+        let radix = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(ast::token::Lit::new(ast::token::LitKind::Integer, sym::integer(10), None)),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Build: char::from_digit(n as u32, 10)
+        let from_digit_path = Path {
+            span,
+            segments: thin_vec![
+                PathSegment::from_ident(Ident::new(sym::char, span)),
+                PathSegment::from_ident(Ident::new(sym::from_digit, span)),
+            ],
+            tokens: None,
+        };
+        let from_digit_call = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Call(
+                Box::new(Expr {
+                    id: DUMMY_NODE_ID,
+                    kind: ExprKind::Path(None, from_digit_path),
+                    span,
+                    attrs: ThinVec::new(),
+                    tokens: None,
+                }),
+                thin_vec![as_u32, radix],
+            ),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Build: .unwrap_or('0')
+        let default_char = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(ast::token::Lit::new(ast::token::LitKind::Char, sym::integer(0), None)),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+        self.mk_method_call(from_digit_call, sym::unwrap_or, thin_vec![default_char], span)
+    }
+
+    /// Build `c.to_digit(10).unwrap_or(0) as i64`
+    fn mk_char_to_digit(&self, char_expr: Box<Expr>, span: Span) -> Box<Expr> {
+        // Build: 10
+        let radix = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(ast::token::Lit::new(ast::token::LitKind::Integer, sym::integer(10), None)),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Build: c.to_digit(10)
+        let to_digit_call = self.mk_method_call(char_expr, sym::to_digit, thin_vec![radix], span);
+
+        // Build: .unwrap_or(0)
+        let zero = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Lit(ast::token::Lit::new(ast::token::LitKind::Integer, sym::integer(0), None)),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+        let unwrapped = self.mk_method_call(to_digit_call, sym::unwrap_or, thin_vec![zero], span);
+
+        // Build: as i64
+        Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Cast(
+                unwrapped,
+                Box::new(Ty {
+                    id: DUMMY_NODE_ID,
+                    kind: TyKind::Path(None, Path::from_ident(Ident::new(sym::i64, span))),
+                    span,
+                    tokens: None,
+                }),
+            ),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
         })
     }
 }
