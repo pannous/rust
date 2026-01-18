@@ -29,6 +29,10 @@ pub fn build_val_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::It
     items.push(build_val_from_f64(def_site, call_site));
     items.push(build_val_from_f32(def_site, call_site));
     items.push(build_val_from_bool(def_site, call_site));
+    items.push(build_val_from_char(def_site, call_site));
+
+    // Build PartialEq<char> impl
+    items.push(build_val_partial_eq_char(def_site, call_site));
 
     // Build Truthy impl
     let truthy_path = ast::Path::from_ident(Ident::new(sym::Truthy, call_site));
@@ -119,8 +123,8 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
 
     let enum_def = ast::EnumDef { variants };
 
-    // Create #[derive(Clone, Debug)] attribute
-    let derive_attr = create_derive_attr(def_site, &[sym::Clone, sym::Debug]);
+    // Create #[derive(Clone, Debug, PartialEq)] attribute
+    let derive_attr = create_derive_attr(def_site, &[sym::Clone, sym::Debug, sym::PartialEq]);
 
     Box::new(ast::Item {
         attrs: ThinVec::from([allow_dead_code, derive_attr]),
@@ -735,6 +739,345 @@ fn build_val_from_bool(def_site: Span, call_site: Span) -> Box<ast::Item> {
     });
     let body_expr = build_val_variant_call(call_site, sym::Bool, b_expr);
     build_from_impl(def_site, call_site, build_simple_ty(call_site, sym::bool), sym::__b, body_expr)
+}
+
+/// Build impl From<char> for Val
+fn build_val_from_char(def_site: Span, call_site: Span) -> Box<ast::Item> {
+    // fn from(c: char) -> Self { Val::Str(c.to_string()) }
+    let c_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::c, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    // c.to_string()
+    let to_string_call = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::to_string, call_site)),
+            receiver: c_expr,
+            args: ThinVec::new(),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let body_expr = build_val_variant_call(call_site, sym::Str, to_string_call);
+    build_from_impl(def_site, call_site, build_simple_ty(call_site, sym::char), sym::c, body_expr)
+}
+
+/// Build impl PartialEq<char> for Val
+fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> {
+    // impl PartialEq<char> for Val {
+    //     fn eq(&self, other: &char) -> bool {
+    //         match self {
+    //             Val::Str(s) => s == &other.to_string(),
+    //             _ => false,
+    //         }
+    //     }
+    // }
+
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(
+            Ident::with_dummy_span(kw::SelfLower).with_span_pos(call_site)
+        )),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // Build match arms
+    let arms = ThinVec::from([
+        build_partial_eq_char_str_arm(call_site),
+        build_partial_eq_wildcard_arm(call_site),
+    ]);
+
+    let match_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Match(self_expr, arms, ast::MatchKind::Prefix),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // Build fn eq(&self, other: &char) -> bool
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([
+                // &self
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::Ref(
+                            None,
+                            ast::MutTy {
+                                ty: Box::new(ast::Ty {
+                                    id: ast::DUMMY_NODE_ID,
+                                    kind: ast::TyKind::ImplicitSelf,
+                                    span: def_site,
+                                    tokens: None,
+                                }),
+                                mutbl: ast::Mutability::Not,
+                            },
+                        ),
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::with_dummy_span(kw::SelfLower).with_span_pos(def_site),
+                            None,
+                        ),
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: def_site,
+                    is_placeholder: false,
+                },
+                // other: &char
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::Ref(
+                            None,
+                            ast::MutTy {
+                                ty: build_simple_ty(call_site, sym::char),
+                                mutbl: ast::Mutability::Not,
+                            },
+                        ),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::new(sym::other, call_site),
+                            None,
+                        ),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: call_site,
+                    is_placeholder: false,
+                },
+            ]),
+            output: ast::FnRetTy::Ty(Box::new(ast::Ty {
+                id: ast::DUMMY_NODE_ID,
+                kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
+                span: call_site,
+                tokens: None,
+            })),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(match_expr),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(sym::eq, call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    let impl_item = Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    });
+
+    // Build PartialEq<char> trait path
+    let partial_eq_path = ast::Path {
+        span: call_site,
+        segments: ThinVec::from([ast::PathSegment {
+            ident: Ident::new(sym::PartialEq, call_site),
+            id: ast::DUMMY_NODE_ID,
+            args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+                span: call_site,
+                args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(
+                    build_simple_ty(call_site, sym::char),
+                ))]),
+            }))),
+        }]),
+        tokens: None,
+    };
+
+    let val_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::Val, call_site))),
+        span: call_site,
+        tokens: None,
+    });
+
+    let impl_def = ast::Impl {
+        generics: ast::Generics::default(),
+        constness: ast::Const::No,
+        of_trait: Some(Box::new(ast::TraitImplHeader {
+            defaultness: ast::Defaultness::Final,
+            safety: ast::Safety::Default,
+            polarity: ast::ImplPolarity::Positive,
+            trait_ref: ast::TraitRef { path: partial_eq_path, ref_id: ast::DUMMY_NODE_ID },
+        })),
+        self_ty: val_ty,
+        items: ThinVec::from([impl_item]),
+    };
+
+    Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Impl(impl_def),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
+
+/// Build arm: Val::Str(s) => s == &other.to_string()
+fn build_partial_eq_char_str_arm(span: Span) -> ast::Arm {
+    let pat_path = ast::Path {
+        span,
+        segments: ThinVec::from([
+            ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
+            ast::PathSegment::from_ident(Ident::new(sym::Str, span)),
+        ]),
+        tokens: None,
+    };
+
+    let binding_pat = ast::Pat {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::s, span), None),
+        span,
+        tokens: None,
+    };
+
+    let pat = Box::new(ast::Pat {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
+        span,
+        tokens: None,
+    });
+
+    // s == &other.to_string()
+    let s_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::s, span))),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let other_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::other, span))),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // other.to_string()
+    let to_string_call = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::to_string, span)),
+            receiver: other_expr,
+            args: ThinVec::new(),
+            span,
+        })),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // &other.to_string()
+    let ref_to_string = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::AddrOf(ast::BorrowKind::Ref, ast::Mutability::Not, to_string_call),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Binary(
+            rustc_span::source_map::Spanned { node: ast::BinOpKind::Eq, span },
+            s_expr,
+            ref_to_string,
+        ),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    ast::Arm {
+        attrs: ThinVec::new(),
+        pat,
+        guard: None,
+        body: Some(body),
+        span,
+        id: ast::DUMMY_NODE_ID,
+        is_placeholder: false,
+    }
+}
+
+/// Build arm: _ => false
+fn build_partial_eq_wildcard_arm(span: Span) -> ast::Arm {
+    let pat = Box::new(ast::Pat {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::PatKind::Wild,
+        span,
+        tokens: None,
+    });
+
+    let body = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Lit(rustc_ast::token::Lit {
+            kind: rustc_ast::token::LitKind::Bool,
+            symbol: kw::False,
+            suffix: None,
+        }),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    ast::Arm {
+        attrs: ThinVec::new(),
+        pat,
+        guard: None,
+        body: Some(body),
+        span,
+        id: ast::DUMMY_NODE_ID,
+        is_placeholder: false,
+    }
 }
 
 /// Build Val::Variant(expr) expression
