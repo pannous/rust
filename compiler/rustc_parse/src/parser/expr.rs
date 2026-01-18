@@ -180,10 +180,10 @@ impl<'a> Parser<'a> {
             } {
                 break;
             }
-            // Check for deprecated `...` syntax
-            if self.token == token::DotDotDot && op.node == AssocOp::Range(RangeLimits::Closed) {
-                self.err_dotdotdot_syntax(self.token.span);
-            }
+            // `...` is now valid inclusive range syntax (alongside `..=` and `…`)
+            // if self.token == token::DotDotDot && op.node == AssocOp::Range(RangeLimits::Closed) {
+            //     self.err_dotdotdot_syntax(self.token.span);
+            // }
 
             if self.token == token::LArrow {
                 self.err_larrow_operator(self.token.span);
@@ -490,10 +490,10 @@ impl<'a> Parser<'a> {
             self.dcx().emit_err(err);
         }
 
-        // Check for deprecated `...` syntax.
-        if self.token == token::DotDotDot {
-            self.err_dotdotdot_syntax(self.token.span);
-        }
+        // `...` is now valid inclusive range syntax (alongside `..=` and `…`)
+        // if self.token == token::DotDotDot {
+        //     self.err_dotdotdot_syntax(self.token.span);
+        // }
 
         debug_assert!(
             self.token.is_range_separator(),
@@ -4578,9 +4578,10 @@ impl<'a> Parser<'a> {
         });
     }
 
-    fn err_dotdotdot_syntax(&self, span: Span) {
-        self.dcx().emit_err(errors::DotDotDot { span });
-    }
+    // `...` is now valid inclusive range syntax, no error needed
+    // fn err_dotdotdot_syntax(&self, span: Span) {
+    //     self.dcx().emit_err(errors::DotDotDot { span });
+    // }
 
     fn err_larrow_operator(&self, span: Span) {
         self.dcx().emit_err(errors::LeftArrowOperator { span });

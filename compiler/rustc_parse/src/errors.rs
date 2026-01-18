@@ -604,24 +604,25 @@ pub(crate) struct EqFieldInit {
     pub eq: Span,
 }
 
-#[derive(Diagnostic)]
-#[diag(parse_dotdotdot)]
-pub(crate) struct DotDotDot {
-    #[primary_span]
-    #[suggestion(
-        parse_suggest_exclusive_range,
-        applicability = "maybe-incorrect",
-        code = "..",
-        style = "verbose"
-    )]
-    #[suggestion(
-        parse_suggest_inclusive_range,
-        applicability = "maybe-incorrect",
-        code = "..=",
-        style = "verbose"
-    )]
-    pub span: Span,
-}
+// `...` is now valid inclusive range syntax, no error needed
+// #[derive(Diagnostic)]
+// #[diag(parse_dotdotdot)]
+// pub(crate) struct DotDotDot {
+//     #[primary_span]
+//     #[suggestion(
+//         parse_suggest_exclusive_range,
+//         applicability = "maybe-incorrect",
+//         code = "..",
+//         style = "verbose"
+//     )]
+//     #[suggestion(
+//         parse_suggest_inclusive_range,
+//         applicability = "maybe-incorrect",
+//         code = "..=",
+//         style = "verbose"
+//     )]
+//     pub span: Span,
+// }
 
 #[derive(Diagnostic)]
 #[diag(parse_left_arrow_operator)]
