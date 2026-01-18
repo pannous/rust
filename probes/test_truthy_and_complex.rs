@@ -1,16 +1,18 @@
 #!/usr/bin/env rust
 class User {
-    Name:string,
-    Age:int
+    name:string,
+    age:int
 }
 
-// users := @[User{Name: "Bob", Age: 17}, User{Name: "Charlie", Age: 22}, User{Name: "Alice", Age: 20}]
-users := vec![User{Name: "Bob", Age: 17}, User{Name: "Charlie", Age: 22}, User{Name: "Alice", Age: 20}]
-let user = users.chose(|u| u.Age > 18).first_cloned()
+// users := @[User{name: "Bob", age: 17}, User{name: "Charlie", age: 22}, User{name: "Alice", age: 20}]
+users := vec![User{name: "Bob", age: 17}, User{name: "Charlie", age: 22}, User{name: "Alice", age: 20}]
+// let user = users.chose(|u| u.age > 18).first_cloned() // todo vs .head()
+let user = users.chose(|u| u.age > 18).first().cloned() // todo vs .head()
+// let user = users.chose(|u| u.age > 18).first()
 
 let result:string
-if user and user.?Name {
-    result = user.?Name ?? "Anonymous"
+if user and user.?name {
+    result = user.?name ?? "Anonymous"
 } else {
     result = "Anonymous"
 }
