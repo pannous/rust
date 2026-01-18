@@ -26,6 +26,7 @@ use super::{
     Recovered, Trailing, UsePreAttrPos,
 };
 use crate::errors::{self, FnPointerCannotBeAsync, FnPointerCannotBeConst, MacroExpandsToAdtField};
+use crate::transformer::create_derive_attr;
 use crate::{exp, fluent_generated as fluent};
 
 impl<'a> Parser<'a> {
@@ -517,8 +518,10 @@ impl<'a> Parser<'a> {
             // STRUCT ITEM
             self.parse_item_struct()?
         } else if self.token.is_ident_named(sym::class) && self.look_ahead(1, |t| t.is_ident()) {
-            // CLASS as synonym for STRUCT (global feature)
+            // CLASS as synonym for STRUCT with auto-derive Debug, Clone, Copy
+            let span = self.token.span;
             self.bump(); // consume `class`
+            attrs.push(create_derive_attr(span, &[sym::Debug, sym::Clone, sym::Copy]));
             self.parse_item_struct()?
         } else if self.is_kw_followed_by_ident(kw::Union) {
             // UNION ITEM
