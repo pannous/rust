@@ -464,6 +464,7 @@ impl TtParser {
         &mut self,
         matcher: &'matcher [MatcherLoc],
         token: &Token,
+        next_token: Option<&Token>,
         approx_position: u32,
         track: &mut T,
     ) -> Option<NamedParseResult<T::Failure>> {
@@ -565,7 +566,7 @@ impl TtParser {
                     // Built-in nonterminals never start with these tokens, so we can eliminate
                     // them from consideration. We use the span of the metavariable declaration
                     // to determine any edition-specific matching behavior for non-terminals.
-                    if Parser::nonterminal_may_begin_with(kind, token) {
+                    if Parser::nonterminal_may_begin_with_lookahead(kind, token, next_token) {
                         self.bb_mps.push(mp);
                     }
                 }
@@ -632,9 +633,12 @@ impl TtParser {
 
             // Process `cur_mps` until either we have finished the input or we need to get some
             // parsing from the black-box parser done.
+            // Get the next token for look-ahead (needed for @[ and @{ syntax detection)
+            let next_token = parser.look_ahead(1, |t| t.clone());
             let res = self.parse_tt_inner(
                 matcher,
                 &parser.token,
+                Some(&next_token),
                 parser.approx_token_stream_pos(),
                 track,
             );

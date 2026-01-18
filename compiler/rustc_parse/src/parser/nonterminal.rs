@@ -107,6 +107,33 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Checks whether a non-terminal may begin with a particular token, with optional look-ahead.
+    ///
+    /// This extends `nonterminal_may_begin_with` to support tokens like `@` that need context
+    /// from the next token to determine if they can begin an expression (e.g., `@[` for vec literals).
+    #[inline]
+    pub fn nonterminal_may_begin_with_lookahead(
+        kind: NonterminalKind,
+        token: &Token,
+        next_token: Option<&Token>,
+    ) -> bool {
+        // Special case: @ can begin Expr/Stmt only if followed by [ or {
+        // This allows @[...] vec literal and @{...} map literal syntax
+        if token.kind == token::At {
+            if matches!(kind, NonterminalKind::Expr(_)) {
+                // For expressions, @ can only begin if followed by [ or {
+                if let Some(next) = next_token {
+                    return matches!(next.kind, token::OpenBracket | token::OpenBrace);
+                }
+                return false;
+            }
+            // For other nonterminals (TT, Item, Stmt, etc.), fall through to standard check
+            // TT accepts any token, and @ is a valid token tree
+        }
+        // For all other tokens, use the standard check
+        Self::nonterminal_may_begin_with(kind, token)
+    }
+
     /// Parse a non-terminal (e.g. MBE `:pat` or `:ident`). Inlined because there is only one call
     /// site.
     #[inline]
