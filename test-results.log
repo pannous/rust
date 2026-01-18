@@ -21,6 +21,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_broken_fixed (compile)
 [0;32m✓[0m test_byte
 [0;32m✓[0m test_check_reverse
+[0;32m✓[0m test_class_derive
 [0;31m✗[0m test_class_funcs (compile)
 [0;31m✗[0m test_class_methods (compile)
 [0;31m✗[0m test_class_parse (compile)
@@ -198,5 +199,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m67 passed[0m, [0;31m126 failed[0m, 0 skipped
+Results: [0;32m68 passed[0m, [0;31m126 failed[0m, 0 skipped
 ========================================

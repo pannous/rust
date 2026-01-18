@@ -2099,6 +2099,14 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_expr_path_start(&mut self) -> PResult<'a, Box<Expr>> {
+        // In script mode, transform `nil` to `None`
+        if self.is_script_mode() && self.token.is_ident_named(sym::nil) {
+            let span = self.token.span;
+            self.bump(); // consume `nil`
+            let none_path = ast::Path::from_ident(Ident::new(sym::None, span));
+            return Ok(self.mk_expr(span, ExprKind::Path(None, none_path)));
+        }
+
         let maybe_eq_tok = self.prev_token;
         let (qself, path) = if self.eat_lt() {
             let lt_span = self.prev_token.span;
