@@ -372,6 +372,70 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         tokens: None,
     }));
 
+    // macro_rules! exit {
+    //     () => { std::process::exit(0) };
+    //     ($code:expr) => { std::process::exit($code) };
+    // }
+    // Exit the process with optional exit code (default 0)
+    let exit_body = vec![
+        // First arm: () => { std::process::exit(0) };
+        delim(Delimiter::Parenthesis, vec![]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            ident_user("std"),
+            TokenTree::token_alone(TokenKind::PathSep, call_site),
+            ident_user("process"),
+            TokenTree::token_alone(TokenKind::PathSep, call_site),
+            ident_user("exit"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(
+                    TokenKind::Literal(Lit { kind: LitKind::Integer, symbol: sym::integer(0), suffix: None }),
+                    def_site,
+                ),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+        // Second arm: ($code:expr) => { std::process::exit($code) };
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("code"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        delim(Delimiter::Brace, vec![
+            ident_user("std"),
+            TokenTree::token_alone(TokenKind::PathSep, call_site),
+            ident_user("process"),
+            TokenTree::token_alone(TokenKind::PathSep, call_site),
+            ident_user("exit"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("code"),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let exit_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(exit_body),
+        }),
+        macro_rules: true,
+        eii_declaration: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::exit, call_site), exit_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
     // macro_rules! __stmt { ($($t:tt)*) => { $($t)*; }; }
     // For script-mode statements parsed as block
     let stmt_body = vec![
