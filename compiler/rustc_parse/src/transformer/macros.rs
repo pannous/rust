@@ -373,19 +373,15 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
     }));
 
     // macro_rules! exit {
-    //     () => { std::process::exit(0) };
-    //     ($code:expr) => { std::process::exit($code) };
+    //     () => { exit(0) };
+    //     ($code:expr) => { exit($code) };
     // }
     // Exit the process with optional exit code (default 0)
     let exit_body = vec![
-        // First arm: () => { std::process::exit(0) };
+        // First arm: () => { exit(0) };
         delim(Delimiter::Parenthesis, vec![]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
         delim(Delimiter::Brace, vec![
-            ident_user("std"),
-            TokenTree::token_alone(TokenKind::PathSep, call_site),
-            ident_user("process"),
-            TokenTree::token_alone(TokenKind::PathSep, call_site),
             ident_user("exit"),
             delim(Delimiter::Parenthesis, vec![
                 TokenTree::token_alone(
@@ -395,7 +391,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
             ]),
         ]),
         TokenTree::token_alone(TokenKind::Semi, def_site),
-        // Second arm: ($code:expr) => { std::process::exit($code) };
+        // Second arm: ($code:expr) => { exit($code) };
         delim(Delimiter::Parenthesis, vec![
             TokenTree::token_alone(TokenKind::Dollar, def_site),
             ident("code"),
@@ -404,10 +400,6 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         ]),
         TokenTree::token_alone(TokenKind::FatArrow, def_site),
         delim(Delimiter::Brace, vec![
-            ident_user("std"),
-            TokenTree::token_alone(TokenKind::PathSep, call_site),
-            ident_user("process"),
-            TokenTree::token_alone(TokenKind::PathSep, call_site),
             ident_user("exit"),
             delim(Delimiter::Parenthesis, vec![
                 TokenTree::token_alone(TokenKind::Dollar, def_site),
@@ -484,4 +476,123 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
     }));
 
     items
+}
+
+/// Build the `exit` function for script mode:
+/// ```ignore
+/// fn exit(code: i32) -> ! {
+///     std::process::exit(code)
+/// }
+/// ```
+pub fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
+    let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
+
+    // Parameter: code: i32
+    let code_param = ast::Param {
+        attrs: ThinVec::new(),
+        ty: Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::i32, call_site))),
+            span: call_site,
+            tokens: None,
+        }),
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                Ident::new(sym::code, call_site),
+                None,
+            ),
+            span: call_site,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span: call_site,
+        is_placeholder: false,
+    };
+
+    // Return type: ! (never type)
+    let ret_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Never,
+        span: call_site,
+        tokens: None,
+    });
+
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([code_param]),
+            output: ast::FnRetTy::Ty(ret_ty),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    // Body: std::process::exit(code)
+    let std_process_exit_path = ast::Path {
+        span: call_site,
+        segments: ThinVec::from([
+            ast::PathSegment::from_ident(Ident::new(sym::std, call_site)),
+            ast::PathSegment::from_ident(Ident::new(sym::process, call_site)),
+            ast::PathSegment::from_ident(Ident::new(sym::exit, call_site)),
+        ]),
+        tokens: None,
+    };
+
+    let code_arg = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::code, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let exit_call = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Call(
+            Box::new(ast::Expr {
+                id: ast::DUMMY_NODE_ID,
+                kind: ast::ExprKind::Path(None, std_process_exit_path),
+                span: call_site,
+                attrs: ThinVec::new(),
+                tokens: None,
+            }),
+            ThinVec::from([code_arg]),
+        ),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(exit_call),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(sym::exit, call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    Box::new(ast::Item {
+        attrs: vec![allow_dead_code].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
 }

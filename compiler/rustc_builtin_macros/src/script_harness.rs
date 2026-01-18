@@ -125,6 +125,7 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     let slice_helpers = transformer::build_slice_ext(def_site, call_site);
     let truthy_helpers = transformer::build_truthy_helpers(def_site, call_site);
     let val_helpers = transformer::build_val_helpers(def_site, call_site);
+    let exit_fn = transformer::build_exit_function(def_site, call_site);
     let main_fn = build_main(def_site, main_stmts);
 
     // Rebuild crate with type aliases + script macros + helpers + module items + main function
@@ -134,6 +135,7 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     krate.items.extend(slice_helpers);
     krate.items.extend(truthy_helpers);
     krate.items.extend(val_helpers);
+    krate.items.push(exit_fn);
     krate.items.extend(module_items);
     krate.items.push(main_fn);
 }

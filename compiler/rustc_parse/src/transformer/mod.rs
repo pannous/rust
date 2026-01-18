@@ -16,7 +16,7 @@ mod val;
 #[allow(unused_imports)]
 pub use filter::build_slice_helpers;
 pub use slice::build_slice_helpers as build_slice_ext;
-pub use macros::build_script_macros;
+pub use macros::{build_script_macros, build_exit_function};
 pub use string::build_string_helpers;
 pub use truthy::build_truthy_helpers;
 pub use val::{build_simple_ty, build_val_helpers};
