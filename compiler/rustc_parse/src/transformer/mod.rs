@@ -8,12 +8,14 @@ use rustc_span::{Ident, Span, sym};
 
 mod filter;
 mod macros;
+mod slice;
 mod string;
 mod truthy;
 mod val;
 
 #[allow(unused_imports)]
 pub use filter::build_slice_helpers;
+pub use slice::build_slice_helpers as build_slice_ext;
 pub use macros::build_script_macros;
 pub use string::build_string_helpers;
 pub use truthy::build_truthy_helpers;

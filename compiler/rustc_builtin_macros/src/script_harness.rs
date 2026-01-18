@@ -122,8 +122,7 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     let type_aliases = build_type_aliases(call_site);
     let script_macros = transformer::build_script_macros(def_site, call_site);
     let string_helpers = transformer::build_string_helpers(def_site, call_site);
-    // TODO: Fix slice extension trait implementation
-    // let slice_helpers = build_slice_helpers(def_site, call_site);
+    let slice_helpers = transformer::build_slice_ext(def_site, call_site);
     let truthy_helpers = transformer::build_truthy_helpers(def_site, call_site);
     let val_helpers = transformer::build_val_helpers(def_site, call_site);
     let main_fn = build_main(def_site, main_stmts);
@@ -132,7 +131,7 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     krate.items = type_aliases;
     krate.items.extend(script_macros);
     krate.items.extend(string_helpers);
-    // krate.items.extend(slice_helpers);
+    krate.items.extend(slice_helpers);
     krate.items.extend(truthy_helpers);
     krate.items.extend(val_helpers);
     krate.items.extend(module_items);
@@ -362,10 +361,11 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
 
     // Suppress common warnings in script mode for convenience
     let allow_unused_mut = create_allow_attr(span, sym::unused_mut);
+    let allow_unused_variables = create_allow_attr(span, sym::unused_variables);
 
     // Node IDs will be assigned during macro expansion
     Box::new(ast::Item {
-        attrs: vec![allow_unused_mut].into(),
+        attrs: vec![allow_unused_mut, allow_unused_variables].into(),
         id: ast::DUMMY_NODE_ID,
         kind: main_fn,
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Public, tokens: None },
@@ -373,4 +373,3 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
         tokens: None,
     })
 }
-
