@@ -98,7 +98,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_list_methods_broken (compile)
 [0;31m✗[0m test_list_methods (compile)
 [0;31m✗[0m test_list_synonyms_only (compile)
-[0;31m✗[0m test_list_typed (compile)
+[0;32m✓[0m test_list_typed
 [0;32m✓[0m test_list
 [0;32m✓[0m test_main
 [0;31m✗[0m test_manual_slices (compile)
@@ -199,5 +199,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m78 passed[0m, [0;31m116 failed[0m, 0 skipped
+Results: [0;32m79 passed[0m, [0;31m115 failed[0m, 0 skipped
 ========================================

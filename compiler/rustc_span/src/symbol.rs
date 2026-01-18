@@ -155,6 +155,7 @@ symbols! {
     // nice to have.
     Symbols {
         // tidy-alphabetical-start
+        A,
         Abi,
         AcqRel,
         Acquire,
@@ -186,6 +187,7 @@ symbols! {
         AtomicU64,
         AtomicU128,
         AtomicUsize,
+        B,
         BTreeEntry,
         BTreeMap,
         BTreeSet,
@@ -508,6 +510,7 @@ symbols! {
         as_dash_needed: "as-needed",
         as_ptr,
         as_ref,
+        as_slice,
         as_str,
         asm,
         asm_cfg,
@@ -2125,6 +2128,7 @@ symbols! {
         search_unbox,
         select,
         select_unpredictable,
+        seq,
         self_in_typedefs,
         self_struct_ctor,
         semiopaque,
@@ -2231,6 +2235,7 @@ symbols! {
         sized_hierarchy,
         skip,
         slice,
+        slice_eq,
         slice_from_raw_parts,
         slice_from_raw_parts_mut,
         slice_from_ref,

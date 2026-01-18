@@ -1208,3 +1208,256 @@ fn build_filter_closure(span: Span) -> Box<ast::Expr> {
         tokens: None,
     })
 }
+
+/// Build slice_eq helper function for comparing arrays with Vecs
+/// Generates:
+/// ```ignore
+/// fn slice_eq<T: PartialEq, A: AsRef<[T]>, B: AsRef<[T]>>(a: &A, b: &B) -> bool {
+///     a.as_ref() == b.as_ref()
+/// }
+/// ```
+pub fn build_slice_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
+    let t_ident = Ident::new(sym::T, call_site);
+    let a_ident = Ident::new(sym::A, call_site);
+    let b_ident = Ident::new(sym::B, call_site);
+
+    // PartialEq bound for T
+    let partial_eq_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path::from_ident(Ident::new(sym::PartialEq, call_site)),
+            ref_id: ast::DUMMY_NODE_ID,
+        },
+        span: call_site,
+        parens: ast::Parens::No,
+    });
+
+    let t_param = ast::GenericParam {
+        id: ast::DUMMY_NODE_ID,
+        ident: t_ident,
+        attrs: ThinVec::new(),
+        bounds: vec![partial_eq_bound],
+        is_placeholder: false,
+        kind: ast::GenericParamKind::Type { default: None },
+        colon_span: None,
+    };
+
+    // T type for AsRef bounds
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
+        span: call_site,
+        tokens: None,
+    });
+
+    // [T] slice type
+    let slice_t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Slice(t_ty),
+        span: call_site,
+        tokens: None,
+    });
+
+    // AsRef<[T]> bound
+    let asref_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path {
+                span: call_site,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::AsRef, call_site),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span: call_site,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(slice_t_ty.clone()),
+                            )]),
+                        },
+                    ))),
+                }]),
+                tokens: None,
+            },
+            ref_id: ast::DUMMY_NODE_ID,
+        },
+        span: call_site,
+        parens: ast::Parens::No,
+    });
+
+    let a_param = ast::GenericParam {
+        id: ast::DUMMY_NODE_ID,
+        ident: a_ident,
+        attrs: ThinVec::new(),
+        bounds: vec![asref_bound.clone()],
+        is_placeholder: false,
+        kind: ast::GenericParamKind::Type { default: None },
+        colon_span: None,
+    };
+
+    let b_param = ast::GenericParam {
+        id: ast::DUMMY_NODE_ID,
+        ident: b_ident,
+        attrs: ThinVec::new(),
+        bounds: vec![asref_bound],
+        is_placeholder: false,
+        kind: ast::GenericParamKind::Type { default: None },
+        colon_span: None,
+    };
+
+    let fn_generics = ast::Generics {
+        params: ThinVec::from([t_param, a_param, b_param]),
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span: call_site,
+        },
+        span: call_site,
+    };
+
+    // &A type
+    let a_ref_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Ref(
+            None,
+            ast::MutTy {
+                ty: Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Path(None, ast::Path::from_ident(a_ident)),
+                    span: call_site,
+                    tokens: None,
+                }),
+                mutbl: ast::Mutability::Not,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    // &B type
+    let b_ref_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Ref(
+            None,
+            ast::MutTy {
+                ty: Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Path(None, ast::Path::from_ident(b_ident)),
+                    span: call_site,
+                    tokens: None,
+                }),
+                mutbl: ast::Mutability::Not,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    let bool_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
+        span: call_site,
+        tokens: None,
+    });
+
+    let a_param_decl = ast::Param {
+        attrs: ThinVec::new(),
+        ty: a_ref_ty,
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::a, call_site), None),
+            span: call_site,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span: call_site,
+        is_placeholder: false,
+    };
+
+    let b_param_decl = ast::Param {
+        attrs: ThinVec::new(),
+        ty: b_ref_ty,
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::b, call_site), None),
+            span: call_site,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span: call_site,
+        is_placeholder: false,
+    };
+
+    let fn_sig = ast::FnSig {
+        header: ast::FnHeader::default(),
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([a_param_decl, b_param_decl]),
+            output: ast::FnRetTy::Ty(bool_ty),
+        }),
+        span: call_site,
+    };
+
+    // Body: a.as_ref() == b.as_ref()
+    let a_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::a, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let a_ref = build_method_call(a_expr, sym::as_ref, ThinVec::new(), call_site);
+
+    let b_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::b, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let b_ref = build_method_call(b_expr, sym::as_ref, ThinVec::new(), call_site);
+
+    let eq_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Binary(
+            ast::BinOp { span: call_site, node: ast::BinOpKind::Eq },
+            a_ref,
+            b_ref,
+        ),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(eq_expr),
+            span: call_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: call_site,
+        tokens: None,
+    });
+
+    let allow_dead_code = super::create_allow_attr(def_site, sym::dead_code);
+
+    Box::new(ast::Item {
+        attrs: vec![allow_dead_code].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Fn(Box::new(ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            sig: fn_sig,
+            ident: Ident::new(sym::slice_eq, call_site),
+            generics: fn_generics,
+            contract: None,
+            body: Some(body),
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        })),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}

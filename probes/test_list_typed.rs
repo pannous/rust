@@ -1,4 +1,7 @@
 #!/usr/bin/env rust
 xs := [1, 2, 3]
 ys := @[1, 2, 3]
-eq!( xs , ys ); // should return true. currently: (mismatched types []any and []int)
+# Vec vs array - Vec already impls PartialEq<[T; N]>
+eq!( ys , xs );
+# Array vs Vec - use seq! (slice eq) for comparing via AsRef<[T]>
+seq!( xs , ys );

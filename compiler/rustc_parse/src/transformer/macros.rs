@@ -272,6 +272,61 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         tokens: None,
     }));
 
+    // macro_rules! seq { ($left:expr, $right:expr) => { assert!(slice_eq(&$left, &$right)) }; }
+    // Slice equality macro for comparing arrays with Vecs
+    let seq_body = vec![
+        // ($left:expr, $right:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("left"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+            TokenTree::token_alone(TokenKind::Comma, def_site),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("right"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { assert!(slice_eq(&$left, &$right)) }
+        delim(Delimiter::Brace, vec![
+            ident_user("assert"),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                ident_user("slice_eq"),
+                delim(Delimiter::Parenthesis, vec![
+                    TokenTree::token_alone(TokenKind::And, def_site),
+                    TokenTree::token_alone(TokenKind::Dollar, def_site),
+                    ident("left"),
+                    TokenTree::token_alone(TokenKind::Comma, def_site),
+                    TokenTree::token_alone(TokenKind::And, def_site),
+                    TokenTree::token_alone(TokenKind::Dollar, def_site),
+                    ident("right"),
+                ]),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let seq_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(seq_body),
+        }),
+        macro_rules: true,
+        eii_declaration: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::seq, call_site), seq_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
     // macro_rules! s { ($e:expr) => { { let __s: String = $e.into(); __s } }; }
     // For converting string literals to String: s!("abc") -> "abc".into()
     // Uses .into() with type annotation for reliable conversion

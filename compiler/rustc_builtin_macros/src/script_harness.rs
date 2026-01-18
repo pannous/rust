@@ -106,6 +106,7 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     let exit_fn = transformer::build_exit_function(def_site, call_site);
     let approx_eq_fn = transformer::build_approx_eq_function(def_site, call_site);
     let math_constants = transformer::build_math_constants(def_site, call_site);
+    let slice_eq_fn = transformer::build_slice_eq_function(def_site, call_site);
 
     // Partition items and optionally build main
     let (module_items, main_stmts) = partition_items(&krate.items);
@@ -119,6 +120,7 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     krate.items.extend(val_helpers);
     krate.items.push(exit_fn);
     krate.items.push(approx_eq_fn);
+    krate.items.push(slice_eq_fn);
     krate.items.extend(math_constants);
     krate.items.extend(module_items);
 
