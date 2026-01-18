@@ -260,6 +260,18 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
     items.push(make_usize_method("size"));
     items.push(make_usize_method("length"));
 
+    // Case conversion - uppercase aliases for to_uppercase()
+    items.push(make_string_method("upper"));
+    items.push(make_string_method("to_upper"));
+    items.push(make_string_method("toUpper"));
+    items.push(make_string_method("uppercase"));
+
+    // Case conversion - lowercase aliases for to_lowercase()
+    items.push(make_string_method("lower"));
+    items.push(make_string_method("to_lower"));
+    items.push(make_string_method("toLower"));
+    items.push(make_string_method("lowercase"));
+
     // Helper to create method with &str param returning bool (for contains synonyms)
     let make_contains_method = |name: &str| -> Box<ast::AssocItem> {
         let fn_sig = ast::FnSig {
@@ -615,6 +627,32 @@ fn build_str_ext_impl_items(def_site: Span, call_site: Span) -> ThinVec<Box<ast:
     // For length(): self.len()
     let length_body = method_call(self_expr(), "len", ThinVec::new());
     items.push(build_impl_method_with_expr("length", false, length_body, def_site, call_site));
+
+    // Case conversion - uppercase aliases: self.to_uppercase()
+    let upper_body = method_call(self_expr(), "to_uppercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("upper", true, upper_body, def_site, call_site));
+
+    let to_upper_body = method_call(self_expr(), "to_uppercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("to_upper", true, to_upper_body, def_site, call_site));
+
+    let to_upper_camel_body = method_call(self_expr(), "to_uppercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("toUpper", true, to_upper_camel_body, def_site, call_site));
+
+    let uppercase_body = method_call(self_expr(), "to_uppercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("uppercase", true, uppercase_body, def_site, call_site));
+
+    // Case conversion - lowercase aliases: self.to_lowercase()
+    let lower_body = method_call(self_expr(), "to_lowercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("lower", true, lower_body, def_site, call_site));
+
+    let to_lower_body = method_call(self_expr(), "to_lowercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("to_lower", true, to_lower_body, def_site, call_site));
+
+    let to_lower_camel_body = method_call(self_expr(), "to_lowercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("toLower", true, to_lower_camel_body, def_site, call_site));
+
+    let lowercase_body = method_call(self_expr(), "to_lowercase", ThinVec::new());
+    items.push(build_impl_method_with_expr("lowercase", true, lowercase_body, def_site, call_site));
 
     // Search synonyms: self.contains(pat)
     items.push(build_contains_impl("includes", def_site, call_site));
