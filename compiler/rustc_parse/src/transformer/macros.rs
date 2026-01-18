@@ -428,6 +428,68 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         tokens: None,
     }));
 
+    // macro_rules! __if {
+    //     ($cond:expr ; $($rest:tt)*) => { if (&$cond).is_truthy() $($rest)* };
+    // }
+    // For script-mode if statements with truthy semantics
+    let if_body = vec![
+        // ($cond:expr ; $($rest:tt)*)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("cond"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+            TokenTree::token_alone(TokenKind::Semi, def_site),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("rest"),
+                TokenTree::token_alone(TokenKind::Colon, def_site),
+                ident("tt"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { if (&$cond).is_truthy() $($rest)* }
+        delim(Delimiter::Brace, vec![
+            ident("if"),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::And, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("cond"),
+            ]),
+            TokenTree::token_alone(TokenKind::Dot, def_site),
+            ident_user("is_truthy"),
+            delim(Delimiter::Parenthesis, vec![]),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("rest"),
+            ]),
+            TokenTree::token_alone(TokenKind::Star, def_site),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let if_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(if_body),
+        }),
+        macro_rules: true,
+        eii_declaration: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::__if, call_site), if_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
     // macro_rules! __stmt { ($($t:tt)*) => { $($t)*; }; }
     // For script-mode statements parsed as block
     let stmt_body = vec![

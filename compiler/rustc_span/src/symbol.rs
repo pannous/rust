@@ -1860,6 +1860,7 @@ symbols! {
         put,
         pushpop_unsafe,
         __stmt,
+        __if,
         qreg,
         qreg_low4,
         qreg_low8,

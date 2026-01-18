@@ -88,7 +88,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_iterator (compile)
 [0;31m✗[0m test_lambda_arg (compile)
 [0;31m✗[0m test_lambda (compile)
-[0;31m✗[0m test_list_comparison (compile)
+[0;32m✓[0m test_list_comparison
 [0;32m✓[0m test_list_comparison2
 [0;32m✓[0m test_list_equality
 [0;31m✗[0m test_list_filter (compile)
@@ -177,9 +177,9 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_tau_pi_approx (compile)
 [0;32m✓[0m test_transform_synonyms
 [0;31m✗[0m test_truthy_and_working (compile)
-[0;31m✗[0m test_truthy_and (compile)
-[0;31m✗[0m test_truthy_simple (compile)
-[0;31m✗[0m test_truthy (compile)
+[0;32m✓[0m test_truthy_and
+[0;32m✓[0m test_truthy_simple
+[0;32m✓[0m test_truthy
 [0;31m✗[0m test_try_assign_context_aware (compile)
 [0;31m✗[0m test_try_assign (compile)
 [0;31m✗[0m test_try_assignment (compile)
@@ -198,5 +198,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m63 passed[0m, [0;31m130 failed[0m, 0 skipped
+Results: [0;32m67 passed[0m, [0;31m126 failed[0m, 0 skipped
 ========================================

@@ -101,6 +101,14 @@ impl<'a> Parser<'a> {
                     continue;
                 }
 
+                // Special handling for `if` statements with truthy semantics
+                if self.token.is_keyword(kw::If) {
+                    if let Some(if_item) = self.parse_script_if_statement_as_item()? {
+                        items.push(Box::new(if_item));
+                        continue;
+                    }
+                }
+
                 // Not an item - parse as statement and wrap in __stmt!
                 if let Some(stmt_item) = self.parse_script_statement_as_item()? {
                     items.push(Box::new(stmt_item));
@@ -212,6 +220,99 @@ impl<'a> Parser<'a> {
         };
 
         let mac = MacCall { path: stmt_path, args: Box::new(args) };
+
+        Ok(Some(Item {
+            attrs: ThinVec::new(),
+            id: DUMMY_NODE_ID,
+            kind: ItemKind::MacCall(Box::new(mac)),
+            vis: Visibility { span: lo, kind: VisibilityKind::Inherited, tokens: None },
+            span: lo.to(hi),
+            tokens: None,
+        }))
+    }
+
+    /// Parse script-mode if statement: `if cond { } [else { }]` -> `__if!(cond ; { } [else { }])`
+    /// The semicolon separates condition from body for macro pattern matching.
+    /// This enables truthy semantics where non-bool values can be used in conditions.
+    fn parse_script_if_statement_as_item(&mut self) -> PResult<'a, Option<Item>> {
+        use rustc_ast::tokenstream::{DelimSpan, TokenStream, TokenTree};
+
+        let lo = self.token.span;
+        self.bump(); // consume `if`
+
+        let mut cond_tokens = Vec::new();
+        let mut body_tokens = Vec::new();
+
+        // Collect condition tokens (everything before the first `{`)
+        while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
+            if let Some(tt) = self.collect_token_tree() {
+                cond_tokens.push(tt);
+            } else {
+                break;
+            }
+        }
+
+        // Collect the body block
+        if self.token == token::OpenBrace {
+            if let Some(tt) = self.collect_token_tree() {
+                body_tokens.push(tt);
+            }
+        }
+
+        // Handle else clauses
+        while self.token.is_keyword(kw::Else) {
+            // Collect the `else` keyword
+            body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
+            self.bump();
+
+            // Check for else-if
+            if self.token.is_keyword(kw::If) {
+                // Collect the `if` keyword
+                body_tokens.push(TokenTree::token_alone(self.token.kind.clone(), self.token.span));
+                self.bump();
+
+                // Collect the condition for else-if
+                while !self.check(exp!(Eof)) && self.token != token::OpenBrace {
+                    if let Some(tt) = self.collect_token_tree() {
+                        body_tokens.push(tt);
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Collect the else body block
+            if self.token == token::OpenBrace {
+                if let Some(tt) = self.collect_token_tree() {
+                    body_tokens.push(tt);
+                }
+            }
+        }
+
+        // Consume optional semicolon
+        let _ = self.eat(exp!(Semi));
+
+        let hi = self.prev_token.span;
+
+        // Build: __if!(cond ; { body } [else { body2 }])
+        // The semicolon separates condition from body for macro pattern matching
+        let mut all_tokens = cond_tokens;
+        all_tokens.push(TokenTree::token_alone(token::TokenKind::Semi, lo));
+        all_tokens.extend(body_tokens);
+
+        let if_path = ast::Path {
+            span: lo,
+            segments: thin_vec![ast::PathSegment::from_ident(Ident::new(sym::__if, lo))],
+            tokens: None,
+        };
+
+        let args = ast::DelimArgs {
+            dspan: DelimSpan::from_pair(lo, hi),
+            delim: Delimiter::Parenthesis,
+            tokens: TokenStream::new(all_tokens),
+        };
+
+        let mac = MacCall { path: if_path, args: Box::new(args) };
 
         Ok(Some(Item {
             attrs: ThinVec::new(),
