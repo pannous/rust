@@ -658,3 +658,326 @@ pub fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         tokens: None,
     })
 }
+
+/// Build the `approx_eq` function for script mode:
+/// ```ignore
+/// fn approx_eq(a: f64, b: f64) -> bool {
+///     (a - b).abs() < 1e-9_f64.max(a.abs() * 1e-9).max(b.abs() * 1e-9)
+/// }
+/// ```
+/// Uses relative epsilon for better precision with varying magnitudes.
+pub fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
+    let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
+
+    // Parameter a: f64
+    let a_param = ast::Param {
+        attrs: ThinVec::new(),
+        ty: Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::f64, call_site))),
+            span: call_site,
+            tokens: None,
+        }),
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                Ident::new(sym::a, call_site),
+                None,
+            ),
+            span: call_site,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span: call_site,
+        is_placeholder: false,
+    };
+
+    // Parameter b: f64
+    let b_param = ast::Param {
+        attrs: ThinVec::new(),
+        ty: Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::f64, call_site))),
+            span: call_site,
+            tokens: None,
+        }),
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                Ident::new(sym::b, call_site),
+                None,
+            ),
+            span: call_site,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span: call_site,
+        is_placeholder: false,
+    };
+
+    // Return type: bool
+    let ret_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
+        span: call_site,
+        tokens: None,
+    });
+
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([a_param, b_param]),
+            output: ast::FnRetTy::Ty(ret_ty),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    // Body: (a - b).abs() < 1e-9_f64.max(a.abs() * 1e-9).max(b.abs() * 1e-9)
+    // Build: a - b
+    let a_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::a, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let b_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::b, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // a - b
+    let diff = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Binary(
+            ast::BinOp { node: ast::BinOpKind::Sub, span: call_site },
+            a_expr.clone(),
+            b_expr.clone(),
+        ),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // (a - b).abs()
+    let diff_abs = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::abs, call_site)),
+            receiver: diff,
+            args: ThinVec::new(),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // 1e-9 literal
+    let epsilon = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Lit(token::Lit {
+            kind: token::LitKind::Float,
+            symbol: sym::float_1e_minus_9,
+            suffix: Some(sym::f64),
+        }),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // a.abs()
+    let a_abs = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::abs, call_site)),
+            receiver: a_expr.clone(),
+            args: ThinVec::new(),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // a.abs() * 1e-9
+    let a_rel_eps = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Binary(
+            ast::BinOp { node: ast::BinOpKind::Mul, span: call_site },
+            a_abs,
+            epsilon.clone(),
+        ),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // b.abs()
+    let b_abs = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::abs, call_site)),
+            receiver: b_expr.clone(),
+            args: ThinVec::new(),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // b.abs() * 1e-9
+    let b_rel_eps = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Binary(
+            ast::BinOp { node: ast::BinOpKind::Mul, span: call_site },
+            b_abs,
+            epsilon.clone(),
+        ),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // 1e-9.max(a.abs() * 1e-9)
+    let eps_max_a = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::max, call_site)),
+            receiver: epsilon,
+            args: ThinVec::from([a_rel_eps]),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // .max(b.abs() * 1e-9)
+    let tolerance = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::max, call_site)),
+            receiver: eps_max_a,
+            args: ThinVec::from([b_rel_eps]),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    // (a - b).abs() < tolerance
+    let comparison = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Binary(
+            ast::BinOp { node: ast::BinOpKind::Lt, span: call_site },
+            diff_abs,
+            tolerance,
+        ),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(comparison),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(sym::approx_eq, call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    Box::new(ast::Item {
+        attrs: vec![allow_dead_code].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
+
+/// Build math constants for script mode: τ, π
+pub fn build_math_constants(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+    let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
+    let mut items = ThinVec::new();
+
+    // const τ: f64 = std::f64::consts::TAU;
+    // const π: f64 = std::f64::consts::PI;
+
+    let make_const = |name: Symbol, const_name: Symbol| -> Box<ast::Item> {
+        // std::f64::consts::CONST_NAME
+        let const_path = ast::Path {
+            span: call_site,
+            segments: ThinVec::from([
+                ast::PathSegment::from_ident(Ident::new(sym::std, call_site)),
+                ast::PathSegment::from_ident(Ident::new(sym::f64, call_site)),
+                ast::PathSegment::from_ident(Ident::new(sym::consts, call_site)),
+                ast::PathSegment::from_ident(Ident::new(const_name, call_site)),
+            ]),
+            tokens: None,
+        };
+
+        let const_expr = Box::new(ast::Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::ExprKind::Path(None, const_path),
+            span: call_site,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        let const_ty = Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::f64, call_site))),
+            span: call_site,
+            tokens: None,
+        });
+
+        Box::new(ast::Item {
+            attrs: vec![allow_dead_code.clone()].into(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::ItemKind::Const(Box::new(ast::ConstItem {
+                defaultness: ast::Defaultness::Final,
+                ident: Ident::new(name, call_site),
+                generics: ast::Generics::default(),
+                ty: const_ty,
+                rhs: Some(ast::ConstItemRhs::Body(const_expr)),
+                define_opaque: None,
+            })),
+            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+            span: def_site,
+            tokens: None,
+        })
+    };
+
+    items.push(make_const(sym::tau, sym::TAU));
+    items.push(make_const(sym::pi, sym::PI));
+    // Also add the Greek letter versions
+    items.push(make_const(sym::tau_greek, sym::TAU));
+    items.push(make_const(sym::pi_greek, sym::PI));
+
+    items
+}

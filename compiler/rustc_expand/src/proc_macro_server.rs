@@ -207,6 +207,7 @@ impl FromInternal<(TokenStream, &mut Rustc<'_, '_>)> for Vec<TokenTree<TokenStre
                 Le => op("<="),
                 EqEq => op("=="),
                 Ne => op("!="),
+                ApproxEq => op("≈"),
                 Ge => op(">="),
                 Gt => op(">"),
                 AndAnd => op("&&"),

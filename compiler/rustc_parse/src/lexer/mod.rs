@@ -442,6 +442,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                         '≤' => Some(token::Le),  // U+2264 LESS-THAN OR EQUAL TO
                         '≥' => Some(token::Ge),  // U+2265 GREATER-THAN OR EQUAL TO
                         '≠' => Some(token::Ne),  // U+2260 NOT EQUAL TO
+                        '≈' => Some(token::ApproxEq),  // U+2248 ALMOST EQUAL TO
                         '…' => Some(token::DotDot), // U+2026 HORIZONTAL ELLIPSIS (range syntax)
                         _ => None,
                     } {

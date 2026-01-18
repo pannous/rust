@@ -175,7 +175,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_strings_auto_import (compile)
 [0;31m✗[0m test_struct (compile)
 [0;32m✓[0m test_synonyms_simple
-[0;31m✗[0m test_tau_pi_approx (compile)
+[0;32m✓[0m test_tau_pi_approx
 [0;32m✓[0m test_transform_synonyms
 [0;31m✗[0m test_truthy_and_complex (compile)
 [0;32m✓[0m test_truthy_and
@@ -199,5 +199,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m71 passed[0m, [0;31m123 failed[0m, 0 skipped
+Results: [0;32m72 passed[0m, [0;31m122 failed[0m, 0 skipped
 ========================================

@@ -316,6 +316,13 @@ impl<'a> Parser<'a> {
                 AssocOp::NullCoalesce => {
                     self.mk_expr(span, ExprKind::NullCoalesce(lhs, rhs))
                 }
+                AssocOp::ApproxEq => {
+                    // Transform `a ≈ b` into `approx_eq(a, b)` function call
+                    let fn_path = ast::Path::from_ident(Ident::new(sym::approx_eq, cur_op_span));
+                    let fn_expr = self.mk_expr(cur_op_span, ExprKind::Path(None, fn_path));
+                    let args = thin_vec![lhs, rhs];
+                    self.mk_expr(span, ExprKind::Call(fn_expr, args))
+                }
                 AssocOp::Cast | AssocOp::Range(_) => {
                     self.dcx().span_bug(span, "AssocOp should have been handled by special case")
                 }

@@ -1,10 +1,9 @@
 #!/usr/bin/env rust
 // Test τ ≈ 2π equality
-// import "math"
 
-put!("τ ≈ 2π:", τ ≈ 2*π)
+put!("τ ≈ 2π:", τ ≈ 2.0*π)
 put!("τ value:", τ)
-put!("2π value:", 2*π)
+put!("2π value:", 2.0*π)
 
 // Test some basic approximate equalities
 a := 3.14159

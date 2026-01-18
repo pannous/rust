@@ -389,6 +389,8 @@ pub enum TokenKind {
     EqEq,
     /// `!=`
     Ne,
+    /// `≈` (approximate equality)
+    ApproxEq,
     /// `>=`
     Ge,
     /// `>`
@@ -650,7 +652,7 @@ impl Token {
 
     pub fn is_punct(&self) -> bool {
         match self.kind {
-            Eq | Lt | Le | EqEq | Ne | Ge | Gt | AndAnd | OrOr | Bang | Tilde | Plus | Minus
+            Eq | Lt | Le | EqEq | Ne | ApproxEq | Ge | Gt | AndAnd | OrOr | Bang | Tilde | Plus | Minus
             | Star | Slash | Percent | Caret | And | Or | Shl | Shr | PlusEq | MinusEq | StarEq
             | SlashEq | PercentEq | CaretEq | AndEq | OrEq | ShlEq | ShrEq | At | Dot | DotDot
             | DotDotDot | DotDotEq | Comma | Semi | Colon | PathSep | ColonEq | RArrow | LArrow
@@ -1071,7 +1073,7 @@ impl Token {
             (SingleQuote, _) => return None,
 
             (
-                Le | EqEq | Ne | Ge | AndAnd | OrOr | Tilde | PlusEq | MinusEq | StarEq | SlashEq
+                Le | EqEq | Ne | ApproxEq | Ge | AndAnd | OrOr | Tilde | PlusEq | MinusEq | StarEq | SlashEq
                 | PercentEq | CaretEq | AndEq | OrEq | ShlEq | ShrEq | At | DotDotDot | DotDotEq
                 | Comma | Semi | PathSep | ColonEq | RArrow | LArrow | FatArrow | Pound | Dollar | Question
                 | QuestionQuestion | OpenParen | CloseParen | OpenBrace | CloseBrace | OpenBracket | CloseBracket

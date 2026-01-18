@@ -18,6 +18,8 @@ pub enum AssocOp {
     Range(RangeLimits),
     /// `??` null coalescing
     NullCoalesce,
+    /// `≈` approximate equality
+    ApproxEq,
 }
 
 #[derive(PartialEq, Debug)]
@@ -70,6 +72,7 @@ impl AssocOp {
             // `<-` should probably be `< -`
             token::LArrow => Some(Binary(BinOpKind::Lt)),
             token::QuestionQuestion => Some(NullCoalesce),
+            token::ApproxEq => Some(ApproxEq),
             _ if t.is_keyword(kw::As) => Some(Cast),
             _ if t.is_keyword(kw::In) => Some(Binary(BinOpKind::In)),
             _ => None,
@@ -84,6 +87,7 @@ impl AssocOp {
             Binary(bin_op) => bin_op.precedence(),
             Range(_) => ExprPrecedence::Range,
             NullCoalesce => ExprPrecedence::NullCoalesce,
+            ApproxEq => ExprPrecedence::Compare,
             Assign | AssignOp(_) => ExprPrecedence::Assign,
         }
     }
@@ -98,6 +102,7 @@ impl AssocOp {
             Cast => Fixity::Left,
             Range(_) => Fixity::None,
             NullCoalesce => Fixity::Right, // a ?? b ?? c == a ?? (b ?? c)
+            ApproxEq => Fixity::None, // comparison operators are non-associative
         }
     }
 
@@ -105,6 +110,7 @@ impl AssocOp {
         use AssocOp::*;
         match *self {
             Binary(binop) => binop.is_comparison(),
+            ApproxEq => true,
             Assign | AssignOp(_) | Cast | Range(_) | NullCoalesce => false,
         }
     }
@@ -113,7 +119,7 @@ impl AssocOp {
         use AssocOp::*;
         match *self {
             Assign | AssignOp(_) => true,
-            Cast | Binary(_) | Range(_) | NullCoalesce => false,
+            Cast | Binary(_) | Range(_) | NullCoalesce | ApproxEq => false,
         }
     }
 
@@ -140,7 +146,8 @@ impl AssocOp {
             AssignOp(_) | // `{ 42 } +=`
             // Equal | // `{ 42 } == { 42 }`    Accepting these here would regress incorrect
             // NotEqual | // `{ 42 } != { 42 }  struct literals parser recovery.
-            Cast // `{ 42 } as usize`
+            Cast | // `{ 42 } as usize`
+            ApproxEq // `{ 42 } ≈ 42.0`
         )
     }
 }

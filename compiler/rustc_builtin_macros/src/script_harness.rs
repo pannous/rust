@@ -126,6 +126,8 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     let truthy_helpers = transformer::build_truthy_helpers(def_site, call_site);
     let val_helpers = transformer::build_val_helpers(def_site, call_site);
     let exit_fn = transformer::build_exit_function(def_site, call_site);
+    let approx_eq_fn = transformer::build_approx_eq_function(def_site, call_site);
+    let math_constants = transformer::build_math_constants(def_site, call_site);
     let main_fn = build_main(def_site, main_stmts);
 
     // Rebuild crate with type aliases + script macros + helpers + module items + main function
@@ -136,6 +138,8 @@ fn wrap_in_main(krate: &mut ast::Crate, def_site: Span, call_site: Span) {
     krate.items.extend(truthy_helpers);
     krate.items.extend(val_helpers);
     krate.items.push(exit_fn);
+    krate.items.push(approx_eq_fn);
+    krate.items.extend(math_constants);
     krate.items.extend(module_items);
     krate.items.push(main_fn);
 }
