@@ -174,10 +174,10 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_string_var_spacing (compile)
 [0;31m✗[0m test_strings_auto_import (compile)
 [0;31m✗[0m test_struct (compile)
-[0;31m✗[0m test_synonyms_simple (compile)
+[0;32m✓[0m test_synonyms_simple
 [0;31m✗[0m test_tau_pi_approx (compile)
 [0;32m✓[0m test_transform_synonyms
-[0;31m✗[0m test_truthy_and_working (compile)
+[0;31m✗[0m test_truthy_and_complex (compile)
 [0;32m✓[0m test_truthy_and
 [0;32m✓[0m test_truthy_simple
 [0;32m✓[0m test_truthy
@@ -186,11 +186,11 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_try_assignment (compile)
 [0;31m✗[0m test_try_catch (compile)
 [0;31m✗[0m test_try_propagation (compile)
-[0;31m✗[0m test_typeof (exit 101)
+[0;32m✓[0m test_typeof
 [0;32m✓[0m test_unicode_ops
 [0;32m✓[0m test_unicode
 [0;31m✗[0m test_units (compile)
-[0;31m✗[0m test_unused_mut (compile)
+[0;32m✓[0m test_unused_mut
 [0;31m✗[0m test_user_defined_put (compile)
 [0;32m✓[0m test_while_loops
 [0;31m✗[0m test_wit_discover (compile)
@@ -199,5 +199,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m68 passed[0m, [0;31m126 failed[0m, 0 skipped
+Results: [0;32m71 passed[0m, [0;31m123 failed[0m, 0 skipped
 ========================================

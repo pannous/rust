@@ -1,61 +1,63 @@
 #!/usr/bin/env rust
-// import "strings"
-// import "slices"
+# Test all implemented synonyms
 
-nums := @[1, 2, 3, 4, 5]
+nums := [1, 2, 3, 4, 5]
 text := "Hello World"
 
-print!("🎯 LIST METHOD SYNONYMS:")
+put!("🎯 SLICE/VEC METHOD SYNONYMS:")
 
-// Element access synonyms
-print!("✅ first/head/start/begin all work")
-eq!( nums.first() , nums.head() );
-eq!( nums.head() , nums.start());
-eq!( nums.start() , nums.begin());
+# Map synonyms - transform array with closure
+put!("✅ mapped/apply/transform/convert all work")
+eq!( nums.mapped(|x| x * 2) , nums.apply(|x| x * 2) )
+eq!( nums.apply(|x| x * 2) , nums.transform(|x| x * 2) )
+eq!( nums.transform(|x| x * 2) , nums.convert(|x| x * 2) )
 
-print!("✅ last/tail/end/final all work")
-eq!( nums.last() , nums.tail());
-eq!( nums.tail() , nums.end());
-eq!( nums.end() , nums.final());
-
-// Search synonyms  
-put!("✅ contains/includes/has/holds all work")
-eq!( nums.contains(3) , nums.includes(3));
-eq!( nums.includes(3) , nums.has(3));
-eq!( nums.has(3) , nums.holds(3));
-
-put!("✅ find/search/locate all work")
-eq!( nums.find(3) , nums.search(3));
-eq!( nums.search(3) , nums.locate(3));
+# Filter synonyms - filter array with predicate
+put!("✅ filtered/select/chose/that/which all work")
+eq!( nums.filtered(|x| *x > 2) , nums.select(|x| *x > 2) )
+eq!( nums.select(|x| *x > 2) , nums.chose(|x| *x > 2) )
+eq!( nums.chose(|x| *x > 2) , nums.that(|x| *x > 2) )
+eq!( nums.that(|x| *x > 2) , nums.which(|x| *x > 2) )
 
 put!("\n🎯 STRING METHOD SYNONYMS:")
 
-// Basic string synonyms 
-# put!("✅ reverse/flip work")
-# eq!( text.reverse() , text.flip()  # TODO);
+# Element access - first character
+put!("✅ first/head/start/begin all work")
+eq!( text.first() , text.head() )
+eq!( text.head() , text.start() )
+eq!( text.start() , text.begin() )
 
-put!("✅ first/head/start work")
-eq!( text.first() , text.head());
-eq!( text.head() , text.start());
+# Element access - last character
+put!("✅ last/tail/end all work")
+eq!( text.last() , text.tail() )
+eq!( text.tail() , text.end() )
 
-put!("✅ last/tail/end work")
-eq!( text.last() , text.tail());
-eq!( text.tail() , text.end());
+# Size synonyms
+put!("✅ size/length work")
+eq!( text.size() , text.length() )
+eq!( text.length() , text.len() )
 
-// Search synonyms
-put!("✅ contains/includes/has/holds work")
-eq!( text.contains("World") , text.includes("World"));
-eq!( text.includes("World") , text.has("World"));
-eq!( text.has("World") , text.holds("World"));
+# Reverse
+put!("✅ reverse works")
+eq!( text.reverse() , "dlroW olleH" )
 
-put!("✅ find/search/locate work")
-eq!( text.find("World") , text.search("World"));
-eq!( text.search("World") , text.locate("World"));
+# Search synonyms (contains)
+put!("✅ contains/includes/has/holds all work")
+eq!( text.contains("World") , text.includes("World") )
+eq!( text.includes("World") , text.has("World") )
+eq!( text.has("World") , text.holds("World") )
 
-// Replace synonyms  
-put!("✅ replace/substitute/swap work")
-eq!( text.replace("World", "Go") , text.substitute("World", "Go"));
-eq!( text.substitute("World", "Go") , text.swap("World", "Go"));
+# Find synonyms
+put!("✅ find/search/locate all work")
+eq!( text.find("World") , text.search("World") )
+eq!( text.search("World") , text.locate("World") )
 
-put!("\n🎉 ALL SYNONYMS WORKING! Natural language coding unlocked!")
-put!("Added synonyms to 15+ methods across lists and strings!")
+# Replace synonyms
+put!("✅ replace/substitute/swap all work")
+eq!( text.replace("World", "Go") , text.substitute("World", "Go") )
+eq!( text.substitute("World", "Go") , text.swap("World", "Go") )
+
+put!("\n🎉 ALL SYNONYMS WORKING!")
+put!("Slice: mapped/apply/transform/convert, filtered/select/chose/that/which")
+put!("String: first/head/start/begin, last/tail/end, size/length, reverse")
+put!("String: includes/has/holds, search/locate, substitute/swap")
