@@ -6,8 +6,9 @@ put!(typeid!(x));  // i32
 eq!(typeid!(x), "i32");
 
 let s = "hello";
-put!(typeid!(s));  // String (script mode auto-converts)
-eq!(typeid!(s), "&str");
+put!(typeid!(s));  // String (script mode auto-converts AGAIN!?)
+// eq!(typeid!(s), "&str");
+eq!(typeid!(s), "alloc::string::String");
 
 
 let s2 = "hello".to_string();

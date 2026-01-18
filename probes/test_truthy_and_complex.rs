@@ -6,11 +6,11 @@ class User {
 
 // users := @[User{Name: "Bob", Age: 17}, User{Name: "Charlie", Age: 22}, User{Name: "Alice", Age: 20}]
 users := vec![User{Name: "Bob", Age: 17}, User{Name: "Charlie", Age: 22}, User{Name: "Alice", Age: 20}]
-user := users.chose(|u| u.Age > 18).first()
+let user = users.chose(|u| u.Age > 18).first()
 
 let result:string
-if user and user.Name {
-    result = user.Name
+if user and user.?Name {
+    result = user.?Name ?? "Anonymous"
 } else {
     result = "Anonymous"
 }

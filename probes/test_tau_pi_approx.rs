@@ -5,12 +5,17 @@ put!("τ ≈ 2π:", τ ≈ 2.0*π)
 put!("τ value:", τ)
 put!("2π value:", 2.0*π)
 
+assert!(τ ≈ 2.0*π)
+// assert!(τ ≈ 2*π)  // todo: fix int-float multiplication
+
 // Test some basic approximate equalities
 a := 3.14159
 b := 3.14160
 put!("3.14159 ≈ 3.14160:", a ≈ b)
+// assert!(a ≈ b) relative epsilon (1e-9) too low  todo: how to adjust?
 
 c := 0.1 + 0.2
 d := 0.3
 put!("(0.1 + 0.2) ≈ 0.3:", c ≈ d)
 put!("(0.1 + 0.2) == 0.3:", c == d)
+assert!(c ≈ d)
