@@ -224,8 +224,10 @@ impl<'a> Parser<'a> {
     }
 
     /// Check if current token could start a new statement
+    /// Note: Use is_non_reserved_ident() to avoid treating continuation keywords
+    /// like `else` as statement starters (they continue previous statements).
     fn token_could_start_statement(&self) -> bool {
-        self.token.is_ident()
+        self.token.is_non_reserved_ident()
             || self.token.is_keyword(kw::Let)
             || self.token.is_keyword(kw::Fn)
             || self.token.is_keyword(kw::If)
