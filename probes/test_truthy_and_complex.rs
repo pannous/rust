@@ -6,7 +6,7 @@ class User {
 
 // users := @[User{Name: "Bob", Age: 17}, User{Name: "Charlie", Age: 22}, User{Name: "Alice", Age: 20}]
 users := vec![User{Name: "Bob", Age: 17}, User{Name: "Charlie", Age: 22}, User{Name: "Alice", Age: 20}]
-let user = users.chose(|u| u.Age > 18).first()
+let user = users.chose(|u| u.Age > 18).first_cloned()
 
 let result:string
 if user and user.?Name {

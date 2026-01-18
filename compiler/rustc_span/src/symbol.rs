@@ -1124,6 +1124,7 @@ symbols! {
         filtered,
         find,
         first,
+        first_cloned,
         flags,
         float,
         float_to_int_unchecked,
