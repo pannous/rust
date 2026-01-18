@@ -4,10 +4,10 @@ Using: /opt/other/rust/rustc
 Mode: [0;33mall[0m (includes WIP files)
 
 [0;32m✓[0m test_add
-[0;31m✗[0m test_all_synonyms (compile)
+[0;32m✓[0m test_all_synonyms
 [0;32m✓[0m test_and_or
-[0;31m✗[0m test_array_1indexed (compile)
-[0;31m✗[0m test_array_like_slice (compile)
+[0;32m✓[0m test_array_1indexed
+[0;32m✓[0m test_array_like_slice
 [0;31m✗[0m test_as_cast_comprehensive (compile)
 [0;31m✗[0m test_as_cast_convert (compile)
 [0;31m✗[0m test_as_cast (compile)
@@ -52,6 +52,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_enum_string (compile)
 [0;31m✗[0m test_enum (compile)
 [0;31m✗[0m test_exclamation_syntax (compile)
+[0;32m✓[0m test_exit
 [0;32m✓[0m test_explicit_main
 [0;31m✗[0m test_fetch_debug (compile)
 [0;31m✗[0m test_fetch_debug2 (compile)
@@ -69,7 +70,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_global (compile)
 [0;32m✓[0m test_hash_index
 [0;32m✓[0m test_hash_minimal
-[0;31m✗[0m test_hash_with_if (compile)
+[0;32m✓[0m test_hash_with_if
 [0;31m✗[0m test_if_parse (compile)
 [0;32m✓[0m test_implicit_main
 [0;31m✗[0m test_import_bare_syntax (compile)
@@ -148,7 +149,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_script_complex
 [0;31m✗[0m test_shebang (compile)
 [0;31m✗[0m test_simple_for_range (compile)
-[0;31m✗[0m test_simple_hash_check (compile)
+[0;32m✓[0m test_simple_hash_check
 [0;31m✗[0m test_simple_printf (compile)
 [0;32m✓[0m test_simple
 [0;31m✗[0m test_slice_inference_core (compile)
@@ -174,7 +175,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_struct (compile)
 [0;31m✗[0m test_synonyms_simple (compile)
 [0;31m✗[0m test_tau_pi_approx (compile)
-[0;31m✗[0m test_transform_synonyms (compile)
+[0;32m✓[0m test_transform_synonyms
 [0;31m✗[0m test_truthy_and_working (compile)
 [0;31m✗[0m test_truthy_and (compile)
 [0;31m✗[0m test_truthy_simple (compile)
@@ -197,5 +198,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m59 passed[0m, [0;31m133 failed[0m, 0 skipped
+Results: [0;32m66 passed[0m, [0;31m127 failed[0m, 0 skipped
 ========================================

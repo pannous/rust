@@ -108,6 +108,27 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
 
     let mut items = ThinVec::new();
 
+    // Helper to build &str type
+    let str_ref_ty = || -> Box<ast::Ty> {
+        Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Ref(
+                None,
+                ast::MutTy {
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, span))),
+                        span,
+                        tokens: None,
+                    }),
+                    mutbl: ast::Mutability::Not,
+                },
+            ),
+            span,
+            tokens: None,
+        })
+    };
+
     // Helper to create a method signature that returns String
     let make_string_method = |name: &str| -> Box<ast::AssocItem> {
         let fn_sig = ast::FnSig {
@@ -224,11 +245,305 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
         })
     };
 
+    // Element access - first and synonyms
     items.push(make_string_method("first"));
+    items.push(make_string_method("head"));
+    items.push(make_string_method("start"));
+    items.push(make_string_method("begin"));
+
+    // Element access - last and synonyms
     items.push(make_string_method("last"));
+    items.push(make_string_method("tail"));
+    items.push(make_string_method("end"));
+
     items.push(make_string_method("reverse"));
     items.push(make_usize_method("size"));
     items.push(make_usize_method("length"));
+
+    // Helper to create method with &str param returning bool (for contains synonyms)
+    let make_contains_method = |name: &str| -> Box<ast::AssocItem> {
+        let fn_sig = ast::FnSig {
+            decl: Box::new(ast::FnDecl {
+                inputs: ThinVec::from([
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: Box::new(ast::Ty {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::TyKind::ImplicitSelf,
+                            span,
+                            tokens: None,
+                        }),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::with_dummy_span(kw::SelfLower).with_span_pos(span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: str_ref_ty(),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::new(sym::pat, span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                ]),
+                output: ast::FnRetTy::Ty(Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, span))),
+                    span,
+                    tokens: None,
+                })),
+            }),
+            header: ast::FnHeader::default(),
+            span,
+        };
+
+        let fn_def = ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(Symbol::intern(name), span),
+            generics: ast::Generics::default(),
+            sig: fn_sig,
+            contract: None,
+            body: None,
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        };
+
+        Box::new(ast::Item {
+            attrs: ThinVec::new(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            span,
+            tokens: None,
+        })
+    };
+
+    // Helper to create method with &str param returning Option<usize> (for find synonyms)
+    let make_find_method = |name: &str| -> Box<ast::AssocItem> {
+        // Build Option<usize> type
+        let option_usize = Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Path(
+                None,
+                ast::Path {
+                    span,
+                    segments: ThinVec::from([ast::PathSegment {
+                        ident: Ident::new(sym::Option, span),
+                        id: ast::DUMMY_NODE_ID,
+                        args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(
+                                Box::new(ast::Ty {
+                                    id: ast::DUMMY_NODE_ID,
+                                    kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::usize, span))),
+                                    span,
+                                    tokens: None,
+                                }),
+                            ))]),
+                        }))),
+                    }]),
+                    tokens: None,
+                },
+            ),
+            span,
+            tokens: None,
+        });
+
+        let fn_sig = ast::FnSig {
+            decl: Box::new(ast::FnDecl {
+                inputs: ThinVec::from([
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: Box::new(ast::Ty {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::TyKind::ImplicitSelf,
+                            span,
+                            tokens: None,
+                        }),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::with_dummy_span(kw::SelfLower).with_span_pos(span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: str_ref_ty(),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::new(sym::pat, span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                ]),
+                output: ast::FnRetTy::Ty(option_usize),
+            }),
+            header: ast::FnHeader::default(),
+            span,
+        };
+
+        let fn_def = ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(Symbol::intern(name), span),
+            generics: ast::Generics::default(),
+            sig: fn_sig,
+            contract: None,
+            body: None,
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        };
+
+        Box::new(ast::Item {
+            attrs: ThinVec::new(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            span,
+            tokens: None,
+        })
+    };
+
+    // Helper to create method with two &str params returning String (for replace synonyms)
+    let make_replace_method = |name: &str| -> Box<ast::AssocItem> {
+        let fn_sig = ast::FnSig {
+            decl: Box::new(ast::FnDecl {
+                inputs: ThinVec::from([
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: Box::new(ast::Ty {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::TyKind::ImplicitSelf,
+                            span,
+                            tokens: None,
+                        }),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::with_dummy_span(kw::SelfLower).with_span_pos(span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: str_ref_ty(),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::new(sym::from, span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                    ast::Param {
+                        attrs: ThinVec::new(),
+                        ty: str_ref_ty(),
+                        pat: Box::new(ast::Pat {
+                            id: ast::DUMMY_NODE_ID,
+                            kind: ast::PatKind::Ident(
+                                ast::BindingMode::NONE,
+                                Ident::new(sym::to, span),
+                                None,
+                            ),
+                            span,
+                            tokens: None,
+                        }),
+                        id: ast::DUMMY_NODE_ID,
+                        span,
+                        is_placeholder: false,
+                    },
+                ]),
+                output: ast::FnRetTy::Ty(Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::String, span))),
+                    span,
+                    tokens: None,
+                })),
+            }),
+            header: ast::FnHeader::default(),
+            span,
+        };
+
+        let fn_def = ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(Symbol::intern(name), span),
+            generics: ast::Generics::default(),
+            sig: fn_sig,
+            contract: None,
+            body: None,
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        };
+
+        Box::new(ast::Item {
+            attrs: ThinVec::new(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            span,
+            tokens: None,
+        })
+    };
+
+    // Search synonyms (contains is in std, these are synonyms)
+    items.push(make_contains_method("includes"));
+    items.push(make_contains_method("has"));
+    items.push(make_contains_method("holds"));
+
+    // Find synonyms (find is in std, these are synonyms)
+    items.push(make_find_method("search"));
+    items.push(make_find_method("locate"));
+
+    // Replace synonyms (replace is in std, these are synonyms)
+    items.push(make_replace_method("substitute"));
+    items.push(make_replace_method("swap"));
 
     items
 }
@@ -266,13 +581,28 @@ fn build_str_ext_impl_items(def_site: Span, call_site: Span) -> ThinVec<Box<ast:
         })
     };
 
-    // For first(): match self.chars().next() { Some(c) => &self[..c.len_utf8()], None => "" }
+    // Element access - first and synonyms
     let first_body = build_first_expr(call_site);
     items.push(build_impl_method_with_expr("first", true, first_body, def_site, call_site));
 
-    // For last(): match self.char_indices().last() { Some((i, _)) => &self[i..], None => "" }
+    let head_body = build_first_expr(call_site);
+    items.push(build_impl_method_with_expr("head", true, head_body, def_site, call_site));
+
+    let start_body = build_first_expr(call_site);
+    items.push(build_impl_method_with_expr("start", true, start_body, def_site, call_site));
+
+    let begin_body = build_first_expr(call_site);
+    items.push(build_impl_method_with_expr("begin", true, begin_body, def_site, call_site));
+
+    // Element access - last and synonyms
     let last_body = build_last_expr(call_site);
     items.push(build_impl_method_with_expr("last", true, last_body, def_site, call_site));
+
+    let tail_body = build_last_expr(call_site);
+    items.push(build_impl_method_with_expr("tail", true, tail_body, def_site, call_site));
+
+    let end_body = build_last_expr(call_site);
+    items.push(build_impl_method_with_expr("end", true, end_body, def_site, call_site));
 
     // For reverse(): self.chars().rev().collect()
     let reverse_body = build_reverse_expr(call_site);
@@ -285,6 +615,19 @@ fn build_str_ext_impl_items(def_site: Span, call_site: Span) -> ThinVec<Box<ast:
     // For length(): self.len()
     let length_body = method_call(self_expr(), "len", ThinVec::new());
     items.push(build_impl_method_with_expr("length", false, length_body, def_site, call_site));
+
+    // Search synonyms: self.contains(pat)
+    items.push(build_contains_impl("includes", def_site, call_site));
+    items.push(build_contains_impl("has", def_site, call_site));
+    items.push(build_contains_impl("holds", def_site, call_site));
+
+    // Find synonyms: self.find(pat)
+    items.push(build_find_impl("search", def_site, call_site));
+    items.push(build_find_impl("locate", def_site, call_site));
+
+    // Replace synonyms: self.replace(from, to)
+    items.push(build_replace_impl("substitute", def_site, call_site));
+    items.push(build_replace_impl("swap", def_site, call_site));
 
     items
 }
@@ -662,6 +1005,477 @@ fn build_impl_method_with_expr(
     };
 
     // Build body block with the expression
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(body_expr),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(Symbol::intern(name), call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
+
+/// Build contains synonym impl: fn name(&self, pat: &str) -> bool { self.contains(pat) }
+fn build_contains_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::AssocItem> {
+    use rustc_span::Symbol;
+
+    // Build &str type for pat parameter
+    let str_ref_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Ref(
+            None,
+            ast::MutTy {
+                ty: Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, call_site))),
+                    span: call_site,
+                    tokens: None,
+                }),
+                mutbl: ast::Mutability::Not,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::ImplicitSelf,
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::with_dummy_span(kw::SelfLower).with_span_pos(def_site),
+                            None,
+                        ),
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: def_site,
+                    is_placeholder: false,
+                },
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: str_ref_ty,
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::new(sym::pat, call_site),
+                            None,
+                        ),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: call_site,
+                    is_placeholder: false,
+                },
+            ]),
+            output: ast::FnRetTy::Ty(Box::new(ast::Ty {
+                id: ast::DUMMY_NODE_ID,
+                kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
+                span: call_site,
+                tokens: None,
+            })),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    // Build body: self.contains(pat)
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::with_dummy_span(kw::SelfLower).with_span_pos(call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let pat_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::pat, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::contains, call_site)),
+            receiver: self_expr,
+            args: ThinVec::from([pat_expr]),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(body_expr),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(Symbol::intern(name), call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
+
+/// Build find synonym impl: fn name(&self, pat: &str) -> Option<usize> { self.find(pat) }
+fn build_find_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::AssocItem> {
+    use rustc_span::Symbol;
+
+    // Build &str type for pat parameter
+    let str_ref_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Ref(
+            None,
+            ast::MutTy {
+                ty: Box::new(ast::Ty {
+                    id: ast::DUMMY_NODE_ID,
+                    kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, call_site))),
+                    span: call_site,
+                    tokens: None,
+                }),
+                mutbl: ast::Mutability::Not,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    // Build Option<usize> type
+    let option_usize = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(
+            None,
+            ast::Path {
+                span: call_site,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Option, call_site),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(ast::AngleBracketedArgs {
+                        span: call_site,
+                        args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(
+                            Box::new(ast::Ty {
+                                id: ast::DUMMY_NODE_ID,
+                                kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::usize, call_site))),
+                                span: call_site,
+                                tokens: None,
+                            }),
+                        ))]),
+                    }))),
+                }]),
+                tokens: None,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::ImplicitSelf,
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::with_dummy_span(kw::SelfLower).with_span_pos(def_site),
+                            None,
+                        ),
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: def_site,
+                    is_placeholder: false,
+                },
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: str_ref_ty,
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::new(sym::pat, call_site),
+                            None,
+                        ),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: call_site,
+                    is_placeholder: false,
+                },
+            ]),
+            output: ast::FnRetTy::Ty(option_usize),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    // Build body: self.find(pat)
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::with_dummy_span(kw::SelfLower).with_span_pos(call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let pat_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::pat, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::find, call_site)),
+            receiver: self_expr,
+            args: ThinVec::from([pat_expr]),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_block = Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(body_expr),
+            span: def_site,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(Symbol::intern(name), call_site),
+        generics: ast::Generics::default(),
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
+
+/// Build replace synonym impl: fn name(&self, from: &str, to: &str) -> String { self.replace(from, to) }
+fn build_replace_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::AssocItem> {
+    use rustc_span::Symbol;
+
+    // Helper to build &str type
+    let str_ref_ty = || -> Box<ast::Ty> {
+        Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Ref(
+                None,
+                ast::MutTy {
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, call_site))),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    mutbl: ast::Mutability::Not,
+                },
+            ),
+            span: call_site,
+            tokens: None,
+        })
+    };
+
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::ImplicitSelf,
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::with_dummy_span(kw::SelfLower).with_span_pos(def_site),
+                            None,
+                        ),
+                        span: def_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: def_site,
+                    is_placeholder: false,
+                },
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: str_ref_ty(),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::new(sym::from, call_site),
+                            None,
+                        ),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: call_site,
+                    is_placeholder: false,
+                },
+                ast::Param {
+                    attrs: ThinVec::new(),
+                    ty: str_ref_ty(),
+                    pat: Box::new(ast::Pat {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::PatKind::Ident(
+                            ast::BindingMode::NONE,
+                            Ident::new(sym::to, call_site),
+                            None,
+                        ),
+                        span: call_site,
+                        tokens: None,
+                    }),
+                    id: ast::DUMMY_NODE_ID,
+                    span: call_site,
+                    is_placeholder: false,
+                },
+            ]),
+            output: ast::FnRetTy::Ty(Box::new(ast::Ty {
+                id: ast::DUMMY_NODE_ID,
+                kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::String, call_site))),
+                span: call_site,
+                tokens: None,
+            })),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    // Build body: self.replace(from, to)
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::with_dummy_span(kw::SelfLower).with_span_pos(call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let from_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::from, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let to_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(sym::to, call_site))),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MethodCall(Box::new(ast::MethodCall {
+            seg: ast::PathSegment::from_ident(Ident::new(sym::replace, call_site)),
+            receiver: self_expr,
+            args: ThinVec::from([from_expr, to_expr]),
+            span: call_site,
+        })),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
     let body_block = Box::new(ast::Block {
         stmts: ThinVec::from([ast::Stmt {
             id: ast::DUMMY_NODE_ID,
