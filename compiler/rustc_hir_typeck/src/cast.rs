@@ -797,6 +797,9 @@ impl<'a, 'tcx> CastCheck<'tcx> {
             // These types have invariants! can't cast into them.
             (_, Int(CEnum) | FnPtr) => Err(CastError::NonScalar),
 
+            // int -> Bool (custom extension: allow integer to bool cast)
+            (Int(I) | Int(U(_)), Int(Bool)) => Ok(CastKind::PrimIntCast),
+
             // * -> Bool
             (_, Int(Bool)) => Err(CastError::CastToBool),
 

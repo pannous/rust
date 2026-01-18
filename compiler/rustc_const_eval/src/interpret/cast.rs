@@ -160,7 +160,7 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
         cast_to: TyAndLayout<'tcx>,
     ) -> InterpResult<'tcx, ImmTy<'tcx, M::Provenance>> {
         assert!(src.layout.ty.is_integral() || src.layout.ty.is_char() || src.layout.ty.is_bool());
-        assert!(cast_to.ty.is_floating_point() || cast_to.ty.is_integral() || cast_to.ty.is_char());
+        assert!(cast_to.ty.is_floating_point() || cast_to.ty.is_integral() || cast_to.ty.is_char() || cast_to.ty.is_bool());
 
         interp_ok(ImmTy::from_scalar(
             self.cast_from_int_like(src.to_scalar(), src.layout, cast_to.ty)?,
@@ -307,7 +307,9 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
             // u8 -> char
             ty::Char => Scalar::from_u32(u8::try_from(v).unwrap().into()),
 
-            // Casts to bool are not permitted by rustc, no need to handle them here.
+            // int -> bool (custom extension: 0 = false, non-zero = true)
+            ty::Bool => Scalar::from_bool(v != 0),
+
             _ => span_bug!(self.cur_span(), "invalid int to {} cast", cast_ty),
         })
     }
