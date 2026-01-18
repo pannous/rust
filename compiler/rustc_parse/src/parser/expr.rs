@@ -690,11 +690,10 @@ impl<'a> Parser<'a> {
         let parser_snapshot_before_type = self.clone();
         let cast_expr = match self.parse_as_cast_ty() {
             Ok(rhs) => {
-                // Script mode: transform conversion casts like `x as string` to method calls
-                if self.is_script_mode() {
-                    if let Some(converted) = self.try_script_cast_conversion(&lhs, &rhs, lhs_span, op_span) {
-                        return Ok(converted);
-                    }
+                // Transform conversion casts like `x as string` to method calls
+                // Safe globally since string/int/float/rune aren't standard Rust types
+                if let Some(converted) = self.try_script_cast_conversion(&lhs, &rhs, lhs_span, op_span) {
+                    return Ok(converted);
                 }
                 mk_expr(self, lhs, rhs)
             }
