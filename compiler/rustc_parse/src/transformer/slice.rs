@@ -58,10 +58,18 @@ pub fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         span: call_site,
     };
 
-    // Build trait methods
+    // Build trait methods - mapped and synonyms
     let mut trait_items = ThinVec::new();
-    trait_items.push(build_map_trait_item(call_site, t_ident));
-    trait_items.push(build_filter_trait_item(call_site, t_ident));
+    trait_items.push(build_map_trait_item(call_site, t_ident, sym::mapped));
+    trait_items.push(build_map_trait_item(call_site, t_ident, sym::apply));
+    trait_items.push(build_map_trait_item(call_site, t_ident, sym::transform));
+    trait_items.push(build_map_trait_item(call_site, t_ident, sym::convert));
+    // filtered and synonyms
+    trait_items.push(build_filter_trait_item(call_site, t_ident, sym::filtered));
+    trait_items.push(build_filter_trait_item(call_site, t_ident, sym::select));
+    trait_items.push(build_filter_trait_item(call_site, t_ident, sym::chose));
+    trait_items.push(build_filter_trait_item(call_site, t_ident, sym::that));
+    trait_items.push(build_filter_trait_item(call_site, t_ident, sym::which));
 
     let trait_def = ast::Trait {
         constness: ast::Const::No,
@@ -88,8 +96,8 @@ pub fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
     items
 }
 
-/// Build: fn map<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
-fn build_map_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+/// Build: fn <name><U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
+fn build_map_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
     let u_ident = Ident::new(sym::U, span);
     let f_ident = Ident::new(sym::F, span);
 
@@ -225,7 +233,7 @@ fn build_map_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
             defaultness: ast::Defaultness::Final,
-            ident: Ident::new(sym::mapped, span),
+            ident: Ident::new(method_name, span),
             generics: method_generics,
             sig: fn_sig,
             contract: None,
@@ -239,8 +247,8 @@ fn build_map_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
     })
 }
 
-/// Build: fn filter<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
-fn build_filter_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+/// Build: fn <name><F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
+fn build_filter_trait_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
     let f_ident = Ident::new(sym::F, span);
 
     // &T type
@@ -382,7 +390,7 @@ fn build_filter_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
             defaultness: ast::Defaultness::Final,
-            ident: Ident::new(sym::filtered, span),
+            ident: Ident::new(method_name, span),
             generics: method_generics,
             sig: fn_sig,
             contract: None,
@@ -500,8 +508,17 @@ fn build_blanket_impl(
     };
 
     let mut impl_items = ThinVec::new();
-    impl_items.push(build_map_impl_item(call_site, t_ident));
-    impl_items.push(build_filter_impl_item(call_site, t_ident));
+    // Map synonyms
+    impl_items.push(build_map_impl_item(call_site, t_ident, sym::mapped));
+    impl_items.push(build_map_impl_item(call_site, t_ident, sym::apply));
+    impl_items.push(build_map_impl_item(call_site, t_ident, sym::transform));
+    impl_items.push(build_map_impl_item(call_site, t_ident, sym::convert));
+    // Filter synonyms
+    impl_items.push(build_filter_impl_item(call_site, t_ident, sym::filtered));
+    impl_items.push(build_filter_impl_item(call_site, t_ident, sym::select));
+    impl_items.push(build_filter_impl_item(call_site, t_ident, sym::chose));
+    impl_items.push(build_filter_impl_item(call_site, t_ident, sym::that));
+    impl_items.push(build_filter_impl_item(call_site, t_ident, sym::which));
 
     let impl_def = ast::Impl {
         generics: impl_generics,
@@ -527,7 +544,7 @@ fn build_blanket_impl(
 }
 
 /// Build map impl: self.iter().cloned().map(f).collect()
-fn build_map_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+fn build_map_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
     let u_ident = Ident::new(sym::U, span);
     let f_ident = Ident::new(sym::F, span);
 
@@ -660,7 +677,7 @@ fn build_map_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
             defaultness: ast::Defaultness::Final,
-            ident: Ident::new(sym::mapped, span),
+            ident: Ident::new(method_name, span),
             generics: method_generics,
             sig: fn_sig,
             contract: None,
@@ -674,8 +691,8 @@ fn build_map_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
     })
 }
 
-/// Build filter impl: self.iter().filter(|x| f(x)).cloned().collect()
-fn build_filter_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+/// Build filter impl: self.as_ref().iter().filter(|x| f(x)).cloned().collect()
+fn build_filter_impl_item(span: Span, t_ident: Ident, method_name: rustc_span::Symbol) -> Box<ast::AssocItem> {
     let f_ident = Ident::new(sym::F, span);
 
     let t_ref_ty = Box::new(ast::Ty {
@@ -815,7 +832,7 @@ fn build_filter_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
             defaultness: ast::Defaultness::Final,
-            ident: Ident::new(sym::filtered, span),
+            ident: Ident::new(method_name, span),
             generics: method_generics,
             sig: fn_sig,
             contract: None,
