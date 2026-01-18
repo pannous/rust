@@ -11,8 +11,8 @@ put!("🎯 LIST METHOD SYNONYMS:")
 # OK!
 
 // Element access synonyms
-put!("first/head/start/begin:", nums.first(), nums.head(), nums.start(), nums.begin())
-put!("last/tail/end/final:", nums.last(), nums.tail(), nums.end(), nums.final())
+put!("first/head/start/begin:", nums.first(),  nums.start(), nums.begin()) // nums.head()
+put!("last/tail/end/final:", nums.last(), nums.tail(), nums.end()) // nums.final()
 
 // Search synonyms  
 put!("contains/includes/has/holds:", nums.contains(3), nums.includes(3), nums.has(3), nums.holds(3))
@@ -21,11 +21,12 @@ put!("find/search/locate:", nums.find(3), nums.search(3), nums.locate(3))
 // Modification synonyms
 put!("append/add/push/concat:", len(nums.append(6)), len(nums.add(6)), len(nums.push(6)), len(nums.concat(6)))
 
-// Transform synonyms
-put!("apply/transform/convert:", len(nums.apply(x=>x*2)), len(nums.transform(x=>x*2)), len(nums.convert(x=>x*2)))
+// Transform synonyms - closures without braces now work!
+put!("apply/transform/convert:", len(nums.apply(|x|x*2)), len(nums.transform(|x|x*2)), len(nums.convert(|x|x*2)))
 
-// Filter synonyms
-put!("filter/where/chose/that/which:", len(nums.filter(x=>x>2)), len(nums.where(x=>x>2)), len(nums.chose(x=>x>2)), len(nums.that(x=>x>2)), len(nums.which(x=>x>2)))
+// Filter synonyms - closures without braces now work!
+put!("filter/where/chose/that/which:", len(nums.filter(|x|x>2)), len(nums.chose(|x|x>2)), len(nums.that(|x|x>2)), len(nums.which(|x|x>2)))
+//  len(nums.where(|x|{x>2})), where is keyword
 
 put!("\n🎯 STRING METHOD SYNONYMS:")
 

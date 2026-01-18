@@ -20,7 +20,7 @@ use thin_vec::{ThinVec, thin_vec};
 use tracing::debug;
 
 use super::diagnostics::{ConsumeClosingDelim, dummy_arg};
-use super::ty::{AllowPlus, RecoverQPath, RecoverReturnSign};
+use super::ty::{AllowGoStyleReturn, AllowPlus, RecoverQPath, RecoverReturnSign};
 use super::{
     AttrWrapper, ExpKeywordPair, ExpTokenPair, FollowedByType, ForceCollect, Parser, PathStyle,
     Recovered, Trailing, UsePreAttrPos,
@@ -2885,6 +2885,7 @@ impl<'a> Parser<'a> {
                         AllowPlus::Yes,
                         RecoverQPath::Yes,
                         RecoverReturnSign::Yes,
+                        AllowGoStyleReturn::No,
                     ) {
                         Ok(ty_span) => ty_span.span().shrink_to_hi(),
                         Err(parse_error) => {
@@ -3381,7 +3382,7 @@ impl<'a> Parser<'a> {
     ) -> PResult<'a, Box<FnDecl>> {
         Ok(Box::new(FnDecl {
             inputs: self.parse_fn_params(fn_parse_mode)?,
-            output: self.parse_ret_ty(ret_allow_plus, RecoverQPath::Yes, recover_return_sign)?,
+            output: self.parse_ret_ty(ret_allow_plus, RecoverQPath::Yes, recover_return_sign, AllowGoStyleReturn::Yes)?,
         }))
     }
 

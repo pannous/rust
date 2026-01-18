@@ -33,7 +33,7 @@ use tracing::instrument;
 
 use super::diagnostics::SnapshotParser;
 use super::pat::{CommaRecoveryMode, Expected, RecoverColon, RecoverComma};
-use super::ty::{AllowPlus, RecoverQPath, RecoverReturnSign};
+use super::ty::{AllowGoStyleReturn, AllowPlus, RecoverQPath, RecoverReturnSign};
 use super::{
     AttrWrapper, BlockMode, ClosureSpans, ExpTokenPair, ForceCollect, Parser, PathStyle,
     Restrictions, SemiColonMode, SeqSep, TokenType, Trailing, UsePreAttrPos,
@@ -3041,8 +3041,10 @@ impl<'a> Parser<'a> {
             args
         };
         let arg_span = self.prev_token.span.with_lo(arg_start);
+        // AllowGoStyleReturn::No - closures must use `->` for return types since
+        // `|x| x.method()` would otherwise interpret `x` as a return type
         let output =
-            self.parse_ret_ty(AllowPlus::Yes, RecoverQPath::Yes, RecoverReturnSign::Yes)?;
+            self.parse_ret_ty(AllowPlus::Yes, RecoverQPath::Yes, RecoverReturnSign::Yes, AllowGoStyleReturn::No)?;
 
         Ok((Box::new(FnDecl { inputs, output }), arg_span))
     }

@@ -12,7 +12,7 @@ use rustc_span::{BytePos, Ident, Span, kw, sym};
 use thin_vec::ThinVec;
 use tracing::debug;
 
-use super::ty::{AllowPlus, RecoverQPath, RecoverReturnSign};
+use super::ty::{AllowGoStyleReturn, AllowPlus, RecoverQPath, RecoverReturnSign};
 use super::{Parser, Restrictions, TokenType};
 use crate::ast::{PatKind, TyKind};
 use crate::errors::{
@@ -450,7 +450,7 @@ impl<'a> Parser<'a> {
                     };
                     let inputs_span = lo.to(self.prev_token.span);
                     let output =
-                        self.parse_ret_ty(AllowPlus::No, RecoverQPath::No, RecoverReturnSign::No)?;
+                        self.parse_ret_ty(AllowPlus::No, RecoverQPath::No, RecoverReturnSign::No, AllowGoStyleReturn::No)?;
                     let span = ident.span.to(self.prev_token.span);
                     ParenthesizedArgs { span, inputs, inputs_span, output }.into()
                 };

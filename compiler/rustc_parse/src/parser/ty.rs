@@ -82,6 +82,15 @@ enum AllowCVariadic {
     No,
 }
 
+/// Whether to allow Go-style return types like `def foo() int { }` (no arrow).
+/// Must be disabled for closures because `|x| x.method()` would incorrectly
+/// interpret `x` as a return type.
+#[derive(Copy, Clone, PartialEq)]
+pub(super) enum AllowGoStyleReturn {
+    Yes,
+    No,
+}
+
 /// Determine if the given token can begin a bound assuming it follows Rust 2015 identifier `dyn`.
 ///
 /// In Rust 2015, `dyn` is a contextual keyword, not a full one.
@@ -238,6 +247,7 @@ impl<'a> Parser<'a> {
         allow_plus: AllowPlus,
         recover_qpath: RecoverQPath,
         recover_return_sign: RecoverReturnSign,
+        allow_go_style: AllowGoStyleReturn,
     ) -> PResult<'a, FnRetTy> {
         let lo = self.prev_token.span;
         Ok(if self.eat(exp!(RArrow)) {
@@ -268,15 +278,15 @@ impl<'a> Parser<'a> {
                 RecoverQuestionMark::Yes,
             )?;
             FnRetTy::Ty(ty)
-        } else if self.is_script_mode()
+        } else if allow_go_style == AllowGoStyleReturn::Yes
+            && self.is_script_mode()
             && self.token.can_begin_type()
             && self.token.kind != token::OpenBrace
             && !self.token.is_keyword(kw::Where)
         {
             // Go-style return type: `def foo() int { ... }` without `->`
-            // NOTE: Must stay script-mode only! Cannot make global because closures break:
-            // `|x| x.method()` - the `x` after closure param matches can_begin_type(),
-            // so parser incorrectly interprets it as a return type.
+            // Disabled for closures because `|x| x.method()` would incorrectly
+            // interpret `x` as a return type.
             let ty = self.parse_ty_common(
                 allow_plus,
                 AllowCVariadic::No,
@@ -1514,7 +1524,7 @@ impl<'a> Parser<'a> {
         let inputs: ThinVec<_> =
             self.parse_fn_params(&mode)?.into_iter().map(|input| input.ty).collect();
         let inputs_span = inputs_lo.to(self.prev_token.span);
-        let output = self.parse_ret_ty(AllowPlus::No, RecoverQPath::No, RecoverReturnSign::No)?;
+        let output = self.parse_ret_ty(AllowPlus::No, RecoverQPath::No, RecoverReturnSign::No, AllowGoStyleReturn::No)?;
         let args = ast::ParenthesizedArgs {
             span: fn_path_segment.span().to(self.prev_token.span),
             inputs,
