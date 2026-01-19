@@ -701,7 +701,7 @@ impl SourceMap {
         //     ---------- correct span
         let prev_source = self.span_to_prev_source(sp).ok()?;
         for ws in &[" ", "\t", "\n"] {
-            let pat = pat.to_owned() + ws;
+            let pat: String = pat.to_owned() + *ws;
             if let Some(pat_pos) = prev_source.rfind(&pat) {
                 let just_after_pat_pos = pat_pos + pat.len() - 1;
                 let just_after_pat_plus_ws = if include_whitespace {

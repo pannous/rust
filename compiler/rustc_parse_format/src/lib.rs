@@ -275,21 +275,10 @@ impl<'input> Iterator for Parser<'input> {
                         None
                     }
                 }
-                '%' if self.mode == ParseMode::Format => {
-                    // C-style printf format specifier
-                    self.input_vec_index += 1;
-                    if let Some((_, i, '%')) = self.peek() {
-                        self.input_vec_index += 1;
-                        // double percent escape: "%%"
-                        Some(Piece::Lit(self.string(i)))
-                    } else if let Some(arg) = self.printf_argument(start, end) {
-                        // Successfully parsed a printf-style format specifier
-                        Some(Piece::NextArgument(Box::new(arg)))
-                    } else {
-                        // Not a valid printf specifier, treat % as literal
-                        Some(Piece::Lit(self.string(idx)))
-                    }
-                }
+                // NOTE: printf-style parsing disabled for now - causes compatibility issues
+                // with existing crates that use %f, %d etc. in string literals.
+                // TODO: Re-enable with opt-in flag or smarter detection
+                // '%' if self.mode == ParseMode::Format => { ... }
                 _ => Some(Piece::Lit(self.string(idx))),
             }
         } else {
@@ -497,9 +486,10 @@ impl<'input> Parser<'input> {
                 '{' | '}' => {
                     return &self.input[start..i];
                 }
-                '%' if self.mode == ParseMode::Format => {
-                    return &self.input[start..i];
-                }
+                // printf-style parsing disabled - see note above
+                // '%' if self.mode == ParseMode::Format => {
+                //     return &self.input[start..i];
+                // }
                 '\n' if self.is_source_literal => {
                     self.input_vec_index += 1;
                     self.line_spans.push(self.cur_line_start..r.start);
@@ -519,6 +509,8 @@ impl<'input> Parser<'input> {
 
     /// Parses a printf-style format specifier like %d, %s, %10.2f, etc.
     /// Returns None if the sequence after % is not a valid printf specifier.
+    /// NOTE: Currently disabled due to compatibility issues - see note in next() method
+    #[allow(dead_code)]
     fn printf_argument(&mut self, percent_start: usize, _percent_end: usize) -> Option<Argument<'input>> {
         let start_idx = self.input_vec_index;
         let position_span_start = percent_start;
@@ -725,6 +717,7 @@ impl<'input> Parser<'input> {
     }
 
     /// Parse an integer for printf-style format (returns usize, not u16)
+    #[allow(dead_code)]
     fn printf_integer(&mut self) -> Option<usize> {
         let mut cur: usize = 0;
         let mut found = false;
