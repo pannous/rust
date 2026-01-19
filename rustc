@@ -1,1 +1,3 @@
-build/host/stage1/bin/rustc
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+exec "$SCRIPT_DIR/build/aarch64-apple-darwin/stage1/bin/rustc" "$@"

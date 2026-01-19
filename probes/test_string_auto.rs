@@ -2,7 +2,8 @@
 // Test that “foo’ automatically becomes String in script mode
 
 // Test 1: Simple string literal type
-let name = “Alice”
+let name = “Alice” // Unicode characters '“' (Left Double Quotation Mark) and '”' (Right Double Quotation Mark) => String!
+// let name : String = “Alice”
 // let name = "Alice" // still &str!!!
 eq!( std::any::type_name_of_val(&name), "alloc::string::String" )
 eq!( typeid!(name), "alloc::string::String" )

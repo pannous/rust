@@ -3,9 +3,9 @@
 use std::collections::HashMap;
 
 // Basic map
-myMap := @{"a": 1, "b": 2, "c": 3}
-put!("Map: {:?}\n", myMap)
-put!("Map length: {}\n", myMap.len())
+my_map := @{"a": 1, "b": 2, "c": 3}
+put!("Map: {:?}\n", my_map)
+put!("Map length: {}\n", my_map.len())
 
 // Map with different types
 ages := @{"alice": 30, "bob": 25}

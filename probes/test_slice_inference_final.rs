@@ -4,7 +4,9 @@
 
 // Basic type inference
 ints := [1, 2, 3]
-eq!( ints , @[1, 2, 3]);
+ys := @[1, 2, 3]
+eq!( ints , ys); // works
+eq!( ints , @[1, 2, 3]); // no rules expected this token in macro call ???
 put!("✓ Integer slice inference: [1, 2, 3] → []int")
 
 strings := ["hello", "world"]  
