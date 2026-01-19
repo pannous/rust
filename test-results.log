@@ -13,8 +13,6 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_as_cast_list (compile)
 [0;32m✓[0m test_as_cast
 [0;32m✓[0m test_assert
-[0;31m✗[0m test_assign_fetch (compile)
-[0;31m✗[0m test_assign_fetch2 (compile)
 [0;32m✓[0m test_at_map
 [0;31m✗[0m test_at_vec (compile)
 [0;32m✓[0m test_auto_return
@@ -138,7 +136,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_power
 [0;32m✓[0m test_precedence
 [0;31m✗[0m test_print_comparison (compile)
-[0;32m✓[0m test_printf_format
+[0;31m✗[0m test_printf_format (compile)
 [0;31m✗[0m test_printf (compile)
 [0;32m✓[0m test_put_eq
 [0;31m✗[0m test_put_no_import (compile)
@@ -199,5 +197,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m82 passed[0m, [0;31m112 failed[0m, 0 skipped
+Results: [0;32m81 passed[0m, [0;31m111 failed[0m, 0 skipped
 ========================================
