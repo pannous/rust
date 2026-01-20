@@ -1,4 +1,5 @@
 // ignore-tidy-filelength
+#![allow(dead_code)]  // Some structs kept for potential future use
 
 use std::borrow::Cow;
 use std::path::PathBuf;
@@ -318,6 +319,7 @@ pub(crate) struct DoCatchSyntaxRemoved {
     pub span: Span,
 }
 
+// Kept for potential future use; .4 is now valid syntax in this fork
 #[derive(Diagnostic)]
 #[diag(parse_float_literal_requires_integer_part)]
 pub(crate) struct FloatLiteralRequiresIntegerPart {

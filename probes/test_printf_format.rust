@@ -1,6 +1,9 @@
 #!/usr/bin/env rust
 put!("⏺ The test_printf_format test now fails because we disabled the printf feature - that's the expected trade-off.");
 put!("342ee0901ab 2026-01-19 09:54 fix: Disable printf-style format parsing to fix self-host build");
+put!("the %d, %f etc. feature in format strings caused compatibility issues with external crates like jiff that use %f as literal text");
+// re-enable printf with smarter detection ? how
+
 // Basic printf-style specifiers
 println!("Integer: %d", 42);
 println!("String: %s", "hello");

@@ -11,6 +11,7 @@ Philosophy:
 • optional trailing semicolon;
 • and, or, not, xor, ¬, ∧, ∨ synonyms for archaic symbols && || !
 • ≤ ≥ ≠ and … range operators
+• Approximate equality   .1 + .2 ≈ .3    2π ~ τ  (tau baked in!)
 • shebang support: #!/usr/bin/env rust
 • run rust as scripts with implicit main
 • ./probes/test_main.rs

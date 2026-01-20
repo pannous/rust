@@ -53,40 +53,40 @@ mkdir -p "$TEMP_DIR"
 
 # Known-working files (compile AND run successfully)
 WORKING_FILES=(
- test_add.rs
- test_and_or.rs
- test_at_vec.rs
- test_box.rs
- test_check_reverse.rs
- test_comments.rs
- test_const_pow.rs
- test_debug_imports.rs
- test_for_loop.rs
- test_main.rs
- test_minimal_conflict.rs
- test_normal_rust.rs
- test_not.rs
- test_null_coalesce.rs
- test_optional_chain.rs
- test_optional_syntax.rs
- test_pow3.rs
- test_power.rs
- test_precedence.rs
- test_put_eq.rs
- test_put.rs
- test_script_complex.rs
- test_simple.rs
- test_string_auto.rs
- test_string_format_chain.rs
- test_string_format_simple.rs
- test_string_macro.rs
- test_string_ops.rs
- test_string_replace.rs
- test_string_reverse.rs
- test_string_special.rs
- test_unicode_ops.rs
- test_unused_mut.rs
- test_with_main.rs
+ test_add.rust
+ test_and_or.rust
+ test_at_vec.rust
+ test_box.rust
+ test_check_reverse.rust
+ test_comments.rust
+ test_const_pow.rust
+ test_debug_imports.rust
+ test_for_loop.rust
+ test_main.rust
+ test_minimal_conflict.rust
+ test_normal_rust.rust
+ test_not.rust
+ test_null_coalesce.rust
+ test_optional_chain.rust
+ test_optional_syntax.rust
+ test_pow3.rust
+ test_power.rust
+ test_precedence.rust
+ test_put_eq.rust
+ test_put.rust
+ test_script_complex.rust
+ test_simple.rust
+ test_string_auto.rust
+ test_string_format_chain.rust
+ test_string_format_simple.rust
+ test_string_macro.rust
+ test_string_ops.rust
+ test_string_replace.rust
+ test_string_reverse.rust
+ test_string_special.rust
+ test_unicode_ops.rust
+ test_unused_mut.rust
+ test_with_main.rust
 )
 
 is_working_file() {
@@ -108,7 +108,7 @@ fi
 
 if $LIST_FAILING; then
     echo "Files that fail to compile (WIP/need features):"
-    for f in "$SCRIPT_DIR"/test_*.rs; do
+    for f in "$SCRIPT_DIR"/test_*.rust; do
         name=$(basename "$f")
         is_working_file "$name" || echo "  $name"
     done
@@ -122,15 +122,15 @@ FAILED_TESTS=()
 
 compile_test() {
     local file="$1"
-    local name=$(basename "$file" .rs)
+    local name=$(basename "$file" .rust)
     local output_bin="$TEMP_DIR/$name"
 
-    "$RUSTC" "$file" -o "$output_bin" 2>&1
+    "$RUSTC" "$file" -o "$output_bin" -A unused 2>&1
 }
 
 run_test() {
     local file="$1"
-    local name=$(basename "$file" .rs)
+    local name=$(basename "$file" .rust)
     local output_bin="$TEMP_DIR/$name"
 
     if $VERBOSE; then
@@ -216,7 +216,7 @@ if $QUICK_MODE; then
         run_test "$file" || true
     done
 else
-    for file in "$SCRIPT_DIR"/test_*.rs; do
+    for file in "$SCRIPT_DIR"/test_*.rust; do
         [[ -f "$file" ]] || continue
         name=$(basename "$file")
 
