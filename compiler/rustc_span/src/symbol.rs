@@ -1194,6 +1194,7 @@ symbols! {
         fsub_algebraic,
         fsub_fast,
         full,
+        fun,
         fundamental,
         fused_iterator,
         future,

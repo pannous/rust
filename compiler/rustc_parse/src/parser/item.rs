@@ -3230,16 +3230,16 @@ impl<'a> Parser<'a> {
         } else {
             &[exp!(Gen), exp!(Const), exp!(Async), exp!(Unsafe), exp!(Safe), exp!(Extern)]
         };
-        // In script mode, also accept `def` as synonym for `fn`
+        // In script mode, also accept `def` and `fun` as synonyms for `fn`
         let is_fn_kw = self.check_keyword_case(exp!(Fn), case)
-            || (self.is_script_mode() && self.token.is_ident_named(sym::def));
-        is_fn_kw // Definitely an `fn` or `def`.
+            || (self.is_script_mode() && (self.token.is_ident_named(sym::def) || self.token.is_ident_named(sym::fun)));
+        is_fn_kw // Definitely an `fn`, `def`, or `fun`.
             // `$qual fn` or `$qual $qual`:
             || quals.iter().any(|&exp| self.check_keyword_case(exp, case))
                 && self.look_ahead(1, |t| {
-                    // `$qual fn` or `$qual def`, e.g. `const fn` or `async fn`.
+                    // `$qual fn` or `$qual def` or `$qual fun`, e.g. `const fn` or `async fn`.
                     t.is_keyword_case(kw::Fn, case)
-                        || (self.is_script_mode() && t.is_ident_named(sym::def))
+                        || (self.is_script_mode() && (t.is_ident_named(sym::def) || t.is_ident_named(sym::fun)))
                     // Two qualifiers `$qual $qual` is enough, e.g. `async unsafe`.
                     || (
                         (
@@ -3360,11 +3360,11 @@ impl<'a> Parser<'a> {
             Some(CoroutineKind::Async { .. }) | None => {}
         }
 
-        // In script mode, also accept `def` as synonym for `fn`
+        // In script mode, also accept `def` and `fun` as synonyms for `fn`
         let ate_fn = if self.eat_keyword_case(exp!(Fn), case) {
             true
-        } else if self.is_script_mode() && self.token.is_ident_named(sym::def) {
-            self.bump(); // consume `def`
+        } else if self.is_script_mode() && (self.token.is_ident_named(sym::def) || self.token.is_ident_named(sym::fun)) {
+            self.bump(); // consume `def` or `fun`
             true
         } else {
             false
