@@ -1201,8 +1201,16 @@ impl Cursor<'_> {
     }
 
     // Eats the suffix of the literal, e.g. "u8".
+    // Only eats ASCII identifiers to allow Julia-style implicit multiplication: 2π -> 2 * π
     fn eat_literal_suffix(&mut self) {
-        self.eat_identifier();
+        // Only eat ASCII identifier starts (not Unicode like Greek letters)
+        let c = self.first();
+        if !c.is_ascii_alphabetic() && c != '_' {
+            return;
+        }
+        self.bump();
+        // Continue eating ASCII identifier characters
+        self.eat_while(|c| c.is_ascii_alphanumeric() || c == '_');
     }
 
     // Eats the identifier. Note: succeeds on `_`, which isn't a valid

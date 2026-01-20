@@ -1,11 +1,13 @@
 #!/usr/bin/env rust
 // Test τ ≈ 2π equality
 
-put!("τ ≈ 2π:", τ ≈ 2.0*π)
+put!("τ ≈ 2.0π (implicit mult):", τ ≈ 2.0π)  // Julia-style: 2π -> 2*π
+put!("τ ≈ 2.0*π:", τ ≈ 2.0*π)
 put!("τ value:", τ)
 put!("2π value:", 2.0*π)
 
 assert!(τ ≈ 2.0*π)
+assert!(τ ≈ 2.0π)  // implicit multiplication works!
 // assert!(τ ≈ 2*π)  // todo: fix int-float multiplication
 
 // Test some basic approximate equalities

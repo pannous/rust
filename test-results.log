@@ -176,7 +176,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_try_catch (compile)
 [0;31m✗[0m test_try_propagation (compile)
 [0;32m✓[0m test_typeof
-[0;31m✗[0m test_unicode_ops (exit 101)
+[0;31m✗[0m test_unicode_ops (compile)
 [0;32m✓[0m test_unicode
 [0;31m✗[0m test_units (compile)
 [0;32m✓[0m test_unused_mut

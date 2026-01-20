@@ -972,7 +972,15 @@ impl<'a> Parser<'a> {
                     token::OpenParen => self.parse_expr_fn_call(lo, e),
                     token::OpenBracket => self.parse_expr_index(lo, e)?,
                     token::Pound => self.parse_expr_hash_index(lo, e)?,
-                    _ => return Ok(e),
+                    _ => {
+                        // Julia-style implicit multiplication: 2π -> 2 * π
+                        // Only for numeric literals followed by non-reserved identifiers
+                        if self.is_implicit_multiplication_context(&e) {
+                            self.parse_implicit_multiplication(lo, e)?
+                        } else {
+                            return Ok(e);
+                        }
+                    }
                 }
             }
         });
@@ -986,6 +994,34 @@ impl<'a> Parser<'a> {
             expr.attrs.extend(attrs)
         }
         res
+    }
+
+    /// Check if current context allows implicit multiplication (Julia-style: 2π -> 2*π)
+    fn is_implicit_multiplication_context(&self, e: &Expr) -> bool {
+        // Only for numeric literals
+        let is_numeric = matches!(
+            &e.kind,
+            ExprKind::Lit(token::Lit { kind: token::Integer | token::Float, .. })
+        );
+        if !is_numeric {
+            return false;
+        }
+        // Next token must be a non-reserved identifier
+        self.token.is_non_reserved_ident()
+    }
+
+    /// Parse implicit multiplication: 2π -> 2 * π
+    fn parse_implicit_multiplication(
+        &mut self,
+        lo: Span,
+        lhs: Box<Expr>,
+    ) -> PResult<'a, Box<Expr>> {
+        // Parse the identifier as an expression
+        let rhs = self.parse_expr_prefix(AttrWrapper::empty())?;
+        let span = lo.to(rhs.span);
+        // Create multiplication: lhs * rhs
+        let binop = BinOp { node: BinOpKind::Mul, span: lhs.span.between(rhs.span) };
+        Ok(self.mk_expr(span, ExprKind::Binary(binop, lhs, rhs)))
     }
 
     pub(super) fn parse_dot_suffix_expr(
