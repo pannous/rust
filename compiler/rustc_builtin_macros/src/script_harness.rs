@@ -101,6 +101,7 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     let type_aliases = build_type_aliases(call_site);
     let script_macros = transformer::build_script_macros(def_site, call_site);
     let string_helpers = transformer::build_string_helpers(def_site, call_site);
+    let debug_string_fn = transformer::build_debug_string_helper(def_site, call_site);
     let slice_helpers = transformer::build_slice_ext(def_site, call_site);
     let truthy_helpers = transformer::build_truthy_helpers(def_site, call_site);
     let val_helpers = transformer::build_val_helpers(def_site, call_site);
@@ -117,6 +118,7 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     krate.items.extend(type_aliases);
     krate.items.extend(script_macros);
     krate.items.extend(string_helpers);
+    krate.items.push(debug_string_fn);
     krate.items.extend(slice_helpers);
     krate.items.extend(truthy_helpers);
     krate.items.extend(val_helpers);

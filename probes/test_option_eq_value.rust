@@ -1,0 +1,30 @@
+#!/usr/bin/env rust
+
+// Test Option<T> == T and Option<&T> == T comparisons
+
+// Option<T> == T for primitives
+assert!(Some(5) == 5);
+assert!(Some(3) != 5);
+let nono: Option<i32> = None;
+assert!(nono != 5);
+
+// Option<&T> == T (the aList.first() case)
+let nums = [1, 2, 3];
+assert!(nums.first() == 1);
+assert!(nums.first() != 2);
+
+let empty: [i32; 0] = [];
+assert!(empty.first() != 1);
+
+// Works with different numeric types
+assert!(Some(42u8) == 42u8);
+assert!(Some(3.14f64) == 3.14);
+assert!(Some(true) == true);
+assert!(Some('x') == 'x');
+
+// Works with &str
+let words = ["hello", "world"];
+assert!(words.first() == "hello");
+assert!(Some("test") == "test");
+
+println!("All Option == T tests passed!");

@@ -1,0 +1,5 @@
+#!/usr/bin/env rust
+xs := [1, 2, 3, 4, 5]
+// evens := xs.filter(x => x%2 == 0) // ok: help: use `select` for slice operations in script mode
+evens := xs.select(x => x%2 == 0)
+put!(evens)

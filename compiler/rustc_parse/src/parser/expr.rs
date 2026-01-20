@@ -4879,9 +4879,9 @@ impl<'a> Parser<'a> {
 
         let span = lhs_span.to(op_span).to(target_ty.span);
 
-        // `x as string` → `x.to_string()`
+        // `x as string` → `__debug_string(&x)` for Debug-based string conversion
         if type_name == sym::string {
-            return Some(self.mk_method_call(lhs.clone(), sym::to_string, ThinVec::new(), span));
+            return Some(self.mk_debug_string_call(lhs.clone(), span));
         }
 
         // String literal `as int` → parse to integer
@@ -4953,6 +4953,32 @@ impl<'a> Parser<'a> {
                 args,
                 span,
             })),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        })
+    }
+
+    /// Build `__debug_string(&expr)` for Debug-based string conversion
+    fn mk_debug_string_call(&self, expr: Box<Expr>, span: Span) -> Box<Expr> {
+        // Create &expr (reference)
+        let ref_expr = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::AddrOf(ast::BorrowKind::Ref, ast::Mutability::Not, expr),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Create __debug_string(&expr) call
+        let fn_path = self.mk_expr(span, ExprKind::Path(
+            None,
+            Path::from_ident(Ident::new(sym::__debug_string, span))
+        ));
+
+        Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::Call(fn_path, thin_vec![ref_expr]),
             span,
             attrs: ThinVec::new(),
             tokens: None,

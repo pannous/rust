@@ -423,6 +423,7 @@ symbols! {
         __n,
         __v,
         __awaitee,
+        __debug_string,
         __null_coalesce,
         __optional_chain,
         __try_var,

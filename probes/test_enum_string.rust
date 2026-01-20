@@ -1,14 +1,15 @@
 #!/usr/bin/env rust
-// #[derive(Debug, Clone, PartialEq)]
+#![allow(unused)]
+// #[derive(Debug, Clone, PartialEq)]  // todo automatic to_string Display how??
 enum State { OK, ERROR, PENDING }
 use State::*;
 put!("Testing enum String() method:")
 
 // Test normal cases
 let mut s:State = OK
-put!("OK.String() = %v\n", s)
-eqs!( s as string , "OK");
-// eq!( s as string , "OK");
+put!("OK.String() = %v\n", s) // wait, this works? Then the following should also work.
+eqs!( s , "OK");
+eq!( s as string , "OK"); // I see can we have sprintf("{}", s) as fallback?
 
 // s = ERROR
 // put!("ERROR.String() = %s\n", s.String())

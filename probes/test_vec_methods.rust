@@ -1,0 +1,30 @@
+#!/usr/bin/env rust
+// Test Vec extension methods: shift, sortDesc
+
+aList := vec![1, 2, 3]
+eq!( aList[0] , 1);
+
+// Test shift - removes and returns first element
+let first = aList.shift();
+put!("shift result: %v\n", first)
+eq!( first , Some(1));
+eq!( aList.len() , 2);
+eq!( aList[0] , 2);
+
+// Test sortDesc - returns sorted copy in descending order
+bList := vec![3, 1, 4, 1, 5, 9, 2, 6]
+let sorted = bList.sortDesc();
+put!("sortDesc result: %v\n", sorted)
+eq!( sorted[0] , 9);
+eq!( sorted[1] , 6);
+eq!( sorted[7] , 1);
+// Original unchanged
+eq!( bList[0] , 3);
+
+// Test shift on empty vec
+emptyList := vec![] as Vec<i32>
+let empty_shift = emptyList.shift();
+put!("shift on empty: %v\n", empty_shift)
+eq!( empty_shift , None);
+
+put!("All Vec method tests passed!\n")

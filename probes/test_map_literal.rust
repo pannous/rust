@@ -10,3 +10,6 @@ put!("person = %v\n", person)
 # Test homogeneous map
 coords := {x: 10, y: 20, z: 30}
 put!("coords = %v\n", coords)
+// eq!(coords.x, 10)
+// eq!(coords.y, 20)
+// eq!(coords.z, person.age) # Accessing age from the previous map

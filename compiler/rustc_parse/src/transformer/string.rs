@@ -4,9 +4,190 @@
 
 use rustc_ast as ast;
 use rustc_span::{Ident, Span, kw, sym};
-use thin_vec::ThinVec;
+use thin_vec::{ThinVec, thin_vec};
 
 use super::create_allow_attr;
+
+/// Build the __debug_string helper function for Debug-based string conversion.
+/// Generates:
+/// ```ignore
+/// fn __debug_string<T: ::std::fmt::Debug>(x: &T) -> String {
+///     format!("{:?}", x)
+/// }
+/// ```
+pub fn build_debug_string_helper(def_site: Span, call_site: Span) -> Box<ast::Item> {
+    let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
+
+    // Build generic parameter: T: ::std::fmt::Debug
+    let debug_bound = ast::GenericBound::Trait(
+        ast::PolyTraitRef {
+            bound_generic_params: ThinVec::new(),
+            modifiers: ast::TraitBoundModifiers::NONE,
+            trait_ref: ast::TraitRef {
+                path: ast::Path {
+                    span: call_site,
+                    segments: thin_vec![
+                        ast::PathSegment::from_ident(Ident::new(sym::std, call_site)),
+                        ast::PathSegment::from_ident(Ident::new(sym::fmt, call_site)),
+                        ast::PathSegment::from_ident(Ident::new(sym::Debug, call_site)),
+                    ],
+                    tokens: None,
+                },
+                ref_id: ast::DUMMY_NODE_ID,
+            },
+            span: call_site,
+            parens: ast::Parens::No,
+        },
+    );
+
+    let t_param = ast::GenericParam {
+        id: ast::DUMMY_NODE_ID,
+        ident: Ident::new(sym::T, call_site),
+        attrs: ThinVec::new(),
+        bounds: vec![debug_bound],
+        is_placeholder: false,
+        kind: ast::GenericParamKind::Type { default: None },
+        colon_span: None,
+    };
+
+    let generics = ast::Generics {
+        params: thin_vec![t_param],
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span: def_site,
+        },
+        span: def_site,
+    };
+
+    // Build parameter: x: &T
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::T, call_site))),
+        span: call_site,
+        tokens: None,
+    });
+
+    let ref_t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Ref(
+            None,
+            ast::MutTy {
+                ty: t_ty,
+                mutbl: ast::Mutability::Not,
+            },
+        ),
+        span: call_site,
+        tokens: None,
+    });
+
+    let x_param = ast::Param {
+        attrs: ThinVec::new(),
+        ty: ref_t_ty,
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                Ident::new(sym::x, call_site),
+                None,
+            ),
+            span: call_site,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span: call_site,
+        is_placeholder: false,
+    };
+
+    // Return type: String
+    let string_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::String, call_site))),
+        span: call_site,
+        tokens: None,
+    });
+
+    let fn_sig = ast::FnSig {
+        decl: Box::new(ast::FnDecl {
+            inputs: thin_vec![x_param],
+            output: ast::FnRetTy::Ty(string_ty),
+        }),
+        header: ast::FnHeader::default(),
+        span: def_site,
+    };
+
+    // Build body: format!("{:?}", x)
+    // We use a macro call for format!
+    let format_mac = ast::MacCall {
+        path: ast::Path::from_ident(Ident::new(sym::format, call_site)),
+        args: Box::new(ast::DelimArgs {
+            dspan: ast::tokenstream::DelimSpan::from_single(call_site),
+            delim: ast::token::Delimiter::Parenthesis,
+            tokens: {
+                use ast::token::{Lit, LitKind, TokenKind};
+                use ast::tokenstream::{TokenStream, TokenTree};
+                TokenStream::new(vec![
+                    // "{:?}"
+                    TokenTree::token_alone(
+                        TokenKind::Literal(Lit {
+                            kind: LitKind::Str,
+                            symbol: sym::empty_braces_debug,
+                            suffix: None,
+                        }),
+                        call_site,
+                    ),
+                    // ,
+                    TokenTree::token_alone(TokenKind::Comma, call_site),
+                    // x
+                    TokenTree::token_alone(
+                        TokenKind::Ident(sym::x, ast::token::IdentIsRaw::No),
+                        call_site,
+                    ),
+                ])
+            },
+        }),
+    };
+
+    let format_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::MacCall(Box::new(format_mac)),
+        span: call_site,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let body_block = Box::new(ast::Block {
+        stmts: thin_vec![ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(format_expr),
+            span: def_site,
+        }],
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span: def_site,
+        tokens: None,
+    });
+
+    let fn_def = ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        ident: Ident::new(sym::__debug_string, call_site),
+        generics,
+        sig: fn_sig,
+        contract: None,
+        body: Some(body_block),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    };
+
+    Box::new(ast::Item {
+        attrs: vec![allow_dead_code].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Fn(Box::new(fn_def)),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    })
+}
 
 /// Build ScriptStrExt trait and impl for &str.
 /// Generates:
