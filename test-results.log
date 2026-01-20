@@ -37,19 +37,15 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_ellipsis
 [0;32m✓[0m test_enum_string
 [0;32m✓[0m test_enum
-[0;31m✗[0m test_exclamation_syntax (compile)
+[0;32m✓[0m test_exclamation_syntax
 [0;32m✓[0m test_exit
 [0;32m✓[0m test_explicit_main
 [0;32m✓[0m test_filter_select_simple
 [0;32m✓[0m test_filter_suggestion
-[0;31m✗[0m test_filter_synonyms (compile)
-[0;31m✗[0m test_float_add (compile)
-[0;32m✓[0m test_fmt
-[0;31m✗[0m test_fn (compile)
-[0;31m✗[0m test_for_in_key_value (compile)
-[0;31m✗[0m test_for_loop (compile)
-[0;31m✗[0m test_global_debug (compile)
-[0;31m✗[0m test_global (compile)
+[0;32m✓[0m test_filter_synonyms
+[0;32m✓[0m test_for_in_key_value
+[0;32m✓[0m test_for_key_in
+[0;32m✓[0m test_for_loop
 [0;32m✓[0m test_hash_index
 [0;32m✓[0m test_hash_minimal
 [0;32m✓[0m test_hash_with_if
@@ -59,7 +55,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_in_operator_auto_import (compile)
 [0;31m✗[0m test_in_operator_maps (compile)
 [0;32m✓[0m test_in_operator_rune_strings
-[0;31m✗[0m test_in_operator_slices (compile)
+[0;32m✓[0m test_in_operator_slices
 [0;31m✗[0m test_in_operator_strings (compile)
 [0;32m✓[0m test_in_operator
 [0;32m✓[0m test_increment_decrement
@@ -79,7 +75,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_list_map
 [0;31m✗[0m test_list_methods_broken (compile)
 [0;31m✗[0m test_list_methods (compile)
-[0;31m✗[0m test_list_shift (compile)
+[0;31m✗[0m test_list_shift (exit 101)
 [0;31m✗[0m test_list_synonyms_only (compile)
 [0;32m✓[0m test_list_typed
 [0;32m✓[0m test_list
@@ -177,5 +173,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m94 passed[0m, [0;31m78 failed[0m, 0 skipped
+Results: [0;32m99 passed[0m, [0;31m69 failed[0m, 0 skipped
 ========================================

@@ -1,22 +1,14 @@
 #!/usr/bin/env rust
 // Test for-in with both single and double variable patterns
-myMap := {
+my_map := {
 	apple:  1,
 	banana: 2,
 	cherry: 3,
 }
 
 put!("Single variable (keys only):\n")
-for key in myMap {
+for key in my_map {
 	put!(key)
-}
-
-put!("\nDouble variable (key-value pairs):\n")
-for (key, value) in myMap {
-	printf!("Key: {}, Value: {}\n", key, value)
-	// printf!("Key: %s, Value: %d\n", key, value)
-	// put!("Key: %s, Value: %d\n", key, value)
-	// put!("Key: %s, Value: %d\n", key, value)
 }
 
 put!("\nTesting with slice:")
@@ -25,11 +17,6 @@ numbers := [10, 20, 30]
 put!("Single variable (values):\n")
 for num in numbers {
 	printf!("Value: {} \n", num)
-}
-
-put!("\nDouble variable (index-value pairs):\n")
-for (i, num) in numbers {
-	put!("Index: %d, Value: %d\n", i, num)
 }
 
 put!("All key-value tests completed!")

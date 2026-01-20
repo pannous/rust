@@ -430,6 +430,10 @@ pub(crate) fn format_expr(
             Err(RewriteError::Unknown)
         }
         ast::ExprKind::Err(_) | ast::ExprKind::Dummy => Err(RewriteError::Unknown),
+        // Custom Rust extensions - format as-is for now
+        ast::ExprKind::OptionalField(..)
+        | ast::ExprKind::OptionalMethodCall(..)
+        | ast::ExprKind::NullCoalesce(..) => Ok(context.snippet(expr.span).to_owned()),
     };
 
     expr_rw

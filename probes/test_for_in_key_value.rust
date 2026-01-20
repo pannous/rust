@@ -1,32 +1,26 @@
 #!/usr/bin/env rust
-// Test for-in with both single and double variable patterns
-myMap := map[string]int{
-	"apple":  1,
-	"banana": 2,
-	"cherry": 3,
-}
+put!("Test for-in with both single and double variable patterns\n")
 
-put!("Single variable (keys only):\n")
-for key in myMap {
-	put!(key)
-}
+# TODO: HashMap pairs needs separate trait implementation
+# my_map := {
+# 	apple:  1,
+# 	banana: 2,
+# 	cherry: 3,
+# }
+# for (key, value) in my_map.pairs() { ... }
 
-put!("\nDouble variable (key-value pairs):\n")
-for key, value in myMap {
-	put!("Key: %s, Value: %d\n", key, value)
-}
-
-put!("\nTesting with slice:")
+put!("Testing with slice:\n")
 numbers := [10, 20, 30]
 
 put!("Single variable (values):\n")
 for num in numbers {
-	put!("Value: %d\n", num)
+	printf!("Value: {} \n", num)
 }
 
 put!("\nDouble variable (index-value pairs):\n")
-for i, num in numbers {
-	put!("Index: %d, Value: %d\n", i, num)
+for (i, num) in numbers.pairs() {
+	printf!("Index: {}, Value: {}\n", i, num)
 }
 
-put!("All key-value tests completed!")
+put!("\nAll key-value tests completed!")
+

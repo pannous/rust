@@ -531,7 +531,11 @@ pub(crate) fn is_block_expr(context: &RewriteContext<'_>, expr: &ast::Expr, repr
         | ast::ExprKind::Use(..)
         | ast::ExprKind::Type(..)
         | ast::ExprKind::Yield(..)
-        | ast::ExprKind::Underscore => false,
+        | ast::ExprKind::Underscore
+        // Custom Rust extensions
+        | ast::ExprKind::OptionalField(..)
+        | ast::ExprKind::OptionalMethodCall(..)
+        | ast::ExprKind::NullCoalesce(..) => false,
     }
 }
 

@@ -70,6 +70,10 @@ pub fn build_slice_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
     trait_items.push(build_filter_trait_item(call_site, t_ident, sym::which));
     // first_cloned - returns Option<T> (owned first element)
     trait_items.push(build_first_cloned_trait_item(call_site, t_ident));
+    // shift - alias for first_cloned (for arrays, returns first without mutation)
+    trait_items.push(build_shift_slice_trait_item(call_site, t_ident));
+    // pairs - returns Vec<(usize, T)> for enumerate-like iteration
+    trait_items.push(build_pairs_trait_item(call_site, t_ident));
 
     let trait_def = ast::Trait {
         constness: ast::Const::No,
@@ -486,6 +490,166 @@ fn build_first_cloned_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocIt
     })
 }
 
+/// Build: fn shift(&self) -> Option<T>; (alias for first_cloned on slices)
+fn build_shift_slice_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
+        span,
+        tokens: None,
+    });
+
+    let option_t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(
+            None,
+            ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Option, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(t_ty),
+                            )]),
+                        },
+                    ))),
+                }]),
+                tokens: None,
+            },
+        ),
+        span,
+        tokens: None,
+    });
+
+    let method_generics = ast::Generics {
+        params: ThinVec::new(),
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span,
+        },
+        span,
+    };
+
+    let self_param = build_ref_self_param(span);
+    let fn_sig = ast::FnSig {
+        header: ast::FnHeader::default(),
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([self_param]),
+            output: ast::FnRetTy::Ty(option_t_ty),
+        }),
+        span,
+    };
+
+    Box::new(ast::AssocItem {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(sym::shift, span),
+            generics: method_generics,
+            sig: fn_sig,
+            contract: None,
+            body: None,
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        })),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    })
+}
+
+/// Build: fn pairs(&self) -> Vec<(usize, T)>;
+fn build_pairs_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
+        span,
+        tokens: None,
+    });
+
+    let usize_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::usize, span))),
+        span,
+        tokens: None,
+    });
+
+    let tuple_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Tup(ThinVec::from([usize_ty, t_ty])),
+        span,
+        tokens: None,
+    });
+
+    let vec_tuple_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(
+            None,
+            ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Vec, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(tuple_ty),
+                            )]),
+                        },
+                    ))),
+                }]),
+                tokens: None,
+            },
+        ),
+        span,
+        tokens: None,
+    });
+
+    let method_generics = ast::Generics {
+        params: ThinVec::new(),
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span,
+        },
+        span,
+    };
+
+    let self_param = build_self_param(span);
+    let fn_sig = ast::FnSig {
+        header: ast::FnHeader::default(),
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([self_param]),
+            output: ast::FnRetTy::Ty(vec_tuple_ty),
+        }),
+        span,
+    };
+
+    Box::new(ast::AssocItem {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(sym::pairs, span),
+            generics: method_generics,
+            sig: fn_sig,
+            contract: None,
+            body: None,
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        })),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    })
+}
+
 /// Build impl<T: Clone, S: AsRef<[T]>> ScriptSliceExt<T> for S
 fn build_blanket_impl(
     def_site: Span,
@@ -599,6 +763,8 @@ fn build_blanket_impl(
     impl_items.push(build_filter_impl_item(call_site, t_ident, sym::that));
     impl_items.push(build_filter_impl_item(call_site, t_ident, sym::which));
     impl_items.push(build_first_cloned_impl_item(call_site, t_ident));
+    impl_items.push(build_shift_slice_impl_item(call_site, t_ident));
+    impl_items.push(build_pairs_impl_item(call_site, t_ident));
 
     let impl_def = ast::Impl {
         generics: impl_generics,
@@ -1009,12 +1175,326 @@ fn build_first_cloned_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocIte
     })
 }
 
+/// Build shift impl for slices: self.as_ref().first().cloned() (same as first_cloned)
+fn build_shift_slice_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
+        span,
+        tokens: None,
+    });
+
+    let option_t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(
+            None,
+            ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Option, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(t_ty),
+                            )]),
+                        },
+                    ))),
+                }]),
+                tokens: None,
+            },
+        ),
+        span,
+        tokens: None,
+    });
+
+    let method_generics = ast::Generics {
+        params: ThinVec::new(),
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span,
+        },
+        span,
+    };
+
+    let self_param = build_ref_self_param(span);
+    let fn_sig = ast::FnSig {
+        header: ast::FnHeader::default(),
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([self_param]),
+            output: ast::FnRetTy::Ty(option_t_ty),
+        }),
+        span,
+    };
+
+    let body = build_first_cloned_body(span);
+
+    Box::new(ast::AssocItem {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(sym::shift, span),
+            generics: method_generics,
+            sig: fn_sig,
+            contract: None,
+            body: Some(body),
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        })),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    })
+}
+
+/// Build pairs impl: self.as_ref().iter().enumerate().map(|(i, v)| (i, v.clone())).collect()
+fn build_pairs_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem> {
+    let t_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(t_ident)),
+        span,
+        tokens: None,
+    });
+
+    let usize_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::usize, span))),
+        span,
+        tokens: None,
+    });
+
+    let tuple_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Tup(ThinVec::from([usize_ty, t_ty])),
+        span,
+        tokens: None,
+    });
+
+    let vec_tuple_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Path(
+            None,
+            ast::Path {
+                span,
+                segments: ThinVec::from([ast::PathSegment {
+                    ident: Ident::new(sym::Vec, span),
+                    id: ast::DUMMY_NODE_ID,
+                    args: Some(Box::new(ast::GenericArgs::AngleBracketed(
+                        ast::AngleBracketedArgs {
+                            span,
+                            args: ThinVec::from([ast::AngleBracketedArg::Arg(
+                                ast::GenericArg::Type(tuple_ty),
+                            )]),
+                        },
+                    ))),
+                }]),
+                tokens: None,
+            },
+        ),
+        span,
+        tokens: None,
+    });
+
+    let method_generics = ast::Generics {
+        params: ThinVec::new(),
+        where_clause: ast::WhereClause {
+            has_where_token: false,
+            predicates: ThinVec::new(),
+            span,
+        },
+        span,
+    };
+
+    let self_param = build_self_param(span);
+    let fn_sig = ast::FnSig {
+        header: ast::FnHeader::default(),
+        decl: Box::new(ast::FnDecl {
+            inputs: ThinVec::from([self_param]),
+            output: ast::FnRetTy::Ty(vec_tuple_ty),
+        }),
+        span,
+    };
+
+    let body = build_pairs_body(span);
+
+    Box::new(ast::AssocItem {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::AssocItemKind::Fn(Box::new(ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            ident: Ident::new(sym::pairs, span),
+            generics: method_generics,
+            sig: fn_sig,
+            contract: None,
+            body: Some(body),
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        })),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    })
+}
+
+/// Build: self.as_ref().iter().enumerate().map(|(i, v)| (i, v.clone())).collect()
+fn build_pairs_body(span: Span) -> Box<ast::Block> {
+    let self_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(Ident::new(kw::SelfLower, span))),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let as_ref_expr = build_method_call(self_expr, sym::as_ref, ThinVec::new(), span);
+    let iter_expr = build_method_call(as_ref_expr, sym::iter, ThinVec::new(), span);
+    let enumerate_expr = build_method_call(iter_expr, sym::enumerate, ThinVec::new(), span);
+
+    // Build closure: |(i, v)| (i, v.clone())
+    let i_ident = Ident::new(sym::i, span);
+    let v_ident = Ident::new(sym::v, span);
+
+    // Pattern: (i, v)
+    let i_pat = ast::Pat {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::PatKind::Ident(ast::BindingMode::NONE, i_ident, None),
+        span,
+        tokens: None,
+    };
+    let v_pat = ast::Pat {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::PatKind::Ident(ast::BindingMode::NONE, v_ident, None),
+        span,
+        tokens: None,
+    };
+    let tuple_pat = Box::new(ast::Pat {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::PatKind::Tuple(ThinVec::from([i_pat, v_pat])),
+        span,
+        tokens: None,
+    });
+
+    let closure_param = ast::Param {
+        attrs: ThinVec::new(),
+        ty: Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Infer,
+            span,
+            tokens: None,
+        }),
+        pat: tuple_pat,
+        id: ast::DUMMY_NODE_ID,
+        span,
+        is_placeholder: false,
+    };
+
+    // Body: (i, v.clone())
+    let i_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(i_ident)),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let v_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Path(None, ast::Path::from_ident(v_ident)),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+    let v_clone_expr = build_method_call(v_expr, sym::clone, ThinVec::new(), span);
+
+    let tuple_expr = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Tup(ThinVec::from([i_expr, v_clone_expr])),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let closure = Box::new(ast::Expr {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ExprKind::Closure(Box::new(ast::Closure {
+            binder: ast::ClosureBinder::NotPresent,
+            capture_clause: ast::CaptureBy::Ref,
+            constness: ast::Const::No,
+            coroutine_kind: None,
+            movability: ast::Movability::Movable,
+            fn_decl: Box::new(ast::FnDecl {
+                inputs: ThinVec::from([closure_param]),
+                output: ast::FnRetTy::Default(span),
+            }),
+            body: tuple_expr,
+            fn_decl_span: span,
+            fn_arg_span: span,
+        })),
+        span,
+        attrs: ThinVec::new(),
+        tokens: None,
+    });
+
+    let map_expr = build_method_call(enumerate_expr, sym::map, ThinVec::from([closure]), span);
+    let collect_expr = build_method_call(map_expr, sym::collect, ThinVec::new(), span);
+
+    Box::new(ast::Block {
+        stmts: ThinVec::from([ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(collect_expr),
+            span,
+        }]),
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span,
+        tokens: None,
+    })
+}
+
 fn build_self_param(span: Span) -> ast::Param {
     ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
             id: ast::DUMMY_NODE_ID,
             kind: ast::TyKind::ImplicitSelf,
+            span,
+            tokens: None,
+        }),
+        pat: Box::new(ast::Pat {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::PatKind::Ident(
+                ast::BindingMode::NONE,
+                Ident::new(kw::SelfLower, span),
+                None,
+            ),
+            span,
+            tokens: None,
+        }),
+        id: ast::DUMMY_NODE_ID,
+        span,
+        is_placeholder: false,
+    }
+}
+
+/// Build &self parameter (immutable reference)
+fn build_ref_self_param(span: Span) -> ast::Param {
+    ast::Param {
+        attrs: ThinVec::new(),
+        ty: Box::new(ast::Ty {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::TyKind::Ref(
+                None,
+                ast::MutTy {
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::ImplicitSelf,
+                        span,
+                        tokens: None,
+                    }),
+                    mutbl: ast::Mutability::Not,
+                },
+            ),
             span,
             tokens: None,
         }),
