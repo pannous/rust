@@ -1,0 +1,13 @@
+[package]
+name = "rustc_extensions"
+version = "0.0.0"
+edition = "2024"
+
+# This crate contains Rust source code that gets injected into scripts.
+# It is NOT compiled as a library - the source files are read at compile time
+# by script_harness.rs and parsed into AST for injection.
+#
+# The crate exists mainly for:
+# 1. Editor support (syntax highlighting, IDE features)
+# 2. Easy testing of the extensions code
+# 3. Documentation

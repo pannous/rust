@@ -1,6 +1,9 @@
 //! Script mode convenience macros: put!, printf!, eq!, s!, typeid!
 //!
 //! Generates macro_rules! definitions for common script operations.
+//!
+//! Note: Some functions are currently unused as their functionality
+//! has been migrated to compiler/extensions/src/all.rs
 
 use rustc_ast as ast;
 use rustc_ast::token::{self, Delimiter, Lit, LitKind, TokenKind};
@@ -659,7 +662,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
 ///     std::process::exit(code)
 /// }
 /// ```
-pub fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
+fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
     let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
 
     // Parameter: code: i32
@@ -779,7 +782,7 @@ pub fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
 /// }
 /// ```
 /// Uses relative epsilon for better precision with varying magnitudes.
-pub fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
+fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
     let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
 
     // Parameter a: f64
@@ -1034,7 +1037,7 @@ pub fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Ite
 }
 
 /// Build math constants for script mode: τ, π
-pub fn build_math_constants(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+fn build_math_constants(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let allow_dead_code = create_allow_attr(def_site, sym::dead_code);
     let mut items = ThinVec::new();
 

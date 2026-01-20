@@ -1,25 +1,27 @@
 //! Script mode AST transformers.
 //!
-//! This module contains various AST transformation utilities for script mode,
-//! such as generating extension traits for convenient method syntax.
+//! This module contains AST transformation utilities for script mode.
+//! Most functionality is now in compiler/extensions/src/all.rs which
+//! gets parsed and injected via parse_extensions().
 
 use rustc_ast as ast;
 use rustc_span::{Ident, Span, sym};
 
-mod filter;
+mod extensions;
+#[allow(dead_code)]
 mod macros;
-mod slice;
-mod string;
-mod truthy;
+#[allow(dead_code)]
 mod val;
 
-#[allow(unused_imports)]
-pub use filter::build_slice_helpers;
-pub use slice::{build_slice_helpers as build_slice_ext, build_slice_eq_function, build_vec_helpers};
-pub use macros::{build_script_macros, build_exit_function, build_approx_eq_function, build_math_constants};
-pub use string::{build_string_helpers, build_debug_string_helper};
-pub use truthy::build_truthy_helpers;
-pub use val::{build_simple_ty, build_val_helpers};
+// Unused modules kept for reference (can be deleted later):
+// mod filter;
+// mod slice;
+// mod string;
+// mod truthy;
+
+pub use extensions::parse_extensions;
+pub use macros::build_script_macros;
+pub use val::build_simple_ty;
 
 /// Create #[allow(lint_name)] attribute for suppressing warnings
 pub fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribute {

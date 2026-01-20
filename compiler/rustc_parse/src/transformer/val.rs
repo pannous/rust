@@ -9,7 +9,7 @@ use thin_vec::ThinVec;
 
 use super::create_allow_attr;
 
-pub fn build_val_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
+fn build_val_helpers(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Item>> {
     let mut items = ThinVec::new();
 
     // Create #[allow(dead_code)] attribute

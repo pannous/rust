@@ -45,7 +45,7 @@ pub fn inject(
     let has_main = has_entry_point(krate);
 
     // Always inject helpers in script mode, optionally wrap in main
-    inject_helpers(krate, def_site, call_site, has_main);
+    inject_helpers(krate, sess, def_site, call_site, has_main);
 }
 
 /// Check if the input source starts with a shebang (`#!`).
@@ -93,22 +93,19 @@ fn has_entry_point(krate: &ast::Crate) -> bool {
 }
 
 /// Inject script mode helpers and optionally generate main function.
-fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_main: bool) {
+fn inject_helpers(krate: &mut ast::Crate, sess: &Session, def_site: Span, call_site: Span, has_main: bool) {
     // Build items with proper hygiene contexts:
     // - def_site: for internal macro implementation (invisible to user)
     // - call_site: for macro names (visible to user code)
     let use_statements = build_use_statements(call_site);
     let type_aliases = build_type_aliases(call_site);
+
+    // Macros need special hygiene handling, so we keep them generated via AST
     let script_macros = transformer::build_script_macros(def_site, call_site);
-    let string_helpers = transformer::build_string_helpers(def_site, call_site);
-    let debug_string_fn = transformer::build_debug_string_helper(def_site, call_site);
-    let slice_helpers = transformer::build_slice_ext(def_site, call_site);
-    let truthy_helpers = transformer::build_truthy_helpers(def_site, call_site);
-    let val_helpers = transformer::build_val_helpers(def_site, call_site);
-    let exit_fn = transformer::build_exit_function(def_site, call_site);
-    let approx_eq_fn = transformer::build_approx_eq_function(def_site, call_site);
-    let math_constants = transformer::build_math_constants(def_site, call_site);
-    let slice_eq_fn = transformer::build_slice_eq_function(def_site, call_site);
+
+    // Parse extension library code with call_site visibility
+    // This replaces the programmatic AST generation for traits, impls, and functions
+    let parsed_extensions = transformer::parse_extensions(&sess.psess, call_site);
 
     // Partition items and optionally build main
     let (module_items, main_stmts) = partition_items(&krate.items);
@@ -117,15 +114,8 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     krate.items = use_statements;
     krate.items.extend(type_aliases);
     krate.items.extend(script_macros);
-    krate.items.extend(string_helpers);
-    krate.items.push(debug_string_fn);
-    krate.items.extend(slice_helpers);
-    krate.items.extend(truthy_helpers);
-    krate.items.extend(val_helpers);
-    krate.items.push(exit_fn);
-    krate.items.push(approx_eq_fn);
-    krate.items.push(slice_eq_fn);
-    krate.items.extend(math_constants);
+    // Extensions parsed from library code (replaces AST-generated helpers)
+    krate.items.extend(parsed_extensions);
     krate.items.extend(module_items);
 
     // Only generate main if file doesn't have one
