@@ -11,20 +11,14 @@ eq!( sum , 6);
 
 // While with for-in syntax for slices
 numbers := [1, 2, 3]
-put!("While with slice:\n")
+put!("While with slice:")
 for num in numbers {
-put!("  num = %d\n", num)
+	printf!("  num = {}\n", num)
 }
 
-// While with for-in syntax for maps
+// While with for-in syntax for maps (iterates key-value pairs)
 myMap := @{"a": 1, "b": 2, "c": 3}
-put!("While with map keys:\n")
-for key in myMap {
-put!("  key = %s\n", key)
-}
-
-// While with key-value pairs
-put!("While with key-value pairs:\n")
-for key, value in myMap {
-put!("  %s = %d\n", key, value)
+put!("While with map:")
+for (key, value) in myMap {
+	printf!("  {} = {:?}\n", key, value)
 }
