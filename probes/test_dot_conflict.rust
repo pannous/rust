@@ -1,0 +1,24 @@
+#!/usr/bin/env rust
+// Test that .N doesn't conflict with tuple.0 field access
+
+// Leading dot floats should work
+x := .5
+put!(".5 =", x)
+
+// Tuple field access should still work
+t := (1, 2, 3)
+put!("tuple.0 =", t.0)
+put!("tuple.1 =", t.1)
+put!("tuple.2 =", t.2)
+
+// Make sure they don't conflict
+assert!(t.0 == 1)
+assert!(t.1 == 2)
+
+// Struct field access also works
+struct Point { x: i32, y: i32 }
+p := Point { x: 10, y: 20 }
+put!("point.x =", p.x)
+assert!(p.x == 10)
+
+put!("No conflicts detected!")

@@ -23,9 +23,6 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_class_derive
 [0;31m✗[0m test_class_funcs (compile)
 [0;31m✗[0m test_class_methods (compile)
-[0;31m✗[0m test_class_parse (compile)
-[0;31m✗[0m test_class_parse2 (compile)
-[0;31m✗[0m test_class_parse3 (compile)
 [0;31m✗[0m test_class (compile)
 [0;31m✗[0m test_comma_compatibility (compile)
 [0;32m✓[0m test_comments
@@ -40,6 +37,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_debug4 (compile)
 [0;32m✓[0m test_def_simple
 [0;32m✓[0m test_def
+[0;32m✓[0m test_dot_conflict
 [0;31m✗[0m test_dynexport_lib (compile)
 [0;31m✗[0m test_dynexport_linked (compile)
 [0;31m✗[0m test_dynexport_nostd (compile)
@@ -56,7 +54,6 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_explicit_main
 [0;31m✗[0m test_fetch_debug (compile)
 [0;31m✗[0m test_fetch_debug2 (compile)
-[0;31m✗[0m test_fetch_parse (compile)
 [0;31m✗[0m test_fetch_simple (compile)
 [0;31m✗[0m test_fib (compile)
 [0;31m✗[0m test_filter_simple (compile)
@@ -71,7 +68,6 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_hash_index
 [0;32m✓[0m test_hash_minimal
 [0;32m✓[0m test_hash_with_if
-[0;31m✗[0m test_if_parse (compile)
 [0;32m✓[0m test_implicit_main
 [0;31m✗[0m test_import_bare_syntax (compile)
 [0;31m✗[0m test_import_folder (compile)
@@ -88,6 +84,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_iterator (compile)
 [0;31m✗[0m test_lambda_arg (compile)
 [0;31m✗[0m test_lambda (compile)
+[0;32m✓[0m test_leading_dot_float
 [0;32m✓[0m test_list_comparison
 [0;32m✓[0m test_list_comparison2
 [0;32m✓[0m test_list_equality
@@ -188,5 +185,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m82 passed[0m, [0;31m101 failed[0m, 0 skipped
+Results: [0;32m84 passed[0m, [0;31m96 failed[0m, 0 skipped
 ========================================

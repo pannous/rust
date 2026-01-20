@@ -1,0 +1,21 @@
+#!/usr/bin/env rust
+// Test .4 syntax for 0.4 (leading dot floats)
+
+x := .5
+put!(".5 =", x)
+assert!(x == 0.5)
+
+y := .123
+put!(".123 =", y)
+assert!(y == 0.123)
+
+// Test in expressions
+z := .25 + .75
+put!(".25 + .75 =", z)
+assert!(z == 1.0)
+
+// Test with explicit type suffix
+w := .5f32
+put!(".5f32 =", w)
+
+put!("Leading dot floats work!")

@@ -1010,7 +1010,7 @@ impl<'a> Parser<'a> {
         self.token.is_non_reserved_ident()
     }
 
-    /// Parse implicit multiplication: 2π -> 2 * π
+    /// Parse implicit multiplication: 2π -> (2 as f64) * π
     fn parse_implicit_multiplication(
         &mut self,
         lo: Span,
@@ -1019,9 +1019,20 @@ impl<'a> Parser<'a> {
         // Parse the identifier as an expression
         let rhs = self.parse_expr_prefix(AttrWrapper::empty())?;
         let span = lo.to(rhs.span);
-        // Create multiplication: lhs * rhs
+        // Convert int literal to float for implicit multiplication with identifiers (likely float constants)
+        let lhs = self.maybe_coerce_int_to_float(lhs);
         let binop = BinOp { node: BinOpKind::Mul, span: lhs.span.between(rhs.span) };
         Ok(self.mk_expr(span, ExprKind::Binary(binop, lhs, rhs)))
+    }
+
+    /// Convert integer literal to float literal if it has no suffix (2 -> 2.0)
+    fn maybe_coerce_int_to_float(&self, expr: Box<Expr>) -> Box<Expr> {
+        if let ExprKind::Lit(token::Lit { kind: token::LitKind::Integer, symbol, suffix: None }) = &expr.kind {
+            let float_str = format!("{}.0", symbol.as_str());
+            let float_lit = token::Lit::new(token::LitKind::Float, Symbol::intern(&float_str), None);
+            return self.mk_expr(expr.span, ExprKind::Lit(float_lit));
+        }
+        expr
     }
 
     pub(super) fn parse_dot_suffix_expr(
@@ -2648,15 +2659,9 @@ impl<'a> Parser<'a> {
 
     fn recover_after_dot(&mut self) {
         if self.token == token::Dot {
-            // Attempt to recover `.4` as `0.4`. We don't currently have any syntax where
-            // dot would follow an optional literal, so we do this unconditionally.
+            // Allow `.4` as `0.4` - valid syntax in this fork (no error emitted)
             let recovered = self.look_ahead(1, |next_token| {
-                // If it's an integer that looks like a float, then recover as such.
-                //
-                // We will never encounter the exponent part of a floating
-                // point literal here, since there's no use of the exponent
-                // syntax that also constitutes a valid integer, so we need
-                // not check for that.
+                // If it's an integer that looks like a float, convert to float.
                 if let token::Literal(token::Lit { kind: token::Integer, symbol, suffix }) =
                     next_token.kind
                     && suffix.is_none_or(|s| s == sym::f32 || s == sym::f64)
@@ -2671,10 +2676,7 @@ impl<'a> Parser<'a> {
                 }
             });
             if let Some(recovered) = recovered {
-                self.dcx().emit_err(errors::FloatLiteralRequiresIntegerPart {
-                    span: recovered.span,
-                    suggestion: recovered.span.shrink_to_lo(),
-                });
+                // Silently accept .4 as 0.4 (no error in this fork)
                 self.bump();
                 self.token = recovered;
             }
@@ -4664,10 +4666,18 @@ impl<'a> Parser<'a> {
                 _ => false,
             }
         }
+        // Check if expression is an integer literal (unsuffixed)
+        fn is_int_lit(e: &Expr) -> bool {
+            matches!(&e.kind, ExprKind::Lit(lit)
+                if lit.kind == token::LitKind::Integer && lit.suffix.is_none())
+        }
+        // Check if expression is a float literal
+        fn is_float_lit(e: &Expr) -> bool {
+            matches!(&e.kind, ExprKind::Lit(lit) if lit.kind == token::LitKind::Float)
+        }
         // Check if expression is a string literal specifically
         let is_str_lit = |e: &Expr| matches!(&e.kind, ExprKind::Lit(lit)
             if matches!(lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_)));
-
         let lhs_is_str_lit = is_str_lit(&lhs);
         let rhs_is_str_lit = is_str_lit(&rhs);
         let rhs_is_literal = is_literal_like(&rhs);
@@ -4696,6 +4706,26 @@ impl<'a> Parser<'a> {
             if rhs_is_str_lit && !lhs_is_str_lit {
                 let call_expr = self.wrap_in_to_string(lhs);
                 return ExprKind::Binary(binop, call_expr, rhs);
+            }
+        }
+
+        // Int-float coercion for arithmetic operations: 2 * 3.14 -> 2.0 * 3.14
+        // Only coerce when both operands are literals (one int, one float)
+        let is_arithmetic = matches!(binop.node, BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div);
+        if is_arithmetic {
+            let lhs_is_int = is_int_lit(&lhs);
+            let rhs_is_int = is_int_lit(&rhs);
+            let lhs_is_float = is_float_lit(&lhs);
+            let rhs_is_float = is_float_lit(&rhs);
+
+            // int literal op float literal -> coerce int to float
+            if lhs_is_int && rhs_is_float {
+                let lhs = self.maybe_coerce_int_to_float(lhs);
+                return ExprKind::Binary(binop, lhs, rhs);
+            }
+            if lhs_is_float && rhs_is_int {
+                let rhs = self.maybe_coerce_int_to_float(rhs);
+                return ExprKind::Binary(binop, lhs, rhs);
             }
         }
 
