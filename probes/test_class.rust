@@ -1,13 +1,11 @@
 #!/usr/bin/env rust
-#type Person struct {
-class Person {
-	name string
-	age  int
+# class is an alias for struct, commas between fields are optional
+class Point {
+	x: i32
+	y: i32
 }
 
-untyped := {name: "Alice", age: 30}
-person := Person{name: "Alice", age: 30}
-put!("Name: %s, Age: %d\n", person.name, person.age)
-#put!("Name: %s, Age: %d\n", untyped.name, untyped.age)
-eq!( person.name , untyped.name);
-eq!( person.age , untyped.age);
+point := Point{x: 10, y: 20}
+put!("Point: (%d, %d)\n", point.x, point.y)
+eq!(point.x, 10)
+eq!(point.y, 20)

@@ -2550,6 +2550,14 @@ impl<'a> Parser<'a> {
                 }
             }
             _ => {
+                // Optional comma: accept if next token looks like another field
+                if self.token.is_ident()
+                    || (self.token == TokenKind::Pound
+                        && self.look_ahead(1, |t| t == &token::OpenBracket))
+                {
+                    return Ok(a_var);
+                }
+
                 let sp = self.prev_token.span.shrink_to_hi();
                 let msg =
                     format!("expected `,`, or `}}`, found {}", super::token_descr(&self.token));
@@ -2563,34 +2571,12 @@ impl<'a> Parser<'a> {
                         &[exp!(Comma), exp!(CloseBrace)],
                     );
                     if let Some(_guar) = guar {
-                        // Handle a case like `Vec<u8>>,` where we can continue parsing fields
-                        // after the comma
                         let _ = self.eat(exp!(Comma));
-
-                        // `check_trailing_angle_brackets` already emitted a nicer error, as
-                        // proven by the presence of `_guar`. We can continue parsing.
                         return Ok(a_var);
                     }
                 }
 
-                let mut err = self.dcx().struct_span_err(sp, msg);
-
-                if self.token.is_ident()
-                    || (self.token == TokenKind::Pound
-                        && (self.look_ahead(1, |t| t == &token::OpenBracket)))
-                {
-                    // This is likely another field, TokenKind::Pound is used for `#[..]`
-                    // attribute for next field. Emit the diagnostic and continue parsing.
-                    err.span_suggestion(
-                        sp,
-                        "try adding a comma",
-                        ",",
-                        Applicability::MachineApplicable,
-                    );
-                    err.emit();
-                } else {
-                    return Err(err);
-                }
+                return Err(self.dcx().struct_span_err(sp, msg));
             }
         }
         Ok(a_var)
