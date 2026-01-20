@@ -11,4 +11,8 @@ b := 1.00000000002
 put!("near-identical floats:", a ~ b)
 assert!(a ~ b)
 
+// Test ~ with implicit multiplication
+put!("τ ~ 2.0π:", τ ~ 2.0π)
+assert!(τ ~ 2.0π)
+
 put!("~ works as ≈")
