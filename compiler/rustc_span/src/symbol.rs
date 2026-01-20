@@ -1013,6 +1013,7 @@ symbols! {
         eprint_macro,
         eprintln_macro,
         eq,
+        eqs,
         ergonomic_clones,
         ermsb_target_feature,
         exact_div,

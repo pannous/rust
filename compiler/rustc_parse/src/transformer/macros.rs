@@ -272,6 +272,64 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         tokens: None,
     }));
 
+    // macro_rules! eqs { ($left:expr, $right:expr) => { assert_eq!(format!("{:?}", $left), $right) }; }
+    // String equality macro: compares Debug representation of left to string literal right
+    let eqs_body = vec![
+        // ($left:expr, $right:expr)
+        delim(Delimiter::Parenthesis, vec![
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("left"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+            TokenTree::token_alone(TokenKind::Comma, def_site),
+            TokenTree::token_alone(TokenKind::Dollar, def_site),
+            ident("right"),
+            TokenTree::token_alone(TokenKind::Colon, def_site),
+            ident("expr"),
+        ]),
+        TokenTree::token_alone(TokenKind::FatArrow, def_site),
+        // { assert_eq!(format!("{:?}", $left), $right) }
+        delim(Delimiter::Brace, vec![
+            ident_user("assert_eq"),
+            TokenTree::token_alone(TokenKind::Bang, def_site),
+            delim(Delimiter::Parenthesis, vec![
+                ident_user("format"),
+                TokenTree::token_alone(TokenKind::Bang, def_site),
+                delim(Delimiter::Parenthesis, vec![
+                    TokenTree::token_alone(TokenKind::Literal(
+                        token::Lit::new(token::LitKind::Str, sym::empty_braces_debug, None)
+                    ), def_site),
+                    TokenTree::token_alone(TokenKind::Comma, def_site),
+                    TokenTree::token_alone(TokenKind::Dollar, def_site),
+                    ident("left"),
+                ]),
+                TokenTree::token_alone(TokenKind::Comma, def_site),
+                TokenTree::token_alone(TokenKind::Dollar, def_site),
+                ident("right"),
+            ]),
+        ]),
+        TokenTree::token_alone(TokenKind::Semi, def_site),
+    ];
+
+    let eqs_macro = ast::MacroDef {
+        body: Box::new(ast::DelimArgs {
+            dspan: DelimSpan::from_single(def_site),
+            delim: Delimiter::Brace,
+            tokens: TokenStream::new(eqs_body),
+        }),
+        macro_rules: true,
+        eii_declaration: None,
+    };
+
+    items.push(Box::new(ast::Item {
+        attrs: vec![allow_unused.clone()].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::MacroDef(Ident::new(sym::eqs, call_site), eqs_macro),
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span: def_site,
+        tokens: None,
+    }));
+
     // macro_rules! seq { ($left:expr, $right:expr) => { assert!(slice_eq(&$left, &$right)) }; }
     // Slice equality macro for comparing arrays with Vecs
     let seq_body = vec![
