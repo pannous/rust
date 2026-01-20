@@ -122,16 +122,9 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_option_hashmap (exit 101)
 [0;32m✓[0m test_optional_chain
 [0;32m✓[0m test_optional_syntax
-[0;31m✗[0m test_parse_if (compile)
-[0;31m✗[0m test_parse_url (compile)
-[0;31m✗[0m test_parse_url2 (compile)
-[0;31m✗[0m test_parse (compile)
-[0;31m✗[0m test_parse2 (compile)
-[0;31m✗[0m test_parse3 (compile)
-[0;31m✗[0m test_parse4 (compile)
 [0;31m✗[0m test_pipe (compile)
-[0;31m✗[0m test_pow (compile)
-[0;32m✓[0m test_pow3
+[0;31m✗[0m test_pow_hat (compile)
+[0;32m✓[0m test_pow
 [0;32m✓[0m test_power_basic
 [0;32m✓[0m test_power
 [0;32m✓[0m test_precedence
@@ -197,5 +190,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m81 passed[0m, [0;31m111 failed[0m, 0 skipped
+Results: [0;32m81 passed[0m, [0;31m104 failed[0m, 0 skipped
 ========================================

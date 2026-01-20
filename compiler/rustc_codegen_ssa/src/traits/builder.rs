@@ -406,19 +406,33 @@ pub trait BuilderMethods<'a, 'tcx>:
     fn icmp(&mut self, op: IntPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
     fn fcmp(&mut self, op: RealPredicate, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
 
-    /// Compute integer exponentiation (base ** exp).
-    /// TODO: Implement proper binary exponentiation loop.
-    /// For now, uses a simple unrolled approach for small exponents.
-    fn int_pow(
-        &mut self,
-        base: Self::Value,
-        _exp: Self::Value,
-        _is_signed: bool,
-    ) -> Self::Value {
-        // TODO: Implement proper pow with loop
-        // For now, just return base * base (correct for exp=2, wrong for others)
-        // This is a placeholder until proper loop codegen is implemented
-        self.mul(base, base)
+    /// Compute integer exponentiation (base ** exp) using binary exponentiation via select chains.
+    /// This unrolls the algorithm without explicit loops, relying on LLVM optimization.
+    fn int_pow(&mut self, base: Self::Value, exp: Self::Value, _is_signed: bool) -> Self::Value {
+        let ty = self.cx().val_ty(base);
+        let one = self.cx().const_uint(ty, 1);
+        let zero = self.cx().const_uint(ty, 0);
+
+        // Binary exponentiation using select chains (max 64 iterations for u64)
+        // result = 1, b = base, e = exp
+        // while e > 0:
+        //   if e & 1: result *= b
+        //   b *= b
+        //   e >>= 1
+        let mut result = one;
+        let mut b = base;
+        let mut e = exp;
+
+        // Unroll up to 64 iterations (enough for any 64-bit exponent)
+        for _ in 0..64 {
+            let e_and_1 = self.and(e, one);
+            let is_odd = self.icmp(IntPredicate::IntNE, e_and_1, zero);
+            let new_result = self.mul(result, b);
+            result = self.select(is_odd, new_result, result);
+            b = self.mul(b, b);
+            e = self.lshr(e, one);
+        }
+        result
     }
 
     /// Returns `-1` if `lhs < rhs`, `0` if `lhs == rhs`, and `1` if `lhs > rhs`.
