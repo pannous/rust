@@ -59,6 +59,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_in_operator_strings (compile)
 [0;32m✓[0m test_in_operator
 [0;32m✓[0m test_increment_decrement
+[0;31m✗[0m test_int_float_coercion (compile)
 [0;32m✓[0m test_int
 [0;31m✗[0m test_interpolation (compile)
 [0;31m✗[0m test_is_operator (compile)
@@ -173,5 +174,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m99 passed[0m, [0;31m69 failed[0m, 0 skipped
+Results: [0;32m99 passed[0m, [0;31m70 failed[0m, 0 skipped
 ========================================

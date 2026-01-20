@@ -604,8 +604,14 @@ impl<'tcx> ThirBuildCx<'tcx> {
                             let mut lhs_mir = self.mirror_expr(lhs);
                             let mut rhs_mir = self.mirror_expr(rhs);
 
-                            // For Pow with mixed int/float types, cast to f64
-                            if op.node == hir::BinOpKind::Pow {
+                            // For Pow and Math operators with mixed int/float types, cast to f64
+                            if matches!(op.node,
+                                hir::BinOpKind::Pow |
+                                hir::BinOpKind::Add |
+                                hir::BinOpKind::Sub |
+                                hir::BinOpKind::Mul |
+                                hir::BinOpKind::Div
+                            ) {
                                 let lhs_ty = self.typeck_results.expr_ty(lhs);
                                 let rhs_ty = self.typeck_results.expr_ty(rhs);
                                 let target_ty = self.tcx.types.f64;

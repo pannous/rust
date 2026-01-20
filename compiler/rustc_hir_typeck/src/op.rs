@@ -372,7 +372,6 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             op.span(),
             expected,
         );
-
         // see `NB` above
         let rhs_ty = self.check_expr_coercible_to_type_or_error(
             rhs_expr,
@@ -431,6 +430,7 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             Err(_) if lhs_ty.references_error() || rhs_ty.references_error() => {
                 Ty::new_misc_error(self.tcx)
             }
+            // Special case: mixed int/float math operators - no trait impl needed
             Err(errors) => {
                 let (_, trait_def_id) = lang_item_for_binop(self.tcx, op);
                 let missing_trait = trait_def_id
