@@ -207,6 +207,8 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
     items.push(make_alias(sym::boolean, sym::bool));
     items.push(make_alias(sym::rune, sym::char));
     items.push(make_alias(sym::byte, sym::u8));
+    items.push(make_alias(sym::unicode, sym::u32));
+    items.push(make_alias(sym::codepoint, sym::u32));
     items.push(make_str_ref_alias());
 
     items
