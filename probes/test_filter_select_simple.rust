@@ -1,0 +1,13 @@
+#!/usr/bin/env rust
+// import "slices"
+
+xs := [1, 2, 3, 4, 5]
+evens := xs.select(x => x%2 == 0)
+// evens := xs.filter(x => x%2 == 0) // todo "use select" which works!
+eq!( evens , [2, 4]);
+
+odds := xs.select(x => x%2 == 1)
+// odds := xs.filter(x => x%2 == 1)
+eq!( odds , [1, 3, 5]);
+
+put!("Filter tests passed")

@@ -14,7 +14,7 @@ use rustc_session::config::Input;
 use rustc_span::hygiene::AstPass;
 use rustc_span::{DUMMY_SP, Ident, Span, sym};
 use std::fs;
-use thin_vec::ThinVec;
+use thin_vec::{ThinVec, thin_vec};
 
 use rustc_parse::transformer;
 

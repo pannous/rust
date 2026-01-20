@@ -997,6 +997,36 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
         }
     }
 
+    /// Suggest script-mode slice method aliases (e.g., `filter` -> `select`)
+    fn suggest_script_slice_method_alias(
+        &self,
+        err: &mut Diag<'_>,
+        span: Span,
+        rcvr_ty: Ty<'tcx>,
+        item_ident: Ident,
+    ) {
+        // Only suggest for slice/array types
+        if !self.is_slice_ty(rcvr_ty, span) {
+            return;
+        }
+
+        // Map of method names that have script-mode aliases
+        let alias = match item_ident.name {
+            sym::filter => Some(sym::select),
+            sym::map => Some(sym::apply),
+            _ => None,
+        };
+
+        if let Some(suggested_method) = alias {
+            err.span_suggestion_verbose(
+                span,
+                format!("use `{}` for slice operations in script mode", suggested_method),
+                suggested_method.to_string(),
+                Applicability::MaybeIncorrect,
+            );
+        }
+    }
+
     fn suggest_method_not_found_because_of_unsatisfied_bounds(
         &self,
         err: &mut Diag<'_>,
@@ -1240,6 +1270,13 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             args,
             unsatisfied_predicates,
             similar_candidate,
+        );
+
+        self.suggest_script_slice_method_alias(
+            &mut err,
+            item_ident.span,
+            rcvr_ty,
+            item_ident,
         );
 
         self.suggest_method_not_found_because_of_unsatisfied_bounds(

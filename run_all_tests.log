@@ -8,11 +8,10 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_array_like_slice
 [0;32m✓[0m test_as_cast_comprehensive
 [0;32m✓[0m test_as_cast_convert
-[0;31m✗[0m test_as_cast_list (compile)
 [0;32m✓[0m test_as_cast
 [0;32m✓[0m test_assert
 [0;32m✓[0m test_at_map
-[0;31m✗[0m test_at_vec (compile)
+[0;32m✓[0m test_at_vec
 [0;32m✓[0m test_auto_return
 [0;32m✓[0m test_box
 [0;31m✗[0m test_broken_fixed (compile)
@@ -22,12 +21,9 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_class_funcs (compile)
 [0;31m✗[0m test_class_methods (compile)
 [0;32m✓[0m test_class
-[0;31m✗[0m test_comma_compatibility (compile)
 [0;31m✗[0m test_comments (compile)
-[0;31m✗[0m test_compound (compile)
 [0;31m✗[0m test_comprehensive_units (compile)
-[0;32m✓[0m test_const_pow
-[0;31m✗[0m test_continue (compile)
+[0;32m✓[0m test_continue
 [0;32m✓[0m test_def_simple
 [0;32m✓[0m test_def
 [0;32m✓[0m test_dot_conflict
@@ -39,17 +35,14 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_dynload_complete (compile)
 [0;31m✗[0m test_dynload_forked (exit 101)
 [0;31m✗[0m test_dynload_prelude (exit 101)
-[0;31m✗[0m test_ellipsis (exit 101)
+[0;32m✓[0m test_ellipsis
 [0;31m✗[0m test_enum_string (compile)
 [0;32m✓[0m test_enum
 [0;31m✗[0m test_exclamation_syntax (compile)
 [0;32m✓[0m test_exit
 [0;32m✓[0m test_explicit_main
-[0;31m✗[0m test_fetch_debug (compile)
-[0;31m✗[0m test_fetch_debug2 (compile)
-[0;31m✗[0m test_fetch_simple (compile)
-[0;31m✗[0m test_fib (compile)
-[0;31m✗[0m test_filter_simple (compile)
+[0;32m✓[0m test_filter_select_simple
+[0;31m✗[0m test_filter_suggestion (compile)
 [0;31m✗[0m test_filter_synonyms (compile)
 [0;31m✗[0m test_float_add (compile)
 [0;32m✓[0m test_fmt
@@ -62,7 +55,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_hash_minimal
 [0;32m✓[0m test_hash_with_if
 [0;32m✓[0m test_implicit_main
-[0;31m✗[0m test_import_bare_syntax (compile)
+[0;31m✗[0m test_import_file (compile)
 [0;31m✗[0m test_import_folder (compile)
 [0;31m✗[0m test_in_operator_auto_import (compile)
 [0;31m✗[0m test_in_operator_maps (compile)
@@ -78,6 +71,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_lambda_arg (compile)
 [0;31m✗[0m test_lambda (compile)
 [0;32m✓[0m test_leading_dot_float
+[0;31m✗[0m test_list_as_casts (compile)
 [0;32m✓[0m test_list_comparison
 [0;32m✓[0m test_list_comparison2
 [0;32m✓[0m test_list_equality
@@ -97,6 +91,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_map_dot_notation (compile)
 [0;31m✗[0m test_map_fields (compile)
 [0;32m✓[0m test_map_literal
+[0;32m✓[0m test_map_struct
 [0;31m✗[0m test_map_type_inference (compile)
 [0;31m✗[0m test_map (compile)
 [0;32m✓[0m test_minimal_conflict
@@ -173,6 +168,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_units (compile)
 [0;32m✓[0m test_unused_mut
 [0;31m✗[0m test_user_defined_put (compile)
+[0;31m✗[0m test_vec_methods (compile)
 [0;32m✓[0m test_while_loops
 [0;31m✗[0m test_wit_discover (compile)
 [0;31m✗[0m test_wit_lib (compile)
@@ -180,5 +176,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m87 passed[0m, [0;31m88 failed[0m, 0 skipped
+Results: [0;32m91 passed[0m, [0;31m80 failed[0m, 0 skipped
 ========================================

@@ -1,6 +1,6 @@
 #!/usr/bin/env rust
 // Test @{key: value} map literal syntax
-use std::collections::HashMap;
+// use std::collections::HashMap;
 
 // Basic map
 my_map := @{"a": 1, "b": 2, "c": 3}

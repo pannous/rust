@@ -317,7 +317,7 @@ fn rsplit_file_at_dot(file: &OsStr) -> (Option<&OsStr>, Option<&OsStr>) {
     let mut iter = file.as_encoded_bytes().rsplitn(2, |b| *b == b'.');
     let after = iter.next();
     let before = iter.next();
-    if before == Some(b"") {
+    if before == Some(&b""[..]) {
         (Some(file), None)
     } else {
         unsafe {

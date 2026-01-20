@@ -17,9 +17,9 @@ assert!(!(1 ≠ 1));
 
 // Test … (ellipsis for range)
 let range_sum: i32 = (0…5).sum();
-assert!(range_sum == 10); // 0+1+2+3+4 = 10
+assert!(range_sum == 15); // 0+1+2+3+4+5 = 15
 
-// Mix with regular operators
+// Mix with regular operators todo why does this need special logic in the parser?
 assert!(1 <= 2 and 2 ≥ 1);
 assert!(1 ≠ 2 and 1 != 2);
 

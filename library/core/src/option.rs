@@ -2395,6 +2395,67 @@ impl<T: [const] PartialEq> const PartialEq for Option<T> {
     }
 }
 
+// Cross-type PartialEq implementations for comparing Option<T> with T directly.
+// Allows natural comparisons like `Some(5) == 5` and `aList.first() == 1`.
+// Implemented for primitive types to avoid type inference issues with blanket impls.
+
+macro_rules! impl_option_partial_eq {
+    ($($t:ty),* $(,)?) => {
+        $(
+            #[stable(feature = "rust1", since = "1.0.0")]
+            impl PartialEq<$t> for Option<$t> {
+                #[inline]
+                fn eq(&self, other: &$t) -> bool {
+                    match self {
+                        Some(val) => *val == *other,
+                        None => false,
+                    }
+                }
+            }
+
+            #[stable(feature = "rust1", since = "1.0.0")]
+            impl PartialEq<$t> for Option<&$t> {
+                #[inline]
+                fn eq(&self, other: &$t) -> bool {
+                    match self {
+                        Some(val) => **val == *other,
+                        None => false,
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl_option_partial_eq!(
+    i8, i16, i32, i64, i128, isize,
+    u8, u16, u32, u64, u128, usize,
+    f32, f64, bool, char,
+);
+
+// Special implementation for &str comparisons
+#[stable(feature = "rust1", since = "1.0.0")]
+impl PartialEq<&str> for Option<&str> {
+    #[inline]
+    fn eq(&self, other: &&str) -> bool {
+        match self {
+            Some(val) => *val == *other,
+            None => false,
+        }
+    }
+}
+
+#[stable(feature = "rust1", since = "1.0.0")]
+impl PartialEq<&str> for Option<&&str> {
+    #[inline]
+    fn eq(&self, other: &&str) -> bool {
+        match self {
+            Some(val) => **val == *other,
+            None => false,
+        }
+    }
+}
+
 // Manually implementing here somewhat improves codegen for
 // https://github.com/rust-lang/rust/issues/49892, although still
 // not optimal.

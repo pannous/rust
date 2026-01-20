@@ -1674,18 +1674,42 @@ fn build_sort_desc_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocItem>
     })
 }
 
-/// Build impl<T> ScriptVecExt<T> for Vec<T>
+/// Build impl<T: Clone + Ord> ScriptVecExt<T> for Vec<T>
 fn build_vec_impl(
     def_site: Span,
     call_site: Span,
     trait_name: rustc_span::Symbol,
     t_ident: Ident,
 ) -> Box<ast::Item> {
+    // Clone bound for T
+    let clone_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path::from_ident(Ident::new(sym::Clone, call_site)),
+            ref_id: ast::DUMMY_NODE_ID,
+        },
+        span: call_site,
+        parens: ast::Parens::No,
+    });
+
+    // Ord bound for T
+    let ord_bound = ast::GenericBound::Trait(ast::PolyTraitRef {
+        bound_generic_params: ThinVec::new(),
+        modifiers: ast::TraitBoundModifiers::NONE,
+        trait_ref: ast::TraitRef {
+            path: ast::Path::from_ident(Ident::new(sym::Ord, call_site)),
+            ref_id: ast::DUMMY_NODE_ID,
+        },
+        span: call_site,
+        parens: ast::Parens::No,
+    });
+
     let t_param = ast::GenericParam {
         id: ast::DUMMY_NODE_ID,
         ident: t_ident,
         attrs: ThinVec::new(),
-        bounds: vec![],
+        bounds: vec![clone_bound, ord_bound],
         is_placeholder: false,
         kind: ast::GenericParamKind::Type { default: None },
         colon_span: None,
@@ -1802,7 +1826,7 @@ fn build_shift_impl_item(span: Span) -> Box<ast::AssocItem> {
                                 ast::GenericArg::Type(t_ty),
                             )]),
                         },
-                    )]),
+                    ))),
                 }]),
                 tokens: None,
             },
@@ -1878,7 +1902,7 @@ fn build_sort_desc_impl_item(span: Span) -> Box<ast::AssocItem> {
                                 ast::GenericArg::Type(t_ty),
                             )]),
                         },
-                    )]),
+                    ))),
                 }]),
                 tokens: None,
             },
@@ -1929,18 +1953,30 @@ fn build_sort_desc_impl_item(span: Span) -> Box<ast::AssocItem> {
 }
 
 fn build_mut_self_param(span: Span) -> ast::Param {
+    // Build &mut self parameter
     ast::Param {
         attrs: ThinVec::new(),
         ty: Box::new(ast::Ty {
             id: ast::DUMMY_NODE_ID,
-            kind: ast::TyKind::ImplicitSelf,
+            kind: ast::TyKind::Ref(
+                None,
+                ast::MutTy {
+                    ty: Box::new(ast::Ty {
+                        id: ast::DUMMY_NODE_ID,
+                        kind: ast::TyKind::ImplicitSelf,
+                        span,
+                        tokens: None,
+                    }),
+                    mutbl: ast::Mutability::Mut,
+                },
+            ),
             span,
             tokens: None,
         }),
         pat: Box::new(ast::Pat {
             id: ast::DUMMY_NODE_ID,
             kind: ast::PatKind::Ident(
-                ast::BindingMode(ast::ByRef::No, ast::Mutability::Mut),
+                ast::BindingMode::NONE,
                 Ident::new(kw::SelfLower, span),
                 None,
             ),
@@ -1978,11 +2014,11 @@ fn build_shift_body(span: Span) -> Box<ast::Block> {
     // 0 literal
     let zero_lit = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
-        kind: ast::ExprKind::Lit(ast::token::Lit::new(
-            ast::token::LitKind::Integer,
-            rustc_span::Symbol::intern("0"),
-            None,
-        )),
+        kind: ast::ExprKind::Lit(ast::token::Lit {
+            kind: ast::token::LitKind::Integer,
+            symbol: sym::integer(0),
+            suffix: None,
+        }),
         span,
         attrs: ThinVec::new(),
         tokens: None,
@@ -2089,10 +2125,11 @@ fn build_sort_desc_body(span: Span) -> Box<ast::Block> {
     let let_v = ast::Stmt {
         id: ast::DUMMY_NODE_ID,
         kind: ast::StmtKind::Let(Box::new(ast::Local {
+            id: ast::DUMMY_NODE_ID,
+            super_: None,
             pat: v_pat,
             ty: None,
             kind: ast::LocalKind::Init(clone_call),
-            id: ast::DUMMY_NODE_ID,
             span,
             colon_sp: None,
             attrs: ThinVec::new(),
