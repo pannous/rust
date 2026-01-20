@@ -97,6 +97,7 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     // Build items with proper hygiene contexts:
     // - def_site: for internal macro implementation (invisible to user)
     // - call_site: for macro names (visible to user code)
+    let use_statements = build_use_statements(call_site);
     let type_aliases = build_type_aliases(call_site);
     let script_macros = transformer::build_script_macros(def_site, call_site);
     let string_helpers = transformer::build_string_helpers(def_site, call_site);
@@ -111,8 +112,9 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
     // Partition items and optionally build main
     let (module_items, main_stmts) = partition_items(&krate.items);
 
-    // Rebuild crate: helpers first, then module items
-    krate.items = type_aliases;
+    // Rebuild crate: use statements and helpers first, then module items
+    krate.items = use_statements;
+    krate.items.extend(type_aliases);
     krate.items.extend(script_macros);
     krate.items.extend(string_helpers);
     krate.items.extend(slice_helpers);
@@ -129,6 +131,36 @@ fn inject_helpers(krate: &mut ast::Crate, def_site: Span, call_site: Span, has_m
         let main_fn = build_main(def_site, main_stmts);
         krate.items.push(main_fn);
     }
+}
+
+/// Build use statements for script mode: use std::collections::HashMap;
+fn build_use_statements(span: Span) -> ThinVec<Box<ast::Item>> {
+    let mut items = ThinVec::new();
+
+    // Build: use std::collections::HashMap;
+    let hashmap_use = Box::new(ast::Item {
+        attrs: ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::Use(ast::UseTree {
+            prefix: ast::Path {
+                span,
+                segments: thin_vec![
+                    ast::PathSegment::from_ident(Ident::new(sym::std, span)),
+                    ast::PathSegment::from_ident(Ident::new(sym::collections, span)),
+                    ast::PathSegment::from_ident(Ident::new(sym::HashMap, span)),
+                ],
+                tokens: None,
+            },
+            kind: ast::UseTreeKind::Simple(None),
+            span,
+        }),
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        span,
+        tokens: None,
+    });
+    items.push(hashmap_use);
+
+    items
 }
 
 /// Build type aliases for script mode: type int = i64; type float = f64;

@@ -3,11 +3,9 @@ Probe Test Runner
 Using: /opt/other/rust/rustc
 Mode: [0;33mall[0m (includes WIP files)
 
-[0;32m✓[0m test_add
-[0;32m✓[0m test_all_synonyms
 [0;32m✓[0m test_and_or
 [0;32m✓[0m test_array_1indexed
-[0;31m✗[0m test_array_like_slice (compile)
+[0;32m✓[0m test_array_like_slice
 [0;32m✓[0m test_as_cast_comprehensive
 [0;32m✓[0m test_as_cast_convert
 [0;31m✗[0m test_as_cast_list (compile)
@@ -25,16 +23,11 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_class_methods (compile)
 [0;32m✓[0m test_class
 [0;31m✗[0m test_comma_compatibility (compile)
-[0;32m✓[0m test_comments
+[0;31m✗[0m test_comments (compile)
 [0;31m✗[0m test_compound (compile)
 [0;31m✗[0m test_comprehensive_units (compile)
 [0;32m✓[0m test_const_pow
 [0;31m✗[0m test_continue (compile)
-[0;32m✓[0m test_debug_imports
-[0;31m✗[0m test_debug (compile)
-[0;31m✗[0m test_debug2 (compile)
-[0;31m✗[0m test_debug3 (compile)
-[0;31m✗[0m test_debug4 (compile)
 [0;32m✓[0m test_def_simple
 [0;32m✓[0m test_def
 [0;32m✓[0m test_dot_conflict
@@ -43,7 +36,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_dynexport_nostd (compile)
 [0;31m✗[0m test_dynexport_user (exit 1)
 [0;32m✓[0m test_dynexport
-[0;31m✗[0m test_dynload_complete (exit 101)
+[0;31m✗[0m test_dynload_complete (compile)
 [0;31m✗[0m test_dynload_forked (exit 101)
 [0;31m✗[0m test_dynload_prelude (exit 101)
 [0;31m✗[0m test_ellipsis (exit 101)
@@ -73,7 +66,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_import_folder (compile)
 [0;31m✗[0m test_in_operator_auto_import (compile)
 [0;31m✗[0m test_in_operator_maps (compile)
-[0;31m✗[0m test_in_operator_rune_strings (compile)
+[0;32m✓[0m test_in_operator_rune_strings
 [0;31m✗[0m test_in_operator_slices (compile)
 [0;31m✗[0m test_in_operator_strings (compile)
 [0;32m✓[0m test_in_operator
@@ -161,6 +154,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_strings_auto_import
 [0;32m✓[0m test_struct
 [0;32m✓[0m test_synonyms_simple
+[0;32m✓[0m test_synonyms
 [0;32m✓[0m test_tau_pi_approx
 [0;32m✓[0m test_tilde_approx
 [0;32m✓[0m test_transform_synonyms
@@ -186,5 +180,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m88 passed[0m, [0;31m93 failed[0m, 0 skipped
+Results: [0;32m87 passed[0m, [0;31m88 failed[0m, 0 skipped
 ========================================

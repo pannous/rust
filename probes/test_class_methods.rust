@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
 class Point{
-		x int
-		y int
+		x:int
+		y:int
 		sum() int { return self.x + self.y }
 		display() { put!("x: %d, y: %d\n", self.x, self.y) }
 }
