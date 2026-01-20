@@ -400,20 +400,67 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
             ty::Float(fty) => {
                 assert_eq!(left.layout.ty, right.layout.ty);
                 let layout = left.layout;
-                let left = left.to_scalar();
-                let right = right.to_scalar();
+                let left_scalar = left.to_scalar();
+                let right_scalar = right.to_scalar();
+
+                // Handle Pow specially since rustc_apfloat doesn't have a pow method.
+                // We convert to native f64, compute pow, and convert back.
+                if bin_op == mir::BinOp::Pow {
+                    use rustc_apfloat::ieee::Double;
+
+                    // Helper to convert apfloat to native f64 via bits
+                    fn apfloat_to_f64<F: Float + FloatConvert<Double>>(f: F) -> f64 {
+                        // Convert to f64 through Double
+                        let d: Double = f.convert(&mut false).value;
+                        f64::from_bits(d.to_bits() as u64)
+                    }
+
+                    let result = match fty {
+                        FloatTy::F16 => {
+                            let l = apfloat_to_f64(left_scalar.to_f16()?);
+                            let r = apfloat_to_f64(right_scalar.to_f16()?);
+                            let res = l.powf(r);
+                            // Convert back: f64 -> Double -> Half
+                            let d = Double::from_bits(res.to_bits() as u128);
+                            Scalar::from_f16(d.convert(&mut false).value)
+                        }
+                        FloatTy::F32 => {
+                            let l = apfloat_to_f64(left_scalar.to_f32()?);
+                            let r = apfloat_to_f64(right_scalar.to_f32()?);
+                            let res = l.powf(r);
+                            let d = Double::from_bits(res.to_bits() as u128);
+                            Scalar::from_f32(d.convert(&mut false).value)
+                        }
+                        FloatTy::F64 => {
+                            let l = f64::from_bits(left_scalar.to_f64()?.to_bits() as u64);
+                            let r = f64::from_bits(right_scalar.to_f64()?.to_bits() as u64);
+                            let res = l.powf(r);
+                            Scalar::from_f64(Double::from_bits(res.to_bits() as u128))
+                        }
+                        FloatTy::F128 => {
+                            // For f128, use f64 approximation (precision loss)
+                            let l = apfloat_to_f64(left_scalar.to_f128()?);
+                            let r = apfloat_to_f64(right_scalar.to_f128()?);
+                            let res = l.powf(r);
+                            let d = Double::from_bits(res.to_bits() as u128);
+                            Scalar::from_f128(d.convert(&mut false).value)
+                        }
+                    };
+                    return interp_ok(ImmTy::from_scalar(result, layout));
+                }
+
                 interp_ok(match fty {
                     FloatTy::F16 => {
-                        self.binary_float_op(bin_op, layout, left.to_f16()?, right.to_f16()?)
+                        self.binary_float_op(bin_op, layout, left_scalar.to_f16()?, right_scalar.to_f16()?)
                     }
                     FloatTy::F32 => {
-                        self.binary_float_op(bin_op, layout, left.to_f32()?, right.to_f32()?)
+                        self.binary_float_op(bin_op, layout, left_scalar.to_f32()?, right_scalar.to_f32()?)
                     }
                     FloatTy::F64 => {
-                        self.binary_float_op(bin_op, layout, left.to_f64()?, right.to_f64()?)
+                        self.binary_float_op(bin_op, layout, left_scalar.to_f64()?, right_scalar.to_f64()?)
                     }
                     FloatTy::F128 => {
-                        self.binary_float_op(bin_op, layout, left.to_f128()?, right.to_f128()?)
+                        self.binary_float_op(bin_op, layout, left_scalar.to_f128()?, right_scalar.to_f128()?)
                     }
                 })
             }

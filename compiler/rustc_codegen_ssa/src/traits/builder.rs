@@ -171,6 +171,8 @@ pub trait BuilderMethods<'a, 'tcx>:
     fn frem(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
     fn frem_fast(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
     fn frem_algebraic(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value;
+    /// Compute floating-point exponentiation (base ** exp).
+    fn fpow(&mut self, base: Self::Value, exp: Self::Value) -> Self::Value;
     /// Generate a left-shift. Both operands must have the same size. The right operand must be
     /// interpreted as unsigned and can be assumed to be less than the size of the left operand.
     fn shl(&mut self, lhs: Self::Value, rhs: Self::Value) -> Self::Value;

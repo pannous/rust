@@ -600,11 +600,50 @@ impl<'tcx> ThirBuildCx<'tcx> {
                             rhs: self.mirror_expr(rhs),
                         },
                         _ => {
-                            let op = bin_op(op.node);
+                            let mir_op = bin_op(op.node);
+                            let mut lhs_mir = self.mirror_expr(lhs);
+                            let mut rhs_mir = self.mirror_expr(rhs);
+
+                            // For Pow with mixed int/float types, cast to f64
+                            if op.node == hir::BinOpKind::Pow {
+                                let lhs_ty = self.typeck_results.expr_ty(lhs);
+                                let rhs_ty = self.typeck_results.expr_ty(rhs);
+                                let target_ty = self.tcx.types.f64;
+                                let scope_id = expr.hir_id.local_id;
+
+                                if lhs_ty.is_numeric() && rhs_ty.is_numeric() {
+                                    // Mixed int/float case: cast both to f64
+                                    if lhs_ty.is_integral() && rhs_ty.is_floating_point()
+                                        || lhs_ty.is_floating_point() && rhs_ty.is_integral()
+                                    {
+                                        if lhs_ty.is_integral() {
+                                            lhs_mir = self.thir.exprs.push(Expr {
+                                                temp_scope_id: scope_id,
+                                                ty: target_ty,
+                                                span: self.thir[lhs_mir].span,
+                                                kind: ExprKind::Cast {
+                                                    source: lhs_mir,
+                                                },
+                                            });
+                                        }
+                                        if rhs_ty.is_integral() {
+                                            rhs_mir = self.thir.exprs.push(Expr {
+                                                temp_scope_id: scope_id,
+                                                ty: target_ty,
+                                                span: self.thir[rhs_mir].span,
+                                                kind: ExprKind::Cast {
+                                                    source: rhs_mir,
+                                                },
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+
                             ExprKind::Binary {
-                                op,
-                                lhs: self.mirror_expr(lhs),
-                                rhs: self.mirror_expr(rhs),
+                                op: mir_op,
+                                lhs: lhs_mir,
+                                rhs: rhs_mir,
                             }
                         }
                     }

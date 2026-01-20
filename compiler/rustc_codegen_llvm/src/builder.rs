@@ -530,6 +530,11 @@ impl<'a, 'll, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'll, 'tcx> {
         }
     }
 
+    fn fpow(&mut self, base: &'ll Value, exp: &'ll Value) -> &'ll Value {
+        let ty = self.val_ty(base);
+        self.call_intrinsic("llvm.pow", &[ty], &[base, exp])
+    }
+
     set_math_builder_methods! {
         fadd_fast(x, y) => (LLVMBuildFAdd, LLVMRustSetFastMath),
         fsub_fast(x, y) => (LLVMBuildFSub, LLVMRustSetFastMath),

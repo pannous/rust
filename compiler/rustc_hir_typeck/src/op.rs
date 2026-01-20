@@ -109,6 +109,11 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             return self.check_in_operator(expr, lhs_expr, rhs_expr);
         }
 
+        // Special handling for `**` (Pow) operator: allow mixed int/float types
+        if op.node == hir::BinOpKind::Pow {
+            return self.check_pow_operator(expr, lhs_expr, rhs_expr);
+        }
+
         match BinOpCategory::from(op.node) {
             BinOpCategory::Shortcircuit => {
                 // && and || are a simple case.
@@ -212,6 +217,46 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
                 .emit();
                 Ty::new_error(tcx, guar)
             }
+        }
+    }
+
+    /// Check the `**` (Pow) operator: allows both same-type and mixed int/float operations.
+    /// For mixed types, the result is f64 and casts are inserted during lowering.
+    fn check_pow_operator(
+        &self,
+        expr: &'tcx hir::Expr<'tcx>,
+        lhs_expr: &'tcx hir::Expr<'tcx>,
+        rhs_expr: &'tcx hir::Expr<'tcx>,
+    ) -> Ty<'tcx> {
+        let tcx = self.tcx;
+
+        // Type-check both operands first
+        let lhs_ty = self.check_expr(lhs_expr);
+        let rhs_ty = self.check_expr(rhs_expr);
+
+        let lhs_ty = self.try_structurally_resolve_type(lhs_expr.span, lhs_ty);
+        let rhs_ty = self.try_structurally_resolve_type(rhs_expr.span, rhs_ty);
+
+        // Determine the result type:
+        // - int ** int -> int (lhs type)
+        // - float ** float -> float (lhs type, with same-type requirement)
+        // - mixed int/float -> f64
+        if lhs_ty.is_integral() && rhs_ty.is_integral() {
+            // Both integers: result is same as lhs type
+            lhs_ty
+        } else if lhs_ty.is_floating_point() && rhs_ty.is_floating_point() {
+            // Both floats: require same type
+            self.demand_suptype(rhs_expr.span, lhs_ty, rhs_ty);
+            lhs_ty
+        } else if lhs_ty.is_numeric() && rhs_ty.is_numeric() {
+            // Mixed int/float: result is f64, casts will be inserted by lowering
+            tcx.types.f64
+        } else {
+            // Non-numeric types: emit error
+            let guar = self.dcx()
+                .struct_span_err(expr.span, format!("cannot apply `**` to non-numeric types `{lhs_ty}` and `{rhs_ty}`"))
+                .emit();
+            Ty::new_error(tcx, guar)
         }
     }
 

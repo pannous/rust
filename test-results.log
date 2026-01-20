@@ -118,8 +118,6 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_not
 [0;32m✓[0m test_null_coalesce
 [0;31m✗[0m test_option_abi (exit 139)
-[0;31m✗[0m test_option_debug (exit 139)
-[0;31m✗[0m test_option_hashmap (exit 101)
 [0;32m✓[0m test_optional_chain
 [0;32m✓[0m test_optional_syntax
 [0;31m✗[0m test_pipe (compile)
@@ -190,5 +188,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m81 passed[0m, [0;31m104 failed[0m, 0 skipped
+Results: [0;32m81 passed[0m, [0;31m102 failed[0m, 0 skipped
 ========================================

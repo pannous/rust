@@ -859,13 +859,9 @@ impl<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>> FunctionCx<'a, 'tcx, Bx> {
                 bx.three_way_compare(lhs_ty, lhs, rhs)
             }
             mir::BinOp::Pow => {
-                // For now, implement pow using a runtime loop
-                // TODO: Use LLVM intrinsics for floats, optimize for constant exponents
                 if is_float {
-                    bug!("Float pow not yet implemented in codegen")
+                    bx.fpow(lhs, rhs)
                 } else {
-                    // Integer pow - use binary exponentiation
-                    // This generates a loop at runtime
                     bx.int_pow(lhs, rhs, is_signed)
                 }
             }
