@@ -135,3 +135,47 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_string_char_literal (compile)
 [0;31m✗[0m test_string_comparison (compile)
 [0;32m✓[0m test_string_concat
+[0;32m✓[0m test_string_format_chain
+[0;32m✓[0m test_string_format_simple
+[0;31m✗[0m test_string_interpolation (compile)
+[0;32m✓[0m test_string_macro
+[0;31m✗[0m test_string_methods_todo (compile)
+[0;31m✗[0m test_string_methods (compile)
+[0;31m✗[0m test_string_ops_struct (compile)
+[0;32m✓[0m test_string_ops
+[0;32m✓[0m test_string_replace
+[0;32m✓[0m test_string_reverse
+[0;32m✓[0m test_string_special
+[0;31m✗[0m test_string_var_spacing (compile)
+[0;32m✓[0m test_strings_auto_import
+[0;32m✓[0m test_struct
+[0;32m✓[0m test_synonyms_simple
+[0;32m✓[0m test_synonyms
+[0;32m✓[0m test_tau_pi_approx
+[0;32m✓[0m test_tilde_approx
+[0;32m✓[0m test_transform_synonyms
+[0;32m✓[0m test_truthy_and_complex
+[0;32m✓[0m test_truthy_and
+[0;32m✓[0m test_truthy_simple
+[0;32m✓[0m test_truthy
+[0;31m✗[0m test_try_assign_context_aware (compile)
+[0;31m✗[0m test_try_assign (compile)
+[0;31m✗[0m test_try_assignment (compile)
+[0;31m✗[0m test_try_catch (compile)
+[0;31m✗[0m test_try_propagation (compile)
+[0;32m✓[0m test_typeof
+[0;31m✗[0m test_unicode_ops (compile)
+[0;32m✓[0m test_unicode
+[0;31m✗[0m test_units (compile)
+[0;32m✓[0m test_unused_mut
+[0;31m✗[0m test_user_defined_put (compile)
+[0;31m✗[0m test_vec_methods (compile)
+[0;32m✓[0m test_while_loops
+[0;31m✗[0m test_wit_discover (compile)
+[0;31m✗[0m test_wit_lib (compile)
+[0;32m✓[0m test_with_main
+[0;32m✓[0m test_xor
+
+========================================
+Results: [0;32m94 passed[0m, [0;31m78 failed[0m, 0 skipped
+========================================
