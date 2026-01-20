@@ -72,7 +72,7 @@ impl AssocOp {
             // `<-` should probably be `< -`
             token::LArrow => Some(Binary(BinOpKind::Lt)),
             token::QuestionQuestion => Some(NullCoalesce),
-            token::ApproxEq => Some(ApproxEq),
+            token::ApproxEq | token::Tilde => Some(ApproxEq),
             _ if t.is_keyword(kw::As) => Some(Cast),
             _ if t.is_keyword(kw::In) => Some(Binary(BinOpKind::In)),
             _ => None,

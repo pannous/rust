@@ -117,7 +117,6 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_not_truthiness (compile)
 [0;32m✓[0m test_not
 [0;32m✓[0m test_null_coalesce
-[0;31m✗[0m test_option_abi (exit 139)
 [0;32m✓[0m test_optional_chain
 [0;32m✓[0m test_optional_syntax
 [0;31m✗[0m test_pipe (compile)
@@ -165,6 +164,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_struct
 [0;32m✓[0m test_synonyms_simple
 [0;32m✓[0m test_tau_pi_approx
+[0;32m✓[0m test_tilde_approx
 [0;32m✓[0m test_transform_synonyms
 [0;32m✓[0m test_truthy_and_complex
 [0;32m✓[0m test_truthy_and
@@ -188,5 +188,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m81 passed[0m, [0;31m102 failed[0m, 0 skipped
+Results: [0;32m82 passed[0m, [0;31m101 failed[0m, 0 skipped
 ========================================
