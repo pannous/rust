@@ -101,7 +101,7 @@ fn main() {
             .expect("Failed to open library")
     };
 
-    // Test 1: assert!()metadata for vec_u8_new
+    // Test 1: assert!(metadata for vec_u8_new)
     println!("--- Metadata Checks ---");
     if let Some(meta) = lib.get_metadata("vec_u8_new") {
         println!("vec_u8_new metadata:");

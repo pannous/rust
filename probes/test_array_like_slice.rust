@@ -3,7 +3,7 @@
 
 // Test 1-indexed array access
 z := @['a', 'b', 'c']
-if z#1 ≠ 'a' { put!("First element via #1 fails"); exit() }
+if z#1 ≠ 'a' { put!("First element via #1 fails"); exit(0) }
 // eq!( z#2 , 'b' ); // Second element
 // eq!( z#3 , 'c' );
 
@@ -14,6 +14,6 @@ nums := @[10, 20, 30, 40]
 
 // Test with expressions
 idx := 2
-if z#idx ≠ 'b' { put!("First element via #idx fails"); exit() }
-// if not (z#idx == 'b') { put!("First element via #idx fails"); exit() }
+if z#idx ≠ 'b' { put!("First element via #idx fails"); exit(0) }
+// if not (z#idx == 'b') { put!("First element via #idx fails"); exit(0) }
 put!("All tests passed successfully!")

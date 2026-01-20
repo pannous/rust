@@ -3,5 +3,5 @@
 
 message := helper.Hello()
 put!("Message:", message)
-assert!()"Hello" in message
+assert!("Hello" in message)
 put!("Import working successfully!")

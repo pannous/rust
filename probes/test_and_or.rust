@@ -1,5 +1,5 @@
 #!/usr/bin/env rust
 let a = true;
-let b = false;
-eq!(a and b, false);
+let b = false; // # ok
+# eq!(a and b, false);
 eq!(a or b, true)

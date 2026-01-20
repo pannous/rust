@@ -281,7 +281,7 @@ fn main() {
     }
 
     // === Compiler hash consistency ===
-    println!("\n--- Compiler Hash assert!()---");
+    println!("\n--- Compiler Hash assert!(---");)
     let mut hashes: Vec<(String, u32)> = vec![];
     for sym in &["vec_u8_new", "string_new", "hashmap_ss_new", "option_i32_some"] {
         if let Some(meta) = lib.meta(sym) {

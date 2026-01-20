@@ -1,0 +1,3 @@
+[cargo]
+# Required for building rustc compiler internals without bootstrap
+extraEnv = { "RUSTC_BOOTSTRAP" = "1" }

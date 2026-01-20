@@ -66,7 +66,7 @@ put!("All list method tests passed!\n")
 #  - pop(), shift() - modify-in-place semantics
 #  - sortDesc() - needs custom implementation
 #
-#  The key fix was adding CheckStmt support to the transform so list methods work in assert!()statements. All the
+#  The key fix was adding CheckStmt support to the transform so list methods work in assert!(statements. All the)
 #  basic list methods now work correctly in goo/test_list_methods.goo.
 #
 #╭──────

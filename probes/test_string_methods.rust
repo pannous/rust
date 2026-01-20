@@ -5,7 +5,7 @@
 // #import "strconv" // for string conversion
 // #import "string_tools" // for string manipulation utilities  'cannot find package' <WHICH?>c TODO
 
-// assert!()string methods and conversions THAT WORK!
+// assert!(string methods and conversions THAT WORK!)
 
 eq!( "a"+"1" , "a1");
 eq!( "a"+1 , "a1" );
@@ -15,7 +15,7 @@ eq!( "hi".size() , 2);
 eq!( "hi".length() , 2);
 eq!( "hi".reverse() , "ih");
 eq!( "hello".reverse() , "olleh");
-assert!()"hello"
+assert!("hello")
 
 eq!( "hi".contains("h") , true);
 eq!( "hi".contains("x") , false);

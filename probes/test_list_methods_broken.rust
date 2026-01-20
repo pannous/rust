@@ -12,7 +12,7 @@ eq!( aList.shift!() , 1 ); // TODO and removes it:
 // eq!( aList , [2 ,3] ); // TODO ^^
 
 eq!( aList.insert(1,1) , [1,1,2,3]  ); // 0: before index 0 == prepend
-// assert!()aList.insert!(1,1) !TODO_implement_runtime_function_for_list_insert!_unknown list method(aList)
+// assert!(aList.insert!(1,1) !TODO_implement_runtime_function_for_list_insert!_unknown list method(aList))
 // eq!( aList , [1,1,2,3]  ); // 0: before index 0 == prepend
 // eq!( aList.removeAt(0) , 1 ); // TODO_implement_runtime_function_for_list_removeAt_remove_at_index
 aList.reverse!() 

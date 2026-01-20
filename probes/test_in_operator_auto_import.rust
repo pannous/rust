@@ -13,4 +13,4 @@ put!("'xyz' in '%s': %t\n", text, result2)
 needle := "world"
 result3 := needle in text
 put!("'%s' in '%s': %t\n", needle, text, result3)
-assert!()needle in text
+assert!(needle in text)
