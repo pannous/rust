@@ -48,7 +48,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_dynload_prelude (exit 101)
 [0;31m✗[0m test_ellipsis (exit 101)
 [0;31m✗[0m test_enum_string (compile)
-[0;31m✗[0m test_enum (compile)
+[0;32m✓[0m test_enum
 [0;31m✗[0m test_exclamation_syntax (compile)
 [0;32m✓[0m test_exit
 [0;32m✓[0m test_explicit_main
@@ -185,5 +185,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m84 passed[0m, [0;31m96 failed[0m, 0 skipped
+Results: [0;32m85 passed[0m, [0;31m95 failed[0m, 0 skipped
 ========================================

@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 enum Status { OK, BAD }
+use Status::*;
 put!("OK = %v\n", OK)
 put!("OK = %d\n", OK)
 put!("OK = %s\n", OK) // strict needs String() method
@@ -7,5 +8,4 @@ put!("BAD = %v\n", BAD) // if String() method, else int
 
 status := OK
 put!("Variable status = %v\n", status)
-eq!( status , 0);
 eq!( status , OK);

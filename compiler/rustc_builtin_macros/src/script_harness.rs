@@ -256,6 +256,64 @@ fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribut
 
 // String helpers moved to transformer/string.rs
 
+/// Create #[derive(Debug, Clone, PartialEq)] attribute for script mode types
+fn create_derive_attr(span: Span) -> ast::Attribute {
+    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::token::{IdentIsRaw, TokenKind};
+    use rustc_ast::tokenstream::{TokenStream, TokenTree};
+
+    let path = Path {
+        span,
+        segments: vec![
+            PathSegment::from_ident(Ident::new(sym::derive, span)),
+        ]
+        .into(),
+        tokens: None,
+    };
+
+    // Build tokens: Debug, Clone, PartialEq (not Copy since String fields prevent it)
+    let tokens = TokenStream::new(vec![
+        TokenTree::token_alone(TokenKind::Ident(sym::Debug, IdentIsRaw::No), span),
+        TokenTree::token_alone(TokenKind::Comma, span),
+        TokenTree::token_alone(TokenKind::Ident(sym::Clone, IdentIsRaw::No), span),
+        TokenTree::token_alone(TokenKind::Comma, span),
+        TokenTree::token_alone(TokenKind::Ident(sym::PartialEq, IdentIsRaw::No), span),
+    ]);
+
+    let args = AttrArgs::Delimited(ast::DelimArgs {
+        dspan: rustc_ast::tokenstream::DelimSpan::from_single(span),
+        delim: rustc_ast::token::Delimiter::Parenthesis,
+        tokens,
+    });
+
+    ast::Attribute {
+        kind: AttrKind::Normal(Box::new(NormalAttr {
+            item: ast::AttrItem {
+                unsafety: Safety::Default,
+                path,
+                args: AttrItemKind::Unparsed(args),
+                tokens: None
+            },
+            tokens: None
+        })),
+        id: ast::AttrId::from_u32(0),
+        style: AttrStyle::Outer,
+        span,
+    }
+}
+
+/// Check if item already has a derive attribute
+fn has_derive_attr(item: &ast::Item) -> bool {
+    item.attrs.iter().any(|attr| {
+        if let ast::AttrKind::Normal(normal) = &attr.kind {
+            normal.item.path.segments.last()
+                .is_some_and(|seg| seg.ident.name == sym::derive)
+        } else {
+            false
+        }
+    })
+}
+
 /// Partition items into module-level items and statements for main.
 fn partition_items(
     items: &ThinVec<Box<ast::Item>>,
@@ -265,6 +323,16 @@ fn partition_items(
 
     for item in items {
         match &item.kind {
+            // Enums and structs get automatic derives in script mode
+            ast::ItemKind::Enum(..) | ast::ItemKind::Struct(..) => {
+                let mut item = item.clone();
+                if !has_derive_attr(&item) {
+                    let derive_attr = create_derive_attr(item.span);
+                    item.attrs.insert(0, derive_attr);
+                }
+                module_items.push(item);
+            }
+
             // These must stay at module level
             ast::ItemKind::Use(_)
             | ast::ItemKind::ExternCrate(..)
@@ -272,8 +340,6 @@ fn partition_items(
             | ast::ItemKind::ForeignMod(_)
             | ast::ItemKind::GlobalAsm(_)
             | ast::ItemKind::TyAlias(_)
-            | ast::ItemKind::Enum(..)
-            | ast::ItemKind::Struct(..)
             | ast::ItemKind::Union(..)
             | ast::ItemKind::Trait(..)
             | ast::ItemKind::TraitAlias(..)
