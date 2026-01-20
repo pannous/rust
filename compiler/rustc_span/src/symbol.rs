@@ -720,6 +720,7 @@ symbols! {
         clone_from,
         cloned,
         collect,
+        collections,
         closure,
         closure_lifetime_binder,
         closure_to_fn_coercion,

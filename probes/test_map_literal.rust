@@ -1,0 +1,12 @@
+#!/usr/bin/env rust
+# Test untyped map literals: {key: value} syntax
+
+# Create an untyped map with mixed value types
+person := {name: "Alice", age: 30}
+
+# Access the map values
+put!("person = %v\n", person)
+
+# Test homogeneous map
+coords := {x: 10, y: 20, z: 30}
+put!("coords = %v\n", coords)

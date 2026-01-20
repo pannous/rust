@@ -1004,16 +1004,63 @@ impl<'a> Parser<'a> {
             let block_tail = self.parse_block_tail(lo, s, AttemptLocalParseRecovery::No);
             return Some(match (struct_expr, block_tail) {
                 (Ok(expr), Err(err)) => {
-                    // We have encountered the following:
-                    // fn foo() -> Foo {
-                    //     field: value,
-                    // }
-                    // Suggest:
-                    // fn foo() -> Foo { Path {
-                    //     field: value,
-                    // } }
+                    // Untyped map literal: {name: "Alice", age: 30}
+                    // Convert to ::std::collections::HashMap::from([("name", Val::from(v1)), ...])
                     err.cancel();
                     self.restore_snapshot(snapshot);
+
+                    if let ExprKind::Struct(struct_expr) = &expr.kind {
+                        let span = expr.span;
+
+                        // Build ::std::collections::HashMap::from path
+                        let hashmap_from_path = Path {
+                            span,
+                            segments: thin_vec![
+                                PathSegment::from_ident(Ident::new(kw::PathRoot, span)),
+                                PathSegment::from_ident(Ident::new(sym::std, span)),
+                                PathSegment::from_ident(Ident::new(sym::collections, span)),
+                                PathSegment::from_ident(Ident::new(sym::HashMap, span)),
+                                PathSegment::from_ident(Ident::new(sym::from, span)),
+                            ],
+                            tokens: None,
+                        };
+                        let path_expr = self.mk_expr(span, ExprKind::Path(None, hashmap_from_path));
+
+                        // Helper to wrap value in Val::from(...)
+                        let mk_val_from = |this: &Self, value: Box<Expr>, sp: Span| -> Box<Expr> {
+                            let val_from_path = Path {
+                                span: sp,
+                                segments: thin_vec![
+                                    PathSegment::from_ident(Ident::new(sym::Val, sp)),
+                                    PathSegment::from_ident(Ident::new(sym::from, sp)),
+                                ],
+                                tokens: None,
+                            };
+                            let path_expr = this.mk_expr(sp, ExprKind::Path(None, val_from_path));
+                            this.mk_expr(sp, ExprKind::Call(path_expr, thin_vec![value]))
+                        };
+
+                        // Build [("key1", Val::from(v1)), ...]
+                        let tuple_exprs: ThinVec<Box<Expr>> = struct_expr
+                            .fields
+                            .iter()
+                            .map(|field| {
+                                let key_lit = token::Lit::new(token::LitKind::Str, field.ident.name, None);
+                                let key_expr = self.mk_expr(field.ident.span, ExprKind::Lit(key_lit));
+                                let val_expr = mk_val_from(self, field.expr.clone(), field.span);
+                                let tup = ExprKind::Tup(thin_vec![key_expr, val_expr]);
+                                self.mk_expr(field.span, tup)
+                            })
+                            .collect();
+
+                        let array_expr = self.mk_expr(span, ExprKind::Array(tuple_exprs));
+                        let map_call = self.mk_expr(span, ExprKind::Call(path_expr, thin_vec![array_expr]));
+
+                        let stmt = ast::Stmt { id: ast::DUMMY_NODE_ID, kind: ast::StmtKind::Expr(map_call), span };
+                        return Some(Ok(self.mk_block(thin_vec![stmt], s, lo.to(self.prev_token.span))));
+                    }
+
+                    // Fallback to original error
                     let guar = self.dcx().emit_err(StructLiteralBodyWithoutPath {
                         span: expr.span,
                         sugg: StructLiteralBodyWithoutPathSugg {
@@ -1021,11 +1068,7 @@ impl<'a> Parser<'a> {
                             after: expr.span.shrink_to_hi(),
                         },
                     });
-                    Ok(self.mk_block(
-                        thin_vec![self.mk_stmt_err(expr.span, guar)],
-                        s,
-                        lo.to(self.prev_token.span),
-                    ))
+                    Ok(self.mk_block(thin_vec![self.mk_stmt_err(expr.span, guar)], s, lo.to(self.prev_token.span)))
                 }
                 (Err(err), Ok(tail)) => {
                     // We have a block tail that contains a somehow valid expr.

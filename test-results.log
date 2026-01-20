@@ -23,7 +23,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_class_derive
 [0;31m✗[0m test_class_funcs (compile)
 [0;31m✗[0m test_class_methods (compile)
-[0;31m✗[0m test_class (compile)
+[0;32m✓[0m test_class
 [0;31m✗[0m test_comma_compatibility (compile)
 [0;32m✓[0m test_comments
 [0;31m✗[0m test_compound (compile)
@@ -103,6 +103,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_map_dot_nested (compile)
 [0;31m✗[0m test_map_dot_notation (compile)
 [0;31m✗[0m test_map_fields (compile)
+[0;32m✓[0m test_map_literal
 [0;31m✗[0m test_map_type_inference (compile)
 [0;31m✗[0m test_map (compile)
 [0;32m✓[0m test_minimal_conflict
@@ -126,7 +127,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;31m✗[0m test_printf_format (compile)
 [0;31m✗[0m test_printf (compile)
 [0;32m✓[0m test_put_eq
-[0;31m✗[0m test_put_no_import (compile)
+[0;32m✓[0m test_put_no_import
 [0;32m✓[0m test_put
 [0;31m✗[0m test_range_exclusive (compile)
 [0;31m✗[0m test_range_inclusive (compile)
@@ -185,5 +186,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m85 passed[0m, [0;31m95 failed[0m, 0 skipped
+Results: [0;32m88 passed[0m, [0;31m93 failed[0m, 0 skipped
 ========================================
