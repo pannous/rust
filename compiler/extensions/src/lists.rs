@@ -1,9 +1,27 @@
-// List/slice extension methods for script mode.
+// List/slice/vec extension methods for script mode.
 //
 // Provides convenient collection methods with intuitive synonyms.
 
+// Separate trait for size/length on slices/vecs to avoid conflict with StringExtensions
+// (str also implements AsRef<[u8]> so blanket impl would overlap)
 #[allow(dead_code)]
-pub trait ScriptSliceExt<T: Clone> {
+pub trait SliceSizeExt {
+	fn size(&self) -> usize;
+	fn length(&self) -> usize;
+}
+
+impl<T> SliceSizeExt for [T] {
+	fn size(&self) -> usize { self.len() }
+	fn length(&self) -> usize { self.len() }
+}
+
+impl<T> SliceSizeExt for Vec<T> {
+	fn size(&self) -> usize { self.len() }
+	fn length(&self) -> usize { self.len() }
+}
+
+#[allow(dead_code)]
+pub trait ListExtensions<T: Clone> {
 	// Map synonyms - transform each element
 	fn mapped<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
 	fn apply<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
@@ -46,7 +64,7 @@ pub trait ScriptSliceExt<T: Clone> {
 	fn sort_desc(&self) -> Vec<T> where T: Ord;
 }
 
-impl<T: Clone, S: AsRef<[T]>> ScriptSliceExt<T> for S {
+impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 	fn mapped<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U> {
 		self.as_ref().iter().cloned().map(f).collect()
 	}

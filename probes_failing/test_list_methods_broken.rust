@@ -2,32 +2,24 @@
 // Broken/unimplemented list methods
 // DON'T REMOVE TESTS even if they fail
 
-aList := [1, 2, 3]
-
-// TODO: .size() alias for .len() - conflicts with StringExtensions
-eq!( aList.size() , 3 )
-
-// TODO: .length() alias for .len() - conflicts with StringExtensions
-eq!( aList.length() , 3 )
+my_list := [1, 2, 3]
 
 // TODO: indexOf without & (auto-borrow like 'in' operator)
-eq!( aList.indexOf(2) , 1 )
+eq!( my_list.indexOf(2) , 1 )
 
 // TODO: [1,2,3].join("-") for int lists (auto-stringify)
 eq!( [1,2,3].join("-") , "1-2-3" )
 
 // TODO: .shift() returning T (not Option<T>)
-eq!( aList.shift() , 1 )
+eq!( my_list.shift() , 1 )
 
-// TODO: .reverse() without mutating (conflict with reversed?)
-eq!( aList.reverse() , [3,2,1] )
+// TODO: .reverse() non-mutating (use reversed() as workaround)
+eq!( my_list.reverse() , [3,2,1] )
 
 put!("All broken list method tests passed!\n")
 
-// Notes on still-broken methods:
-// - size()/length() conflict with StringExtensions trait
-//   Need to either: rename methods, make impl more specific, or fix in StringExtensions
+// Notes:
 // - indexOf(2) without & - needs auto-borrow like 'in' operator
 // - [1,2,3].join() - needs Display trait bound or auto-stringify
 // - shift() returning T - current impl returns Option<T> which is safer
-// - reverse() non-mutating - use reversed() instead (conflict resolution)
+// - reverse() non-mutating - use reversed() instead

@@ -2,25 +2,27 @@
 // Test working list methods
 // DON'T REMOVE TESTS even if they fail
 
-aList := [1, 2, 3]
+my_list := [1, 2, 3]
 
 // Basic indexing
-eq!( aList[1] , 2 )
+eq!( my_list[1] , 2 )
 
 // first/last - note: returns Option<&T>
-eq!( aList.first() , Some(&1) )
-eq!( aList.last() , Some(&3) )
+eq!( my_list.first() , Some(&1) )
+eq!( my_list.last() , Some(&3) )
 
-// len
-eq!( aList.len() , 3 )
+// len / size / length
+eq!( my_list.len() , 3 )
+eq!( my_list.size() , 3 )
+eq!( my_list.length() , 3 )
 
 // contains - needs & or use 'in' operator
-eq!( aList.contains(&2) , true )
-eq!( aList.contains(&5) , false )
+eq!( my_list.contains(&2) , true )
+eq!( my_list.contains(&5) , false )
 
 // 'in' operator (auto-borrows)
-eq!( 2 in aList , true )
-eq!( 5 in aList , false )
+eq!( 2 in my_list , true )
+eq!( 5 in my_list , false )
 
 // sort (in place)
 sorted := [3, 1, 2]
@@ -28,7 +30,7 @@ sorted.sort()
 eq!( sorted , [1,2,3] )
 
 // to_vec (clone)
-eq!( aList.to_vec() , vec![1,2,3] )
+eq!( my_list.to_vec() , vec![1,2,3] )
 
 // String list join
 stringList := ["3", "2", "1"]
@@ -37,15 +39,15 @@ eq!( stringList.join("") , "321" )
 
 // iter
 sum := 0
-for x in aList.iter() { sum += x }
+for x in my_list.iter() { sum += x }
 eq!( sum , 6 )
 
 // get (safe indexing)
-eq!( aList.get(1) , Some(&2) )
-eq!( aList.get(99) , None )
+eq!( my_list.get(1) , Some(&2) )
+eq!( my_list.get(99) , None )
 
 // is_empty
-eq!( aList.is_empty() , false )
+eq!( my_list.is_empty() , false )
 let empty: [i32; 0] = []
 eq!( empty.is_empty() , true )
 
@@ -57,27 +59,27 @@ eq!( rev , vec![3, 2, 1] )
 // ===== NEW METHODS FROM ScriptSliceExt =====
 
 // indexOf - returns index or -1 if not found
-eq!( aList.indexOf(&2) , 1 )
-eq!( aList.indexOf(&5) , -1 )
+eq!( my_list.indexOf(&2) , 1 )
+eq!( my_list.indexOf(&5) , -1 )
 
 // slice(start, end) - non-mutating slice to vec
-eq!( aList.slice(1,3) , vec![2,3] )
-eq!( aList.slice(0,2) , vec![1,2] )
+eq!( my_list.slice(1,3) , vec![2,3] )
+eq!( my_list.slice(0,2) , vec![1,2] )
 
 // copy - clone to vec
-eq!( aList.copy() , vec![1,2,3] )
+eq!( my_list.copy() , vec![1,2,3] )
 
 // append - non-mutating, returns new vec
-eq!( aList.append(4) , vec![1,2,3,4] )
+eq!( my_list.append(4) , vec![1,2,3,4] )
 
 // prepend - non-mutating, returns new vec
-eq!( aList.prepend(0) , vec![0,1,2,3] )
+eq!( my_list.prepend(0) , vec![0,1,2,3] )
 
 // insert - non-mutating, returns new vec
-eq!( aList.insert(1, 99) , vec![1,99,2,3] )
+eq!( my_list.insert(1, 99) , vec![1,99,2,3] )
 
 // reversed - non-mutating reverse
-eq!( aList.reversed() , vec![3,2,1] )
+eq!( my_list.reversed() , vec![3,2,1] )
 
 // sorted - non-mutating sort
 eq!( [3,1,2].sorted() , vec![1,2,3] )
