@@ -1,6 +1,6 @@
-//! Truthy trait for script mode.
-//!
-//! Allows values to be used in boolean contexts like Python/JavaScript.
+// Truthy trait for script mode.
+//
+// Allows values to be used in boolean contexts like Python/JavaScript.
 
 #[allow(dead_code)]
 pub trait Truthy {

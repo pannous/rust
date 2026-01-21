@@ -41,7 +41,7 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_implicit_main
 [0;32m✓[0m test_in_operator_rune_strings
 [0;32m✓[0m test_in_operator_slices
-[0;31m✗[0m test_in_operator (compile)
+[0;32m✓[0m test_in_operator
 [0;32m✓[0m test_increment_decrement
 [0;32m✓[0m test_int
 [0;32m✓[0m test_leading_dot_float
@@ -87,8 +87,8 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_string_special
 [0;32m✓[0m test_strings_auto_import
 [0;32m✓[0m test_struct
-[0;31m✗[0m test_synonyms_simple (compile)
-[0;31m✗[0m test_synonyms (compile)
+[0;32m✓[0m test_synonyms_simple
+[0;32m✓[0m test_synonyms
 [0;32m✓[0m test_tau_pi_approx
 [0;32m✓[0m test_tilde_approx
 [0;32m✓[0m test_transform_synonyms
@@ -104,10 +104,5 @@ Mode: [0;33mall[0m (includes WIP files)
 [0;32m✓[0m test_xor
 
 ========================================
-Results: [0;32m96 passed[0m, [0;31m3 failed[0m, 0 skipped
+Results: [0;32m99 passed[0m, [0;31m0 failed[0m, 0 skipped
 ========================================
-
-Failed:
-  - test_in_operator
-  - test_synonyms_simple
-  - test_synonyms

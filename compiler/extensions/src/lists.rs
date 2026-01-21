@@ -1,6 +1,6 @@
-//! List/slice extension methods for script mode.
-//!
-//! Provides convenient collection methods with intuitive synonyms.
+// List/slice extension methods for script mode.
+//
+// Provides convenient collection methods with intuitive synonyms.
 
 #[allow(dead_code)]
 pub trait ScriptSliceExt<T: Clone> { // todo rename to SliceExtensions
@@ -52,6 +52,6 @@ impl<T: Clone, S: AsRef<[T]>> ScriptSliceExt<T> for S {
 }
 
 #[allow(dead_code)]
-fn slice_eq<T: PartialEq, A: AsRef<[T]>, B: AsRef<[T]>>(a: &A, b: &B) -> bool {
+pub fn slice_eq<T: PartialEq, A: AsRef<[T]>, B: AsRef<[T]>>(a: &A, b: &B) -> bool {
 	a.as_ref() == b.as_ref()
 }

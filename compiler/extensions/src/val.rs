@@ -1,8 +1,7 @@
-//! Val enum for dynamic typing in script mode.
-//!
-//! Enables heterogeneous collections and dynamic value handling.
-
-use super::truthy::Truthy;
+// Val enum for dynamic typing in script mode.
+//
+// Enables heterogeneous collections and dynamic value handling.
+// Note: Truthy trait must be defined before this file (loaded from truthy.rs).
 
 #[derive(Clone, Debug, PartialEq)]
 #[allow(dead_code)]

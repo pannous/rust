@@ -3,7 +3,7 @@
 // Provides convenient string methods with intuitive synonyms.
 
 #[allow(dead_code)]
-pub trait ScriptStrExt {
+pub trait StringExtensions {
 	fn first(&self) -> String;
 	fn head(&self) -> String;
 	fn start(&self) -> String;
@@ -31,7 +31,7 @@ pub trait ScriptStrExt {
 	fn swap(&self, from: &str, to: &str) -> String;
 }
 
-impl ScriptStrExt for &str {
+impl StringExtensions for &str {
 	fn first(&self) -> String { self.chars().next().map(|c| c.to_string()).unwrap_or_default() }
 	fn head(&self) -> String { self.first() }
 	fn start(&self) -> String { self.first() }
@@ -59,7 +59,7 @@ impl ScriptStrExt for &str {
 	fn swap(&self, from: &str, to: &str) -> String { self.replace(from, to) }
 }
 
-impl ScriptStrExt for String {
+impl StringExtensions for String {
 	fn first(&self) -> String { self.as_str().first() }
 	fn head(&self) -> String { self.as_str().head() }
 	fn start(&self) -> String { self.as_str().start() }

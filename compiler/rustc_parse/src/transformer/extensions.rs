@@ -2,6 +2,9 @@
 //!
 //! Instead of generating AST programmatically, this module parses actual Rust
 //! source code from the extensions library and injects it into scripts.
+//!
+//! Extension files are loaded individually via include_str!() so changes to
+//! any file will trigger recompilation.
 
 use rustc_ast as ast;
 use rustc_session::parse::ParseSess;
@@ -11,9 +14,14 @@ use thin_vec::ThinVec;
 use crate::parser::{ForceCollect, Parser};
 use crate::source_str_to_stream;
 
-/// Extensions source code - embedded at compile time.
-/// This is the actual Rust code that gets parsed and injected.
-const EXTENSIONS_SOURCE: &str = include_str!("../../../extensions/src/all.rs");
+/// Extensions source code - embedded at compile time from individual files.
+/// Each file is included separately so changes to any file trigger recompilation.
+const TRUTHY_SOURCE: &str = include_str!("../../../extensions/src/truthy.rs");
+const STRINGS_SOURCE: &str = include_str!("../../../extensions/src/strings.rs");
+const LISTS_SOURCE: &str = include_str!("../../../extensions/src/lists.rs");
+const VAL_SOURCE: &str = include_str!("../../../extensions/src/val.rs");
+const NUMBERS_SOURCE: &str = include_str!("../../../extensions/src/numbers.rs");
+const MACROS_SOURCE: &str = include_str!("../../../extensions/src/macros.rs");
 
 /// Parse and return the extensions items with proper span context.
 ///
@@ -24,8 +32,16 @@ pub fn parse_extensions(
     psess: &ParseSess,
     call_site: Span,
 ) -> ThinVec<Box<ast::Item>> {
-    // Filter out macros from the source - we handle those separately
-    let source_without_macros = filter_out_macros(EXTENSIONS_SOURCE);
+    // Concatenate all extension source files
+    let combined_source = [
+        TRUTHY_SOURCE,
+        STRINGS_SOURCE,
+        LISTS_SOURCE,
+        VAL_SOURCE,
+        NUMBERS_SOURCE,
+        MACROS_SOURCE,
+    ].join("\n");
+    let source_without_macros = filter_out_macros(&combined_source);
 
     let filename = FileName::Custom("script_extensions".into());
 

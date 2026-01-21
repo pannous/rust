@@ -6,8 +6,20 @@ edition = "2024"
 # This crate contains Rust source code that gets injected into scripts.
 # It is NOT compiled as a library - the source files are read at compile time
 # by script_harness.rs and parsed into AST for injection.
-#
+#  used in /opt/other/rust/compiler/rustc_parse/src/transformer/extensions.rs
+
+# ⚠️ no use or mod statements
+# ⚠️ Each file is imported individually via
+                              
+      # 16 +const TRUTHY_SOURCE: &str = include_str!("../../../extensions/src/truthy.rs");                                   
+      # 17 +const STRINGS_SOURCE: &str = include_str!("../../../extensions/src/strings.rs");                                 
+      # 18 +const LISTS_SOURCE: &str = include_str!("../../../extensions/src/lists.rs");                                     
+      # 19 +const VAL_SOURCE: &str = include_str!("../../../extensions/src/val.rs");                                         
+      # 20 +const NUMBERS_SOURCE: &str = include_str!("../../../extensions/src/numbers.rs");                                 
+      # 21 +const MACROS_SOURCE: &str = include_str!("../../../extensions/src/macros.rs");  
+
 # The crate exists mainly for:
 # 1. Editor support (syntax highlighting, IDE features)
 # 2. Easy testing of the extensions code
 # 3. Documentation
+# 4. Aditional standalone usage OUTSIDE of the modified rust https://github.com/pannous/rust
