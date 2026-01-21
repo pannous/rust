@@ -2,23 +2,6 @@
 //
 // Provides convenient collection methods with intuitive synonyms.
 
-// Separate trait for size/length on slices/vecs to avoid conflict with StringExtensions
-// (str also implements AsRef<[u8]> so blanket impl would overlap)
-#[allow(dead_code)]
-pub trait SliceSizeExt {
-	fn size(&self) -> usize;
-	fn length(&self) -> usize;
-}
-
-impl<T> SliceSizeExt for [T] {
-	fn size(&self) -> usize { self.len() }
-	fn length(&self) -> usize { self.len() }
-}
-
-impl<T> SliceSizeExt for Vec<T> {
-	fn size(&self) -> usize { self.len() }
-	fn length(&self) -> usize { self.len() }
-}
 
 #[allow(dead_code)]
 pub trait ListExtensions<T: Clone> {
@@ -147,4 +130,22 @@ pub fn len<T, S: AsRef<[T]>>(s: S) -> usize {
 #[allow(dead_code)]
 pub fn slice_eq<T: PartialEq, A: AsRef<[T]>, B: AsRef<[T]>>(a: &A, b: &B) -> bool {
 	a.as_ref() == b.as_ref()
+}
+
+// Separate trait for size/length on slices/vecs to avoid conflict with StringExtensions
+// (str also implements AsRef<[u8]> so blanket impl would overlap)
+#[allow(dead_code)]
+pub trait SliceSizeExt {
+	fn size(&self) -> usize;
+	fn length(&self) -> usize;
+}
+
+impl<T> SliceSizeExt for [T] {
+	fn size(&self) -> usize { self.len() }
+	fn length(&self) -> usize { self.len() }
+}
+
+impl<T> SliceSizeExt for Vec<T> {
+	fn size(&self) -> usize { self.len() }
+	fn length(&self) -> usize { self.len() }
 }
