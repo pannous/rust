@@ -1,0 +1,15 @@
+#!/usr/bin/env rust
+// myMap := { "hello": 1, "world": 2, "test":  3 }
+myMap := { hello: 1, world: 2, test:  3 }
+
+// Test key existence using assignment like string tests
+// known issue
+result1 := ("hello" in myMap)
+result2 := "world" in myMap
+result3 := "missing" in myMap
+
+put!("'hello' in myMap: %t\n", result1)
+put!("'world' in myMap: %t\n", result2)
+put!("'missing' in myMap: %t\n", result3)
+
+put!("ALL MAP TESTS COMPLETED\n")

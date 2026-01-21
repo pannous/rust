@@ -1,0 +1,7 @@
+#!/usr/bin/env rust
+// import "./helper" // Local directory imports require explicit ./ prefix
+
+message := helper.Hello()
+put!("Message:", message)
+assert!("Hello" in message)
+put!("Import working successfully!")

@@ -1,0 +1,9 @@
+#!/usr/bin/env rust
+a_list := [1, 2, 3]
+eq!( a_list.shift() , 1 );// can't modify!
+
+a_vec := @[1, 2, 3]
+eq!( a_vec.shift() , 1 );
+eq!( a_vec , [2, 3] );
+
+put!("All tests completed successfully.\n")

@@ -114,22 +114,6 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             return self.check_pow_operator(expr, lhs_expr, rhs_expr);
         }
 
-        // Special handling for mixed int/float arithmetic: +, -, *, /
-        if matches!(op.node, hir::BinOpKind::Add | hir::BinOpKind::Sub | hir::BinOpKind::Mul | hir::BinOpKind::Div) {
-            let lhs_ty = self.check_expr(lhs_expr);
-            let rhs_ty = self.check_expr(rhs_expr);
-            let lhs_ty = self.try_structurally_resolve_type(lhs_expr.span, lhs_ty);
-            let rhs_ty = self.try_structurally_resolve_type(rhs_expr.span, rhs_ty);
-
-            // Check for mixed int/float case
-            if (lhs_ty.is_integral() && rhs_ty.is_floating_point())
-                || (lhs_ty.is_floating_point() && rhs_ty.is_integral())
-            {
-                // Mixed int/float: result is f64, casts will be inserted by THIR lowering
-                return tcx.types.f64;
-            }
-        }
-
         match BinOpCategory::from(op.node) {
             BinOpCategory::Shortcircuit => {
                 // && and || are a simple case.
