@@ -1,0 +1,7 @@
+#!/usr/bin/env rust
+
+// Using fmt package functions
+fmt.Print("fmt.Print:", "hello", 42, true)
+put!("print:", "hello", 42, true)
+put!("println:", "world", 123, false)
+put!("put!:", "test", 99, true)
