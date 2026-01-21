@@ -29,6 +29,7 @@ pub trait StringExtensions {
 	fn locate(&self, pat: &str) -> Option<usize>;
 	fn substitute(&self, from: &str, to: &str) -> String;
 	fn swap(&self, from: &str, to: &str) -> String;
+	fn swapy(&self, from: &str, to: &str) -> String;
 }
 
 impl StringExtensions for &str {
@@ -57,6 +58,7 @@ impl StringExtensions for &str {
 	fn locate(&self, pat: &str) -> Option<usize> { self.find(pat) }
 	fn substitute(&self, from: &str, to: &str) -> String { self.replace(from, to) }
 	fn swap(&self, from: &str, to: &str) -> String { self.replace(from, to) }
+	fn swapy(&self, from: &str, to: &str) -> String { self.replace(from, to) }
 }
 
 impl StringExtensions for String {
@@ -85,6 +87,7 @@ impl StringExtensions for String {
 	fn locate(&self, pat: &str) -> Option<usize> { self.as_str().locate(pat) }
 	fn substitute(&self, from: &str, to: &str) -> String { self.as_str().substitute(from, to) }
 	fn swap(&self, from: &str, to: &str) -> String { self.as_str().swap(from, to) }
+	fn swapy(&self, from: &str, to: &str) -> String { self.as_str().swap(from, to) }
 }
 
 #[allow(dead_code)]

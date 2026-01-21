@@ -1673,6 +1673,7 @@ fn build_replace_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::A
         attrs: ThinVec::new(),
         tokens: None,
     });
+    println!("!from_expr: {:?}", from_expr);
 
     let to_expr = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
