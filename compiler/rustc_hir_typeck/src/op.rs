@@ -202,13 +202,13 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
                 let lhs_ty = self.check_expr(lhs_expr);
                 let lhs_ty = self.try_structurally_resolve_type(lhs_expr.span, lhs_ty);
 
-                // Auto-borrow: if expected is &T and we have T, add an auto-ref adjustment
-                // This allows `2 in [1,2,3]` instead of requiring `&2 in [1,2,3]`
-                // Also handles `"hello" in ["hello", "world"]` where we have &str but need &&str
+                // Auto-borrow: For `in` operator, always add auto-ref for non-reference LHS
+                // This enables `2 in [1,2,3]` instead of requiring `&2 in [1,2,3]`
+                // Also handles `"needle" in text` and `needle in text` where needle: String
+                // (String doesn't impl Pattern but &String does)
                 if let ty::Ref(region, inner_ty, mutbl) = expected_arg_ty.kind() {
-                    // Check if LHS type matches the inner type (adding a reference makes it work)
+                    // Expected type is &T - check if adding a reference helps
                     if self.can_eq(self.param_env, lhs_ty, *inner_ty) {
-                        // Create auto-borrow adjustment
                         let autoref_mutbl = AutoBorrowMutability::new(*mutbl, AllowTwoPhase::No);
                         let target = Ty::new_ref(tcx, *region, lhs_ty, *mutbl);
                         let autoref = Adjustment {
@@ -217,11 +217,27 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
                         };
                         self.apply_adjustments(lhs_expr, vec![autoref]);
                     } else {
-                        // Fall back to normal coercion which will produce a type error if incompatible
+                        self.demand_coerce(lhs_expr, lhs_ty, expected_arg_ty, None, AllowTwoPhase::No);
+                    }
+                } else if !matches!(lhs_ty.kind(), ty::Ref(..)) {
+                    // LHS is not a reference, and expected type is not a reference (e.g., generic P: Pattern)
+                    // Some types like char implement Pattern directly, others like String need &String
+                    // Add auto-ref only for types that need it (String, but not char or primitives)
+                    let needs_autoref = matches!(lhs_ty.kind(), ty::Adt(..));
+                    if needs_autoref {
+                        let ref_lhs_ty = Ty::new_imm_ref(tcx, tcx.lifetimes.re_erased, lhs_ty);
+                        let autoref = Adjustment {
+                            kind: Adjust::Borrow(AutoBorrow::Ref(AutoBorrowMutability::Not)),
+                            target: ref_lhs_ty,
+                        };
+                        self.apply_adjustments(lhs_expr, vec![autoref]);
+                        self.demand_coerce(lhs_expr, ref_lhs_ty, expected_arg_ty, None, AllowTwoPhase::No);
+                    } else {
+                        // Primitives like char work directly
                         self.demand_coerce(lhs_expr, lhs_ty, expected_arg_ty, None, AllowTwoPhase::No);
                     }
                 } else {
-                    // Expected type is not a reference, use normal coercion
+                    // LHS is already a reference, use normal coercion
                     self.demand_coerce(lhs_expr, lhs_ty, expected_arg_ty, None, AllowTwoPhase::No);
                 }
 
