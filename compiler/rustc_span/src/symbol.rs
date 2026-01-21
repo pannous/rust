@@ -2443,6 +2443,7 @@ symbols! {
         type_length_limit,
         type_macros,
         type_name,
+        type_name_of_val,
         type_of,
         typeid,
         type_privacy_lints,

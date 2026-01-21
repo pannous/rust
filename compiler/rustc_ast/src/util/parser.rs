@@ -14,6 +14,8 @@ pub enum AssocOp {
     Assign,
     /// `as`
     Cast,
+    /// `is` type check (script mode)
+    Is,
     /// `..` or `..=` range
     Range(RangeLimits),
     /// `??` null coalescing
@@ -75,6 +77,7 @@ impl AssocOp {
             token::ApproxEq | token::Tilde => Some(ApproxEq),
             _ if t.is_keyword(kw::As) => Some(Cast),
             _ if t.is_keyword(kw::In) => Some(Binary(BinOpKind::In)),
+            _ if t.is_ident_named(rustc_span::sym::is) => Some(Is),
             _ => None,
         }
     }
@@ -83,7 +86,7 @@ impl AssocOp {
     pub fn precedence(&self) -> ExprPrecedence {
         use AssocOp::*;
         match *self {
-            Cast => ExprPrecedence::Cast,
+            Cast | Is => ExprPrecedence::Cast,
             Binary(bin_op) => bin_op.precedence(),
             Range(_) => ExprPrecedence::Range,
             NullCoalesce => ExprPrecedence::NullCoalesce,
@@ -99,7 +102,7 @@ impl AssocOp {
         match *self {
             Assign | AssignOp(_) => Fixity::Right,
             Binary(binop) => binop.fixity(),
-            Cast => Fixity::Left,
+            Cast | Is => Fixity::Left,
             Range(_) => Fixity::None,
             NullCoalesce => Fixity::Right, // a ?? b ?? c == a ?? (b ?? c)
             ApproxEq => Fixity::None, // comparison operators are non-associative
@@ -111,7 +114,7 @@ impl AssocOp {
         match *self {
             Binary(binop) => binop.is_comparison(),
             ApproxEq => true,
-            Assign | AssignOp(_) | Cast | Range(_) | NullCoalesce => false,
+            Assign | AssignOp(_) | Cast | Is | Range(_) | NullCoalesce => false,
         }
     }
 
@@ -119,7 +122,7 @@ impl AssocOp {
         use AssocOp::*;
         match *self {
             Assign | AssignOp(_) => true,
-            Cast | Binary(_) | Range(_) | NullCoalesce | ApproxEq => false,
+            Cast | Is | Binary(_) | Range(_) | NullCoalesce | ApproxEq => false,
         }
     }
 
@@ -147,6 +150,7 @@ impl AssocOp {
             // Equal | // `{ 42 } == { 42 }`    Accepting these here would regress incorrect
             // NotEqual | // `{ 42 } != { 42 }  struct literals parser recovery.
             Cast | // `{ 42 } as usize`
+            Is | // `{ 42 } is int`
             ApproxEq // `{ 42 } ≈ 42.0`
         )
     }

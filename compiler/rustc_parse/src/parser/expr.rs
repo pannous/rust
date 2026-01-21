@@ -286,6 +286,10 @@ impl<'a> Parser<'a> {
             if op == AssocOp::Cast {
                 lhs = self.parse_assoc_op_cast(lhs, lhs_span, op_span, ExprKind::Cast)?;
                 continue;
+            } else if op == AssocOp::Is {
+                // `x is Type` transforms to type comparison
+                lhs = self.parse_is_operator(lhs, lhs_span, op_span)?;
+                continue;
             } else if let AssocOp::Range(limits) = op {
                 // If we didn't have to handle `x..`/`x..=`, it would be pretty easy to
                 // generalise it to the Fixity::None code.
@@ -323,7 +327,7 @@ impl<'a> Parser<'a> {
                     let args = thin_vec![lhs, rhs];
                     self.mk_expr(span, ExprKind::Call(fn_expr, args))
                 }
-                AssocOp::Cast | AssocOp::Range(_) => {
+                AssocOp::Cast | AssocOp::Is | AssocOp::Range(_) => {
                     self.dcx().span_bug(span, "AssocOp should have been handled by special case")
                 }
             };
@@ -845,6 +849,81 @@ impl<'a> Parser<'a> {
             err.emit();
         };
         Ok(with_postfix)
+    }
+
+    /// Parse `expr is Type` and transform to type name comparison.
+    /// `x is int` becomes `std::any::type_name::<int>() == std::any::type_name_of_val(&x)`
+    fn parse_is_operator(
+        &mut self,
+        lhs: Box<Expr>,
+        lhs_span: Span,
+        op_span: Span,
+    ) -> PResult<'a, Box<Expr>> {
+        // Parse the type after `is`
+        let rhs_ty = self.parse_as_cast_ty()?;
+        let full_span = lhs_span.to(rhs_ty.span);
+
+        // Build: std::any::type_name::<Type>()
+        let type_name_of_type = self.mk_type_name_call_with_ty(&rhs_ty, op_span);
+
+        // Build: std::any::type_name_of_val(&expr)
+        let type_name_of_val = self.mk_type_name_of_val_call(lhs, op_span);
+
+        // Build: type_name::<Type>() == type_name_of_val(&expr)
+        let eq_op = BinOp { node: BinOpKind::Eq, span: op_span };
+        let eq_expr = ExprKind::Binary(eq_op, type_name_of_type, type_name_of_val);
+
+        Ok(self.mk_expr(full_span, eq_expr))
+    }
+
+    /// Build `std::any::type_name::<T>()` expression
+    fn mk_type_name_call_with_ty(&self, ty: &Ty, span: Span) -> Box<Expr> {
+        // Build path: std::any::type_name
+        let std_seg = ast::PathSegment::from_ident(Ident::new(sym::std, span));
+        let any_seg = ast::PathSegment::from_ident(Ident::new(sym::any, span));
+
+        // Build generic args with the type
+        let generic_args = ast::AngleBracketedArgs {
+            span,
+            args: thin_vec![ast::AngleBracketedArg::Arg(ast::GenericArg::Type(Box::new(ty.clone())))],
+        };
+        let type_name_seg = ast::PathSegment {
+            ident: Ident::new(sym::type_name, span),
+            id: DUMMY_NODE_ID,
+            args: Some(Box::new(ast::GenericArgs::AngleBracketed(generic_args))),
+        };
+
+        let path = ast::Path {
+            span,
+            segments: thin_vec![std_seg, any_seg, type_name_seg],
+            tokens: None,
+        };
+
+        let path_expr = self.mk_expr(span, ExprKind::Path(None, path));
+        // Call with no args: type_name::<T>()
+        self.mk_expr(span, ExprKind::Call(path_expr, ThinVec::new()))
+    }
+
+    /// Build `std::any::type_name_of_val(&expr)` expression
+    fn mk_type_name_of_val_call(&self, expr: Box<Expr>, span: Span) -> Box<Expr> {
+        // Build path: std::any::type_name_of_val
+        let std_seg = ast::PathSegment::from_ident(Ident::new(sym::std, span));
+        let any_seg = ast::PathSegment::from_ident(Ident::new(sym::any, span));
+        let type_name_of_val_seg = ast::PathSegment::from_ident(Ident::new(sym::type_name_of_val, span));
+
+        let path = ast::Path {
+            span,
+            segments: thin_vec![std_seg, any_seg, type_name_of_val_seg],
+            tokens: None,
+        };
+
+        let path_expr = self.mk_expr(span, ExprKind::Path(None, path));
+
+        // Build &expr
+        let ref_expr = self.mk_expr(span, ExprKind::AddrOf(ast::BorrowKind::Ref, ast::Mutability::Not, expr));
+
+        // Call: type_name_of_val(&expr)
+        self.mk_expr(span, ExprKind::Call(path_expr, thin_vec![ref_expr]))
     }
 
     /// Parse `& mut? <expr>` or `& raw [ const | mut ] <expr>`.
