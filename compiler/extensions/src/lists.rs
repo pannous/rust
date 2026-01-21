@@ -18,9 +18,8 @@ pub trait ListExtensions<T: Clone> {
 	fn that<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
 	fn which<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
 
-	// Element access
+	// Element access (non-mutating)
 	fn first_cloned(&self) -> Option<T>;
-	fn shift(&self) -> Option<T>;
 
 	// Enumeration
 	fn pairs(&self) -> Vec<(usize, T)>;
@@ -66,7 +65,6 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 	fn first_cloned(&self) -> Option<T> {
 		self.as_ref().first().cloned()
 	}
-	fn shift(&self) -> Option<T> { self.first_cloned() }
 
 	fn pairs(&self) -> Vec<(usize, T)> {
 		self.as_ref().iter().cloned().enumerate().collect()
@@ -148,4 +146,16 @@ impl<T> SliceSizeExt for [T] {
 impl<T> SliceSizeExt for Vec<T> {
 	fn size(&self) -> usize { self.len() }
 	fn length(&self) -> usize { self.len() }
+}
+
+// Mutating operations for Vec only (not slices)
+#[allow(dead_code)]
+pub trait VecMutExtensions<T> {
+	fn shift(&mut self) -> Option<T>;
+}
+
+impl<T> VecMutExtensions<T> for Vec<T> {
+	fn shift(&mut self) -> Option<T> {
+		if self.is_empty() { None } else { Some(self.remove(0)) }
+	}
 }
