@@ -1,0 +1,63 @@
+#!/usr/bin/env rust
+// Broken/unimplemented list methods
+// DON'T REMOVE TESTS even if they fail
+// These need implementation in compiler/extensions/src/lists.rs
+
+aList := [1, 2, 3]
+
+// TODO: .size() alias for .len()
+eq!( aList.size() , 3 )
+
+// TODO: .length() alias for .len()
+eq!( aList.length() , 3 )
+
+// TODO: len(list) function form
+eq!( len(@[]) , 0 )
+eq!( len(@[1]) , 1 )
+
+// TODO: .indexOf(x) - find index, return -1 if not found
+eq!( aList.indexOf(2) , 1 )
+eq!( aList.indexOf(5) , -1 )
+
+// TODO: .slice(start, end) method
+eq!( aList.slice(1,2) , [2,] )
+
+// TODO: .copy() alias for .clone()/.to_vec()
+eq!( aList.copy() , aList )
+
+// TODO: .append(x) returning new list (non-mutating)
+eq!( aList.append(4) , [1,2,3,4] )
+
+// TODO: .sortDesc() - sort descending
+eq!( [3,1,2].sortDesc() , [3,2,1] )
+
+// TODO: .shift() without ! - return first without removing
+eq!( aList.shift() , 1 )
+
+// TODO: .insert(index, value) - insert and return new list
+eq!( aList.insert(1,99) , [1,99,2,3] )
+
+// TODO: .reverse() without ! - return reversed copy
+eq!( aList.reverse() , [3,2,1] )
+
+// TODO: [1,2,3].join("-") for int lists (auto-stringify)
+eq!( [1,2,3].join("-") , "1-2-3" )
+
+// TODO: .prepend(x) - add to front, return new list
+eq!( aList.prepend(0) , [0,1,2,3] )
+
+put!("All broken list method tests passed!\n")
+
+// Implementation notes:
+// - .size(), .length() -> easy aliases for .len()
+// - len(x) -> free function
+// - .indexOf(x) -> wrap .iter().position(), return -1 if None
+// - .slice(a,b) -> &self[a..b].to_vec()
+// - .copy() -> .to_vec() or .clone()
+// - .append(x) -> create new vec with element added
+// - .sortDesc() -> sort then reverse
+// - .shift() -> .first().cloned()
+// - .insert(i,x) -> create new vec with element inserted
+// - .reverse() -> .iter().rev().cloned().collect()
+// - int join -> map to string then join
+// - .prepend(x) -> create new vec with element at front

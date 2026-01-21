@@ -1,0 +1,57 @@
+#!/usr/bin/env rust
+// Test working list methods
+// DON'T REMOVE TESTS even if they fail
+
+aList := [1, 2, 3]
+
+// Basic indexing
+eq!( aList[1] , 2 )
+
+// first/last - note: returns Option<&T>
+eq!( aList.first() , Some(&1) )
+eq!( aList.last() , Some(&3) )
+
+// len
+eq!( aList.len() , 3 )
+
+// contains - needs & or use 'in' operator
+eq!( aList.contains(&2) , true )
+eq!( aList.contains(&5) , false )
+
+// 'in' operator (auto-borrows)
+eq!( 2 in aList , true )
+eq!( 5 in aList , false )
+
+// sort (in place)
+sorted := [3, 1, 2]
+sorted.sort()
+eq!( sorted , [1,2,3] )
+
+// to_vec (clone)
+eq!( aList.to_vec() , vec![1,2,3] )
+
+// String list join
+stringList := ["3", "2", "1"]
+eq!( stringList.join("-") , "3-2-1" )
+eq!( stringList.join("") , "321" )
+
+// iter
+sum := 0
+for x in aList.iter() { sum += x }
+eq!( sum , 6 )
+
+// get (safe indexing)
+eq!( aList.get(1) , Some(&2) )
+eq!( aList.get(99) , None )
+
+// is_empty
+eq!( aList.is_empty() , false )
+let empty: [i32; 0] = []
+eq!( empty.is_empty() , true )
+
+// reverse on vec
+reversed := vec![1, 2, 3]
+reversed.reverse()
+eq!( reversed , vec![3, 2, 1] )
+
+put!("All list method tests passed!\n")
