@@ -3,7 +3,7 @@
 // Provides convenient collection methods with intuitive synonyms.
 
 #[allow(dead_code)]
-pub trait ScriptSliceExt<T: Clone> { // todo rename to SliceExtensions
+pub trait ScriptSliceExt<T: Clone> {
 	// Map synonyms - transform each element
 	fn mapped<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
 	fn apply<U, F: Fn(T) -> U>(&self, f: F) -> Vec<U>;
@@ -23,6 +23,27 @@ pub trait ScriptSliceExt<T: Clone> { // todo rename to SliceExtensions
 
 	// Enumeration
 	fn pairs(&self) -> Vec<(usize, T)>;
+
+	// Slicing and copying
+	fn slice(&self, start: usize, end: usize) -> Vec<T>;
+	fn copy(&self) -> Vec<T>;
+
+	// Adding elements (non-mutating, returns new vec)
+	fn append(&self, item: T) -> Vec<T>;
+	fn prepend(&self, item: T) -> Vec<T>;
+	fn insert(&self, index: usize, item: T) -> Vec<T>;
+
+	// Non-mutating reverse
+	fn reversed(&self) -> Vec<T>;
+
+	// Index finding
+	fn indexOf(&self, item: &T) -> i64 where T: PartialEq;
+	fn index_of(&self, item: &T) -> i64 where T: PartialEq;
+
+	// Sorting (returns new vec)
+	fn sorted(&self) -> Vec<T> where T: Ord;
+	fn sortDesc(&self) -> Vec<T> where T: Ord;
+	fn sort_desc(&self) -> Vec<T> where T: Ord;
 }
 
 impl<T: Clone, S: AsRef<[T]>> ScriptSliceExt<T> for S {
@@ -49,6 +70,60 @@ impl<T: Clone, S: AsRef<[T]>> ScriptSliceExt<T> for S {
 	fn pairs(&self) -> Vec<(usize, T)> {
 		self.as_ref().iter().cloned().enumerate().collect()
 	}
+
+	// Slicing and copying
+	fn slice(&self, start: usize, end: usize) -> Vec<T> {
+		self.as_ref()[start..end].to_vec()
+	}
+	fn copy(&self) -> Vec<T> { self.as_ref().to_vec() }
+
+	// Adding elements (non-mutating)
+	fn append(&self, item: T) -> Vec<T> {
+		let mut v = self.as_ref().to_vec();
+		v.push(item);
+		v
+	}
+	fn prepend(&self, item: T) -> Vec<T> {
+		let mut v = vec![item];
+		v.extend(self.as_ref().iter().cloned());
+		v
+	}
+	fn insert(&self, index: usize, item: T) -> Vec<T> {
+		let mut v = self.as_ref().to_vec();
+		Vec::insert(&mut v, index, item);
+		v
+	}
+
+	// Non-mutating reverse
+	fn reversed(&self) -> Vec<T> {
+		self.as_ref().iter().rev().cloned().collect()
+	}
+
+	// Index finding - returns -1 if not found (like JS/Python convention)
+	fn indexOf(&self, item: &T) -> i64 where T: PartialEq {
+		self.as_ref().iter().position(|x| x == item).map(|i| i as i64).unwrap_or(-1)
+	}
+	fn index_of(&self, item: &T) -> i64 where T: PartialEq { self.indexOf(item) }
+
+	// Sorting (returns new sorted vec)
+	fn sorted(&self) -> Vec<T> where T: Ord {
+		let mut v = self.as_ref().to_vec();
+		v.sort();
+		v
+	}
+	fn sortDesc(&self) -> Vec<T> where T: Ord {
+		let mut v = self.as_ref().to_vec();
+		v.sort();
+		v.reverse();
+		v
+	}
+	fn sort_desc(&self) -> Vec<T> where T: Ord { self.sortDesc() }
+}
+
+// Free function for len(collection)
+#[allow(dead_code)]
+pub fn len<T, S: AsRef<[T]>>(s: S) -> usize {
+	s.as_ref().len()
 }
 
 #[allow(dead_code)]
