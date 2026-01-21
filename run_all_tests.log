@@ -3,106 +3,23 @@ Probe Test Runner
 Using: /opt/other/rust/rustc
 Mode: [0;33mall[0m (includes WIP files)
 
-[0;32m✓[0m test_and_or
-[0;32m✓[0m test_array_1indexed
-[0;32m✓[0m test_array_like_slice
-[0;32m✓[0m test_as_cast_comprehensive
-[0;32m✓[0m test_as_cast_convert
-[0;32m✓[0m test_as_cast
-[0;32m✓[0m test_assert
-[0;32m✓[0m test_at_map
-[0;32m✓[0m test_at_vec
-[0;32m✓[0m test_auto_return
-[0;32m✓[0m test_box
-[0;32m✓[0m test_byte
-[0;32m✓[0m test_check_reverse
-[0;32m✓[0m test_class_derive
-[0;32m✓[0m test_class
-[0;32m✓[0m test_continue
-[0;32m✓[0m test_def_simple
-[0;32m✓[0m test_def
-[0;32m✓[0m test_dot_conflict
-[0;32m✓[0m test_dynexport
-[0;32m✓[0m test_ellipsis
-[0;32m✓[0m test_enum_string
-[0;32m✓[0m test_enum
-[0;32m✓[0m test_exclamation_syntax
-[0;32m✓[0m test_exit
-[0;32m✓[0m test_explicit_main
-[0;32m✓[0m test_filter_select_simple
-[0;32m✓[0m test_filter_suggestion
-[0;32m✓[0m test_filter_synonyms
-[0;32m✓[0m test_for_in_key_value
-[0;32m✓[0m test_for_key_in
-[0;32m✓[0m test_for_loop
-[0;32m✓[0m test_hash_index
-[0;32m✓[0m test_hash_minimal
-[0;32m✓[0m test_hash_with_if
-[0;32m✓[0m test_implicit_main
-[0;32m✓[0m test_in_operator_rune_strings
-[0;32m✓[0m test_in_operator_slices
-[0;32m✓[0m test_in_operator
-[0;32m✓[0m test_increment_decrement
-[0;32m✓[0m test_int
-[0;32m✓[0m test_leading_dot_float
-[0;32m✓[0m test_list_comparison
-[0;32m✓[0m test_list_comparison2
-[0;32m✓[0m test_list_equality
-[0;32m✓[0m test_list_map
-[0;32m✓[0m test_list_typed
-[0;32m✓[0m test_list
-[0;32m✓[0m test_main
-[0;32m✓[0m test_map_literal
-[0;32m✓[0m test_map_struct
-[0;32m✓[0m test_minimal_conflict
-[0;32m✓[0m test_mixed
-[0;32m✓[0m test_nil
-[0;32m✓[0m test_normal_rust
-[0;32m✓[0m test_not
-[0;32m✓[0m test_null_coalesce
-[0;32m✓[0m test_option_eq_value
-[0;32m✓[0m test_optional_chain
-[0;32m✓[0m test_optional_syntax
-[0;32m✓[0m test_pow
-[0;32m✓[0m test_power_basic
-[0;32m✓[0m test_power
-[0;32m✓[0m test_precedence
-[0;32m✓[0m test_put_eq
-[0;32m✓[0m test_put_no_import
-[0;32m✓[0m test_put
-[0;32m✓[0m test_return_without_arrow
-[0;32m✓[0m test_rune
-[0;32m✓[0m test_script_complex
-[0;32m✓[0m test_simple_for_range
-[0;32m✓[0m test_simple_hash_check
-[0;32m✓[0m test_simple
-[0;32m✓[0m test_string_auto
-[0;32m✓[0m test_string_concat
-[0;32m✓[0m test_string_format_chain
-[0;32m✓[0m test_string_format_simple
-[0;32m✓[0m test_string_macro
-[0;32m✓[0m test_string_ops
-[0;32m✓[0m test_string_replace
-[0;32m✓[0m test_string_reverse
-[0;32m✓[0m test_string_special
-[0;32m✓[0m test_strings_auto_import
-[0;32m✓[0m test_struct
-[0;32m✓[0m test_synonyms_simple
-[0;32m✓[0m test_synonyms
-[0;32m✓[0m test_tau_pi_approx
-[0;32m✓[0m test_tilde_approx
-[0;32m✓[0m test_transform_synonyms
-[0;32m✓[0m test_truthy_and_complex
-[0;32m✓[0m test_truthy_and
-[0;32m✓[0m test_truthy_simple
-[0;32m✓[0m test_truthy
-[0;32m✓[0m test_typeof
-[0;32m✓[0m test_unicode
-[0;32m✓[0m test_unused_mut
-[0;32m✓[0m test_while_loops
-[0;32m✓[0m test_with_main
-[0;32m✓[0m test_xor
-
-========================================
-Results: [0;32m99 passed[0m, [0;31m0 failed[0m, 0 skipped
-========================================
+[0;31m✗[0m test_and_or (compile)
+[0;31m✗[0m test_array_1indexed (compile)
+[0;31m✗[0m test_array_like_slice (compile)
+[0;31m✗[0m test_as_cast_comprehensive (compile)
+[0;31m✗[0m test_as_cast_convert (compile)
+[0;31m✗[0m test_as_cast (compile)
+[0;31m✗[0m test_assert (compile)
+[0;31m✗[0m test_at_map (compile)
+[0;31m✗[0m test_at_vec (compile)
+[0;31m✗[0m test_auto_return (compile)
+[0;31m✗[0m test_box (compile)
+[0;31m✗[0m test_byte (compile)
+[0;31m✗[0m test_check_reverse (compile)
+[0;31m✗[0m test_class_derive (compile)
+[0;31m✗[0m test_class_funcs (compile)
+[0;31m✗[0m test_class_methods (compile)
+[0;31m✗[0m test_class (compile)
+[0;31m✗[0m test_comments (compile)
+[0;31m✗[0m test_comprehensive_units (compile)
+[0;31m✗[0m test_continue (compile)
