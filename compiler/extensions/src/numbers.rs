@@ -9,9 +9,25 @@ pub const τ: f64 = std::f64::consts::TAU;
 #[allow(dead_code)]
 pub const π: f64 = std::f64::consts::PI;
 
+use std::cell::Cell;
+
+thread_local! {
+	static EPSILON: Cell<f64> = Cell::new(1e-6);
+}
+
+#[allow(dead_code)]
+pub fn set_epsilon(eps: f64) {
+	EPSILON.with(|e| e.set(eps));
+}
+
+#[allow(dead_code)]
+pub fn get_epsilon() -> f64 {
+	EPSILON.with(|e| e.get())
+}
+
 #[allow(dead_code)]
 pub fn approx_eq(a: f64, b: f64) -> bool {
-	let epsilon = 1e-9_f64;
+	let epsilon = get_epsilon();
 	(a - b).abs() < epsilon.max(a.abs() * epsilon).max(b.abs() * epsilon)
 }
 
