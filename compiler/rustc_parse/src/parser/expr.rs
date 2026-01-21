@@ -600,9 +600,10 @@ impl<'a> Parser<'a> {
             {
                 make_it!(this, attrs, |this, _| this.parse_expr_box(lo))
             }
-            // C++ style: `not` as alias for `!`
+            // C++ style: `not` as alias for `!` with truthiness support
+            // Transforms `not expr` to `!(&expr).is_truthy()` for non-bool types
             token::Ident(..) if this.is_not_operator() => {
-                make_it!(this, attrs, |this, _| this.parse_expr_unary(lo, UnOp::Not))
+                make_it!(this, attrs, |this, _| this.parse_expr_not_truthy(lo))
             }
             _ => return this.parse_expr_dot_or_call(attrs),
         }
@@ -623,6 +624,38 @@ impl<'a> Parser<'a> {
     fn parse_expr_unary(&mut self, lo: Span, op: UnOp) -> PResult<'a, (Span, ExprKind)> {
         let (span, expr) = self.parse_expr_prefix_common(lo)?;
         Ok((span, self.mk_unary(op, expr)))
+    }
+
+    /// Parse `not expr` and transform to `!(&expr).is_truthy()` for truthiness support.
+    /// This allows `not` to work with non-bool types like integers, strings, etc.
+    fn parse_expr_not_truthy(&mut self, lo: Span) -> PResult<'a, (Span, ExprKind)> {
+        let (span, expr) = self.parse_expr_prefix_common(lo)?;
+
+        // Create (&expr) - reference to the expression
+        let ref_expr = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::AddrOf(ast::BorrowKind::Ref, ast::Mutability::Not, expr),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Create (&expr).is_truthy() - method call
+        let is_truthy_call = Box::new(Expr {
+            id: DUMMY_NODE_ID,
+            kind: ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg: PathSegment::from_ident(Ident::new(sym::is_truthy, span)),
+                receiver: ref_expr,
+                args: ThinVec::new(),
+                span,
+            })),
+            span,
+            attrs: ThinVec::new(),
+            tokens: None,
+        });
+
+        // Create !(...) - negation of is_truthy result
+        Ok((span, self.mk_unary(UnOp::Not, is_truthy_call)))
     }
 
     /// Recover on `~expr` in favor of `!expr`.
