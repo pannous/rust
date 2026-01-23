@@ -49,6 +49,11 @@ use crate::interface::Compiler;
 use crate::{errors, limits, proc_macro_decls, util};
 
 pub fn parse<'a>(sess: &'a Session) -> ast::Crate {
+    // Enable script mode if -Z script flag is set
+    if sess.opts.unstable_opts.script {
+        sess.psess.set_script_mode(true);
+    }
+
     let mut krate = sess
         .time("parse_crate", || {
             let mut parser = unwrap_or_emit_fatal(match &sess.io.input {

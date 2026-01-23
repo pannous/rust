@@ -5,6 +5,12 @@ pub enum FrontmatterAllowed {
     No,
 }
 
+#[derive(Clone, Copy)]
+pub enum ScriptMode {
+    Enabled,
+    Disabled,
+}
+
 /// Peekable iterator over a char sequence.
 ///
 /// Next characters can be peeked via `first` method,
@@ -14,10 +20,13 @@ pub struct Cursor<'a> {
     /// Iterator over chars. Slightly faster than a &str.
     chars: Chars<'a>,
     pub(crate) frontmatter_allowed: FrontmatterAllowed,
+    pub(crate) script_mode: ScriptMode,
     /// Tracks if we're at start of a line (for # comments)
     pub(crate) at_line_start: bool,
     /// Tracks if previous non-whitespace token was `builtin` (for `builtin # name` syntax)
     pub(crate) prev_was_builtin: bool,
+    /// Tracks if the previous token was whitespace (for trailing # comments)
+    pub(crate) prev_token_was_whitespace: bool,
     #[cfg(debug_assertions)]
     prev: char,
 }
@@ -25,13 +34,15 @@ pub struct Cursor<'a> {
 pub(crate) const EOF_CHAR: char = '\0';
 
 impl<'a> Cursor<'a> {
-    pub fn new(input: &'a str, frontmatter_allowed: FrontmatterAllowed) -> Cursor<'a> {
+    pub fn new(input: &'a str, frontmatter_allowed: FrontmatterAllowed, script_mode: ScriptMode) -> Cursor<'a> {
         Cursor {
             len_remaining: input.len(),
             chars: input.chars(),
             frontmatter_allowed,
+            script_mode,
             at_line_start: true,     // Start of input counts as line start
             prev_was_builtin: false, // No previous token
+            prev_token_was_whitespace: false, // No previous token
             #[cfg(debug_assertions)]
             prev: EOF_CHAR,
         }

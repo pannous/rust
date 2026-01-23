@@ -33,7 +33,7 @@ mod tests;
 use LiteralKind::*;
 use TokenKind::*;
 use cursor::EOF_CHAR;
-pub use cursor::{Cursor, FrontmatterAllowed};
+pub use cursor::{Cursor, FrontmatterAllowed, ScriptMode};
 pub use unicode_ident::UNICODE_VERSION;
 use unicode_properties::UnicodeEmoji;
 
@@ -291,7 +291,7 @@ pub fn strip_shebang(input: &str) -> Option<usize> {
         // Ok, this is a shebang but if the next non-whitespace token is `[`,
         // then it may be valid Rust code, so consider it Rust code.
         let next_non_whitespace_token =
-            tokenize(input_tail, FrontmatterAllowed::No).map(|tok| tok.kind).find(|tok| {
+            tokenize(input_tail, FrontmatterAllowed::No, ScriptMode::Disabled).map(|tok| tok.kind).find(|tok| {
                 !matches!(
                     tok,
                     TokenKind::Whitespace
@@ -312,7 +312,7 @@ pub fn strip_shebang(input: &str) -> Option<usize> {
 #[inline]
 pub fn validate_raw_str(input: &str, prefix_len: u32) -> Result<(), RawStrError> {
     debug_assert!(!input.is_empty());
-    let mut cursor = Cursor::new(input, FrontmatterAllowed::No);
+    let mut cursor = Cursor::new(input, FrontmatterAllowed::No, ScriptMode::Disabled);
     // Move past the leading `r` or `br`.
     for _ in 0..prefix_len {
         cursor.bump().unwrap();
@@ -329,8 +329,9 @@ pub fn validate_raw_str(input: &str, prefix_len: u32) -> Result<(), RawStrError>
 pub fn tokenize(
     input: &str,
     frontmatter_allowed: FrontmatterAllowed,
+    script_mode: ScriptMode,
 ) -> impl Iterator<Item = Token> {
-    let mut cursor = Cursor::new(input, frontmatter_allowed);
+    let mut cursor = Cursor::new(input, frontmatter_allowed, script_mode);
     std::iter::from_fn(move || {
         let token = cursor.advance_token();
         if token.kind != TokenKind::Eof { Some(token) } else { None }
@@ -412,7 +413,8 @@ impl Cursor<'_> {
     pub fn advance_token(&mut self) -> Token {
         // Capture state before consuming character
         let was_at_line_start = self.at_line_start;
-        let _prev_was_builtin = self.prev_was_builtin;
+        let prev_was_builtin = self.prev_was_builtin;
+        let prev_token_was_whitespace = self.prev_token_was_whitespace;
         let input_before = self.as_str();
 
         let Some(first_char) = self.bump() else {
@@ -456,14 +458,16 @@ impl Cursor<'_> {
                 _ => Slash,
             },
 
-            // Hash comment (Python-style): ONLY at line start, followed by space
-            // This avoids conflicts with:
-            // - #[attr], #!inner, #"raw", ##double
-            // - #ident macro interpolation in quote!
-            // - `# $var` patterns in macro_rules!
-            // - `builtin # name` syntax
-            // - Standalone `#` tokens (e.g., stringify!(#).parse())
-            '#' if was_at_line_start
+            // Hash comment (Python-style): ONLY in script mode
+            // At line start OR after whitespace (trailing comment)
+            // Requires space before AND after the # to avoid conflicts with:
+            // - #[attr], #!inner, #"raw", ##double (no space after)
+            // - #ident macro interpolation in quote! (no space after)
+            // - `# $var` patterns in macro_rules! (disabled outside script mode)
+            // - `builtin # name` syntax (excluded via prev_was_builtin)
+            // - Standalone `#` tokens e.g. stringify!(#).parse() (excluded via !is_eof)
+            '#' if matches!(self.script_mode, ScriptMode::Enabled)
+                && (was_at_line_start || (prev_token_was_whitespace && !prev_was_builtin))
                 && !matches!(self.first(), '"' | '#' | '!' | '[')
                 && self.first().is_whitespace()
                 && !self.is_eof() =>
@@ -584,6 +588,9 @@ impl Cursor<'_> {
             // stop allowing frontmatters after first non-whitespace token
             self.frontmatter_allowed = FrontmatterAllowed::No;
         }
+        // Track if this token was whitespace (for trailing # comments)
+        self.prev_token_was_whitespace = matches!(token_kind, Whitespace);
+
         let res = Token::new(token_kind, self.pos_within_token());
         self.reset_pos_within_token();
         res

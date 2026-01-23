@@ -1,0 +1,14 @@
+#!/usr/bin/env rust
+# ^^ shebang line for Goo interpreter handled by comment code?
+# This file tests Python-style hash comments
+// old comment style
+/*
+ Multi-line comment block
+ that should be foldable
+ in the IDE
+*/
+put!("OK") # trailing comments now work with space before and after #
+put!("OK")
+let x = 1 # another trailing comment
+let y = 2; # works with semicolon too
+put!(x + y) # prints 3

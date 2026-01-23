@@ -773,7 +773,7 @@ struct TokenIter<'a> {
 
 impl<'a> TokenIter<'a> {
     fn new(src: &'a str) -> Self {
-        Self { src, cursor: Cursor::new(src, FrontmatterAllowed::Yes) }
+        Self { src, cursor: Cursor::new(src, FrontmatterAllowed::Yes, rustc_lexer::ScriptMode::Disabled) }
     }
 }
 

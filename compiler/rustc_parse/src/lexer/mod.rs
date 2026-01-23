@@ -6,7 +6,7 @@ use rustc_ast::util::unicode::{TEXT_FLOW_CONTROL_CHARS, contains_text_flow_contr
 use rustc_errors::codes::*;
 use rustc_errors::{Applicability, Diag, DiagCtxtHandle, StashKey};
 use rustc_lexer::{
-    Base, Cursor, DocStyle, FrontmatterAllowed, LiteralKind, RawStrError, is_horizontal_whitespace,
+    Base, Cursor, DocStyle, FrontmatterAllowed, LiteralKind, RawStrError, ScriptMode, is_horizontal_whitespace,
 };
 use rustc_literal_escaper::{EscapeError, Mode, check_for_errors};
 use rustc_session::lint::BuiltinLintDiag;
@@ -86,7 +86,13 @@ pub(crate) fn lex_token_trees<'psess, 'src>(
         StripTokens::Shebang | StripTokens::Nothing => FrontmatterAllowed::No,
     };
 
-    let cursor = Cursor::new(src, frontmatter_allowed);
+    let script_mode = if psess.script_mode() {
+        ScriptMode::Enabled
+    } else {
+        ScriptMode::Disabled
+    };
+
+    let cursor = Cursor::new(src, frontmatter_allowed, script_mode);
     let mut lexer = Lexer {
         psess,
         start_pos,
@@ -94,6 +100,7 @@ pub(crate) fn lex_token_trees<'psess, 'src>(
         src,
         cursor,
         override_span,
+        script_mode,
         nbsp_is_whitespace: false,
         last_lifetime: None,
         token: Token::dummy(),
@@ -133,6 +140,8 @@ struct Lexer<'psess, 'src> {
     /// Cursor for getting lexer tokens.
     cursor: Cursor<'src>,
     override_span: Option<Span>,
+    /// Script mode for # comments.
+    script_mode: ScriptMode,
     /// When a "unknown start of token: \u{a0}" has already been emitted earlier
     /// in this file, it's safe to treat further occurrences of the non-breaking
     /// space character as whitespace.
@@ -289,7 +298,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                     // was consumed.
                     let lit_start = start + BytePos(prefix_len);
                     self.pos = lit_start;
-                    self.cursor = Cursor::new(&str_before[prefix_len as usize..], FrontmatterAllowed::No);
+                    self.cursor = Cursor::new(&str_before[prefix_len as usize..], FrontmatterAllowed::No, self.script_mode);
                     self.report_unknown_prefix(start);
                     let prefix_span = self.mk_sp(start, lit_start);
                     return (Token::new(self.ident(start), prefix_span), preceded_by_whitespace);
@@ -394,7 +403,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                         // Reset the state so we just lex the `'r`.
                         let lt_start = start + BytePos(2);
                         self.pos = lt_start;
-                        self.cursor = Cursor::new(&str_before[2 as usize..], FrontmatterAllowed::No);
+                        self.cursor = Cursor::new(&str_before[2 as usize..], FrontmatterAllowed::No, self.script_mode);
 
                         let lifetime_name = nfc_normalize(self.str_from(start));
                         token::Lifetime(lifetime_name, IdentIsRaw::No)
@@ -457,7 +466,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
                             self.pos = new_pos;
                             // Recreate cursor at the new position (cursor was only advanced past first char)
                             let remaining = &self.src[self.src_index(new_pos)..];
-                            self.cursor = Cursor::new(remaining, FrontmatterAllowed::No);
+                            self.cursor = Cursor::new(remaining, FrontmatterAllowed::No, self.script_mode);
                             token::Literal(token::Lit { kind, symbol: sym, suffix: None })
                         } else {
                             // Unterminated - emit error and continue
@@ -1093,7 +1102,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
         let space_pos = start + BytePos(1);
         let space_span = self.mk_sp(space_pos, space_pos);
 
-        let mut cursor = Cursor::new(str_before, FrontmatterAllowed::No);
+        let mut cursor = Cursor::new(str_before, FrontmatterAllowed::No, self.script_mode);
 
         let (is_string, span, unterminated) = match cursor.guarded_double_quoted_string() {
             Some(rustc_lexer::GuardedStr { n_hashes, terminated, token_len }) => {
@@ -1159,7 +1168,7 @@ impl<'psess, 'src> Lexer<'psess, 'src> {
             // For backwards compatibility, roll back to after just the first `#`
             // and return the `Pound` token.
             self.pos = start + BytePos(1);
-            self.cursor = Cursor::new(&str_before[1..], FrontmatterAllowed::No);
+            self.cursor = Cursor::new(&str_before[1..], FrontmatterAllowed::No, self.script_mode);
             token::Pound
         }
     }
