@@ -18,6 +18,8 @@ pub struct Cursor<'a> {
     pub(crate) at_line_start: bool,
     /// Tracks if previous non-whitespace token was `builtin` (for `builtin # name` syntax)
     pub(crate) prev_was_builtin: bool,
+    /// Tracks if the previous token was whitespace (for trailing # comments)
+    pub(crate) prev_token_was_whitespace: bool,
     #[cfg(debug_assertions)]
     prev: char,
 }
@@ -32,6 +34,7 @@ impl<'a> Cursor<'a> {
             frontmatter_allowed,
             at_line_start: true,     // Start of input counts as line start
             prev_was_builtin: false, // No previous token
+            prev_token_was_whitespace: false, // No previous token
             #[cfg(debug_assertions)]
             prev: EOF_CHAR,
         }

@@ -412,7 +412,8 @@ impl Cursor<'_> {
     pub fn advance_token(&mut self) -> Token {
         // Capture state before consuming character
         let was_at_line_start = self.at_line_start;
-        let _prev_was_builtin = self.prev_was_builtin;
+        let prev_was_builtin = self.prev_was_builtin;
+        let prev_token_was_whitespace = self.prev_token_was_whitespace;
         let input_before = self.as_str();
 
         let Some(first_char) = self.bump() else {
@@ -456,14 +457,13 @@ impl Cursor<'_> {
                 _ => Slash,
             },
 
-            // Hash comment (Python-style): ONLY at line start, followed by space
-            // This avoids conflicts with:
-            // - #[attr], #!inner, #"raw", ##double
-            // - #ident macro interpolation in quote!
-            // - `# $var` patterns in macro_rules!
-            // - `builtin # name` syntax
-            // - Standalone `#` tokens (e.g., stringify!(#).parse())
-            '#' if was_at_line_start
+            // Hash comment (Python-style): at line start OR after whitespace (trailing comment)
+            // Requires space before AND after the # to avoid conflicts with:
+            // - #[attr], #!inner, #"raw", ##double (no space after)
+            // - #ident macro interpolation in quote! (no space after)
+            // - `builtin # name` syntax (excluded via prev_was_builtin)
+            // - Standalone `#` tokens e.g. stringify!(#).parse() (excluded via !is_eof)
+            '#' if (was_at_line_start || (prev_token_was_whitespace && !prev_was_builtin))
                 && !matches!(self.first(), '"' | '#' | '!' | '[')
                 && self.first().is_whitespace()
                 && !self.is_eof() =>
@@ -584,6 +584,9 @@ impl Cursor<'_> {
             // stop allowing frontmatters after first non-whitespace token
             self.frontmatter_allowed = FrontmatterAllowed::No;
         }
+        // Track if this token was whitespace (for trailing # comments)
+        self.prev_token_was_whitespace = matches!(token_kind, Whitespace);
+
         let res = Token::new(token_kind, self.pos_within_token());
         self.reset_pos_within_token();
         res
