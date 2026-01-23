@@ -4,7 +4,7 @@
 
 LOG_FILE="${1:-test-results.log}"
 PROBES_DIR="probes"
-FAILING_DIR="probes_failing"
+FAILING_DIR="probes/todo/"
 
 if [[ ! -f "$LOG_FILE" ]]; then
     echo "Error: $LOG_FILE not found. Run ./run_all_tests.sh first."

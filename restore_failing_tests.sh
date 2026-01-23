@@ -2,7 +2,7 @@
 # Restore previously hidden failing tests back to probes/
 
 PROBES_DIR="probes"
-FAILING_DIR="probes_failing"
+FAILING_DIR="probes/todo/"
 
 if [[ ! -d "$FAILING_DIR" ]]; then
     echo "No failing tests to restore ($FAILING_DIR not found)"

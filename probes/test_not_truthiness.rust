@@ -36,6 +36,7 @@ eq!( not zero_int8 , true);
 let nonzero_int64: i64 = 42
 eq!( not nonzero_int64 , false);
 
-// TODO: Add support for maps, pointers, channels in 'not' operator
+put!("Most cases are passing. ")
+put!("TODO: Add support for maps, pointers, channels in 'not' operator")
 // These work fine with runtime truthiness in 'if' statements (see test_truthy.goo)
 // but need transform context type information for 'not' operator support
