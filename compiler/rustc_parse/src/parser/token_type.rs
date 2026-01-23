@@ -588,7 +588,7 @@ macro_rules! exp {
 pub(super) struct TokenTypeSet(u128);
 
 impl TokenTypeSet {
-    pub(super) fn new() -> TokenTypeSet {
+    pub(super) const fn new() -> TokenTypeSet {
         TokenTypeSet(0)
     }
 

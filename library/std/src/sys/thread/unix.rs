@@ -49,7 +49,7 @@ impl Thread {
         // WASI does not support threading via pthreads. While wasi-libc provides
         // pthread stubs, pthread_create returns EAGAIN, which causes confusing
         // errors. We return UNSUPPORTED_PLATFORM directly instead.
-        if cfg!(target_os = "wasi") {
+        if cfg!(all(target_os = "wasi", not(target_feature = "atomics"))) {
             return Err(io::Error::UNSUPPORTED_PLATFORM);
         }
 
@@ -528,8 +528,51 @@ pub fn set_name(name: &CStr) {
     debug_assert_eq!(res, libc::OK);
 }
 
-#[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
+#[cfg(not(target_os = "espidf"))]
 pub fn sleep(dur: Duration) {
+    cfg_select! {
+        // Any unix that has clock_nanosleep
+        // If this list changes update the MIRI chock_nanosleep shim
+        any(
+            target_os = "freebsd",
+            target_os = "netbsd",
+            target_os = "linux",
+            target_os = "android",
+            target_os = "solaris",
+            target_os = "illumos",
+            target_os = "dragonfly",
+            target_os = "hurd",
+            target_os = "fuchsia",
+            target_os = "vxworks",
+            target_os = "wasi",
+        ) => {
+            // POSIX specifies that `nanosleep` uses CLOCK_REALTIME, but is not
+            // affected by clock adjustments. The timing of `sleep` however should
+            // be tied to `Instant` where possible. Thus, we use `clock_nanosleep`
+            // with a relative time interval instead, which allows explicitly
+            // specifying the clock.
+            //
+            // In practice, most systems (like e.g. Linux) actually use
+            // CLOCK_MONOTONIC for `nanosleep` anyway, but others like FreeBSD don't
+            // so it's better to be safe.
+            //
+            // wasi-libc prior to WebAssembly/wasi-libc#696 has a broken implementation
+            // of `nanosleep` which used `CLOCK_REALTIME` even though it is unsupported
+            // on WASIp2. Using `clock_nanosleep` directly bypasses the issue.
+            unsafe fn nanosleep(rqtp: *const libc::timespec, rmtp: *mut libc::timespec) -> libc::c_int {
+                unsafe { libc::clock_nanosleep(crate::sys::time::Instant::CLOCK_ID, 0, rqtp, rmtp) }
+            }
+        }
+        _ => {
+            unsafe fn nanosleep(rqtp: *const libc::timespec, rmtp: *mut libc::timespec) -> libc::c_int {
+                let r = unsafe { libc::nanosleep(rqtp, rmtp) };
+                // `clock_nanosleep` returns the error number directly, so mimic
+                // that behaviour to make the shared code below simpler.
+                if r == 0 { 0 } else { sys::io::errno() }
+            }
+        }
+    }
+
     let mut secs = dur.as_secs();
     let mut nsecs = dur.subsec_nanos() as _;
 
@@ -543,8 +586,9 @@ pub fn sleep(dur: Duration) {
             };
             secs -= ts.tv_sec as u64;
             let ts_ptr = &raw mut ts;
-            if libc::nanosleep(ts_ptr, ts_ptr) == -1 {
-                assert_eq!(sys::io::errno(), libc::EINTR);
+            let r = nanosleep(ts_ptr, ts_ptr);
+            if r != 0 {
+                assert_eq!(r, libc::EINTR);
                 secs += ts.tv_sec as u64;
                 nsecs = ts.tv_nsec;
             } else {
@@ -554,13 +598,7 @@ pub fn sleep(dur: Duration) {
     }
 }
 
-#[cfg(any(
-    target_os = "espidf",
-    // wasi-libc prior to WebAssembly/wasi-libc#696 has a broken implementation
-    // of `nanosleep`, used above by most platforms, so use `usleep` until
-    // that fix propagates throughout the ecosystem.
-    target_os = "wasi",
-))]
+#[cfg(target_os = "espidf")]
 pub fn sleep(dur: Duration) {
     // ESP-IDF does not have `nanosleep`, so we use `usleep` instead.
     // As per the documentation of `usleep`, it is expected to support
@@ -639,6 +677,49 @@ pub fn sleep_until(deadline: crate::time::Instant) {
                     "timespec is in range,
                          clockid is valid and kernel should support it"
                 );
+            }
+        }
+    }
+}
+
+#[cfg(target_vendor = "apple")]
+pub fn sleep_until(deadline: crate::time::Instant) {
+    unsafe extern "C" {
+        // This is defined in the public header mach/mach_time.h alongside
+        // `mach_absolute_time`, and like it has been available since the very
+        // beginning.
+        //
+        // There isn't really any documentation on this function, except for a
+        // short reference in technical note 2169:
+        // https://developer.apple.com/library/archive/technotes/tn2169/_index.html
+        safe fn mach_wait_until(deadline: u64) -> libc::kern_return_t;
+    }
+
+    // Make sure to round up to ensure that we definitely sleep until after
+    // the deadline has elapsed.
+    let Some(deadline) = deadline.into_inner().into_mach_absolute_time_ceil() else {
+        // Since the deadline is before the system boot time, it has already
+        // passed, so we can return immediately.
+        return;
+    };
+
+    // If the deadline is not representable, then sleep for the maximum duration
+    // possible and worry about the potential clock issues later (in ca. 600 years).
+    let deadline = deadline.try_into().unwrap_or(u64::MAX);
+    loop {
+        match mach_wait_until(deadline) {
+            // Success! The deadline has passed.
+            libc::KERN_SUCCESS => break,
+            // If the sleep gets interrupted by a signal, `mach_wait_until`
+            // returns KERN_ABORTED, so we need to restart the syscall.
+            // Also see Apple's implementation of the POSIX `nanosleep`, which
+            // converts this error to the POSIX equivalent EINTR:
+            // https://github.com/apple-oss-distributions/Libc/blob/55b54c0a0c37b3b24393b42b90a4c561d6c606b1/gen/nanosleep.c#L281-L306
+            libc::KERN_ABORTED => continue,
+            // All other errors indicate that something has gone wrong...
+            error => {
+                let description = unsafe { CStr::from_ptr(libc::mach_error_string(error)) };
+                panic!("mach_wait_until failed: {} (code {error})", description.display())
             }
         }
     }

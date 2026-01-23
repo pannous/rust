@@ -26,12 +26,6 @@ error[E0463]: can't find crate for `wloop`
 LL | extern crate wloop;
    | ^^^^^^^^^^^^^^^^^^^ can't find crate
 
-error: malformed `patchable_function_entry` attribute input
-  --> $DIR/malformed-attrs.rs:114:1
-   |
-LL | #[patchable_function_entry]
-   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: must be of the form: `#[patchable_function_entry(prefix_nops = m, entry_nops = n)]`
-
 error: malformed `allow` attribute input
   --> $DIR/malformed-attrs.rs:184:1
    |
@@ -444,6 +438,15 @@ LL | #[instruction_set]
    |
    = note: for more information, visit <https://doc.rust-lang.org/reference/attributes/codegen.html#the-instruction_set-attribute>
 
+error[E0539]: malformed `patchable_function_entry` attribute input
+  --> $DIR/malformed-attrs.rs:114:1
+   |
+LL | #[patchable_function_entry]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   | |
+   | expected this to be a list
+   | help: must be of the form: `#[patchable_function_entry(prefix_nops = m, entry_nops = n)]`
+
 error[E0565]: malformed `coroutine` attribute input
   --> $DIR/malformed-attrs.rs:117:5
    |
@@ -771,7 +774,7 @@ warning: crate-level attribute should be an inner attribute: add an exclamation 
 LL | #[crate_name]
    | ^^^^^^^^^^^^^
    |
-note: This attribute does not have an `!`, which means it is applied to this function
+note: this attribute does not have an `!`, which means it is applied to this function
   --> $DIR/malformed-attrs.rs:116:1
    |
 LL | / fn test() {

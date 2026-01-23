@@ -45,6 +45,8 @@ pub enum TypeKind {
     Tuple(Tuple),
     /// Arrays.
     Array(Array),
+    /// Slices.
+    Slice(Slice),
     /// Primitive boolean type.
     Bool(Bool),
     /// Primitive character type.
@@ -57,6 +59,8 @@ pub enum TypeKind {
     Str(Str),
     /// References.
     Reference(Reference),
+    /// Pointers.
+    Pointer(Pointer),
     /// FIXME(#146922): add all the common types
     Other,
 }
@@ -92,6 +96,15 @@ pub struct Array {
     pub len: usize,
 }
 
+/// Compile-time type information about slices.
+#[derive(Debug)]
+#[non_exhaustive]
+#[unstable(feature = "type_info", issue = "146922")]
+pub struct Slice {
+    /// The type of each element in the slice.
+    pub element_ty: TypeId,
+}
+
 /// Compile-time type information about `bool`.
 #[derive(Debug)]
 #[non_exhaustive]
@@ -114,7 +127,7 @@ pub struct Char {
 #[unstable(feature = "type_info", issue = "146922")]
 pub struct Int {
     /// The bit width of the signed integer type.
-    pub bit_width: usize,
+    pub bits: u32,
     /// Whether the integer type is signed.
     pub signed: bool,
 }
@@ -125,7 +138,7 @@ pub struct Int {
 #[unstable(feature = "type_info", issue = "146922")]
 pub struct Float {
     /// The bit width of the floating-point type.
-    pub bit_width: usize,
+    pub bits: u32,
 }
 
 /// Compile-time type information about string slice types.
@@ -144,5 +157,16 @@ pub struct Reference {
     /// The type of the value being referred to.
     pub pointee: TypeId,
     /// Whether this reference is mutable or not.
+    pub mutable: bool,
+}
+
+/// Compile-time type information about pointers.
+#[derive(Debug)]
+#[non_exhaustive]
+#[unstable(feature = "type_info", issue = "146922")]
+pub struct Pointer {
+    /// The type of the value being pointed to.
+    pub pointee: TypeId,
+    /// Whether this pointer is mutable or not.
     pub mutable: bool,
 }
