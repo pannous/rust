@@ -20,6 +20,7 @@ pub struct Cursor<'a> {
     /// Iterator over chars. Slightly faster than a &str.
     chars: Chars<'a>,
     pub(crate) frontmatter_allowed: FrontmatterAllowed,
+    #[allow(dead_code)]
     pub(crate) script_mode: ScriptMode,
     /// Tracks if we're at start of a line (for # comments)
     pub(crate) at_line_start: bool,

@@ -4858,6 +4858,27 @@ impl<'a> Parser<'a> {
             }
         }
 
+        // String-char comparison for equality operations: "a" == 'a' -> "a" == 'a'.to_string()
+        // Coerce when one operand is a string literal and the other is a char literal
+        let is_char_lit = |e: &Expr| matches!(&e.kind, ExprKind::Lit(lit)
+            if lit.kind == token::LitKind::Char);
+        let is_equality = matches!(binop.node, BinOpKind::Eq | BinOpKind::Ne);
+        if is_equality {
+            let lhs_is_char = is_char_lit(&lhs);
+            let rhs_is_char = is_char_lit(&rhs);
+
+            // "str" == 'c' -> "str" == 'c'.to_string()
+            if lhs_is_str_lit && rhs_is_char {
+                let rhs = self.wrap_in_to_string(rhs);
+                return ExprKind::Binary(binop, lhs, rhs);
+            }
+            // 'c' == "str" -> 'c'.to_string() == "str"
+            if lhs_is_char && rhs_is_str_lit {
+                let lhs = self.wrap_in_to_string(lhs);
+                return ExprKind::Binary(binop, lhs, rhs);
+            }
+        }
+
         ExprKind::Binary(binop, lhs, rhs)
     }
 

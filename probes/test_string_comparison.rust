@@ -1,0 +1,12 @@
+#!/usr/bin/env rust
+// String-char comparison works with direct comparison (using assert!)
+assert!("a" == 'a');  // ✅ Works! Transformed to "a" == 'a'.to_string()
+assert!('b' == "b");  // ✅ String/rune comparison supported!
+assert!("c" != 'd');  // ✅ Inequality also works!
+eq!( "a" , "a" );     // ✅ String-string comparison
+
+// Test string concatenation and methods
+eq!( "a"+"1" , "a1");
+eq!( "a"+1 , "a1" );
+eq!( "hi".first() , "h");
+eq!( "hi".last() , "i");
