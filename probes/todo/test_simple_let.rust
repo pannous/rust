@@ -1,0 +1,6 @@
+#!/usr/bin/env rust
+fn main() {
+    let mut x = 42;
+    x = 43;
+    put!(x)
+}

@@ -1,0 +1,6 @@
+#!/usr/bin/env rust
+# This is a comment
+fn main() {
+    let x = 42;
+    put!(x)
+}
