@@ -458,16 +458,13 @@ impl Cursor<'_> {
                 _ => Slash,
             },
 
-            // Hash comment (Python-style): ONLY in script mode
-            // At line start OR after whitespace (trailing comment)
+            // Hash comment (Python-style): at line start OR after whitespace (trailing comment)
             // Requires space before AND after the # to avoid conflicts with:
             // - #[attr], #!inner, #"raw", ##double (no space after)
             // - #ident macro interpolation in quote! (no space after)
-            // - `# $var` patterns in macro_rules! (disabled outside script mode)
             // - `builtin # name` syntax (excluded via prev_was_builtin)
             // - Standalone `#` tokens e.g. stringify!(#).parse() (excluded via !is_eof)
-            '#' if matches!(self.script_mode, ScriptMode::Enabled)
-                && (was_at_line_start || (prev_token_was_whitespace && !prev_was_builtin))
+            '#' if (was_at_line_start || (prev_token_was_whitespace && !prev_was_builtin))
                 && !matches!(self.first(), '"' | '#' | '!' | '[')
                 && self.first().is_whitespace()
                 && !self.is_eof() =>
