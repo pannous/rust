@@ -224,15 +224,14 @@ impl<'a> Parser<'a> {
                 ));
             }
 
-            // Go-style short variable declaration: `x := expr` -> `let x = expr`
-            if this.token == token::Colon && this.look_ahead(1, |t| *t == token::Eq) {
+            // Go-style short variable declaration: `x := expr` -> `let mut x = expr`
+            if this.token == token::ColonEq {
                 // Only allow simple identifiers (single path segment, no generics)
                 if path.segments.len() == 1 && path.segments[0].args.is_none() {
                     let ident = path.segments[0].ident;
-                    this.bump(); // consume `:`
-                    this.bump(); // consume `=`
+                    this.bump(); // consume `:=`
                     let expr = this.parse_expr()?;
-                    let pat = Box::new(this.mk_pat_ident(lo, ast::BindingMode::NONE, ident));
+                    let pat = Box::new(this.mk_pat_ident(lo, ast::BindingMode::MUT, ident));
                     let local = Box::new(Local {
                         id: DUMMY_NODE_ID,
                         super_: None,
