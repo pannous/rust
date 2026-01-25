@@ -1527,7 +1527,7 @@ impl<'a> Parser<'a> {
         // Parse `(T, U) -> R`.
         let inputs_lo = self.token.span;
         let mode =
-            FnParseMode { req_name: |_, _| false, context: FnContext::Free, req_body: false };
+            FnParseMode { req_name: |_, _| false, context: FnContext::Free, req_body: false, in_block: false };
         let params = match self.parse_fn_params(&mode) {
             Ok(params) => params,
             Err(err) => {

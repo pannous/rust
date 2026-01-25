@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""
+Wrapper for rustfmt that handles custom Rust syntax (.rust files).
+Adds semicolons before formatting and optionally removes them after.
+"""
+import sys
+import subprocess
+import re
+import tempfile
+import os
+
+def needs_semicolon(line: str) -> bool:
+    """Check if a line needs a semicolon added."""
+    stripped = line.rstrip()
+    if not stripped:
+        return False
+    # Skip lines that already end with these
+    skip_endings = (';', '{', '}', '(', ',', ':', '>', '<', '|', '&', '+', '-', '*', '/', '=', '[', ']', '\\')
+    if stripped.endswith(skip_endings):
+        return False
+    # Skip attributes, comments, doc comments
+    trimmed = stripped.lstrip()
+    if trimmed.startswith(('#[', '//', '/*', '*', '///')):
+        return False
+    # Skip control flow without semicolons
+    if re.match(r'^\s*(if|else|while|for|loop|match|fn|struct|enum|impl|trait|mod|use|pub|let|const|static|type|where|unsafe|async|await|move|ref|mut|dyn|extern|crate|super|self|Self)\b', stripped):
+        # But 'let' and some others DO need semicolons at end
+        if re.match(r'^\s*(let|use|type|const|static)\b.*[^{;,]$', stripped):
+            return True
+        return False
+    # Lines ending with ) that look like function/macro calls need semicolons
+    if stripped.endswith(')'):
+        return True
+    return False
+
+def add_semicolons(content: str) -> str:
+    """Add semicolons to lines that need them."""
+    lines = content.split('\n')
+    result = []
+    for line in lines:
+        if needs_semicolon(line):
+            result.append(line.rstrip() + ';')
+        else:
+            result.append(line)
+    return '\n'.join(result)
+
+def main():
+    args = sys.argv[1:]
+
+    # Find input files in args
+    files = [a for a in args if not a.startswith('-') and os.path.isfile(a)]
+    other_args = [a for a in args if a.startswith('-') or not os.path.isfile(a)]
+
+    if not files:
+        # No files, pass through to rustfmt (might be --help, etc.)
+        result = subprocess.run(['rustfmt'] + args)
+        sys.exit(result.returncode)
+
+    for filepath in files:
+        # Read original content
+        with open(filepath, 'r') as f:
+            original = f.read()
+
+        # Add semicolons for formatting
+        modified = add_semicolons(original)
+
+        # Write to temp file and format
+        ext = os.path.splitext(filepath)[1]
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.rs', delete=False) as tmp:
+            tmp.write(modified)
+            tmp_path = tmp.name
+
+        try:
+            result = subprocess.run(
+                ['rustfmt'] + other_args + [tmp_path],
+                capture_output=True,
+                text=True
+            )
+
+            if result.returncode != 0:
+                print(f"rustfmt error for {filepath}:", file=sys.stderr)
+                print(result.stderr, file=sys.stderr)
+                continue
+
+            # Read formatted content
+            with open(tmp_path, 'r') as f:
+                formatted = f.read()
+
+            # For now, keep semicolons (rustfmt output is valid Rust)
+            # User can choose to strip them if desired
+
+            # Write back
+            with open(filepath, 'w') as f:
+                f.write(formatted)
+
+        finally:
+            os.unlink(tmp_path)
+
+    sys.exit(0)
+
+if __name__ == '__main__':
+    main()

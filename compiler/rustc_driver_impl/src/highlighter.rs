@@ -74,7 +74,7 @@ impl Highlighter {
         let stripped_code = &code[stripped_idx..];
         self.len_accum = stripped_idx;
         let len_accum = &mut self.len_accum;
-        let tokens = tokenize(stripped_code, rustc_lexer::FrontmatterAllowed::No);
+        let tokens = tokenize(stripped_code, rustc_lexer::FrontmatterAllowed::No, rustc_lexer::ScriptMode::Disabled);
         for token in tokens {
             let len = token.len as usize;
             // If the previous token was a special token, and this token is

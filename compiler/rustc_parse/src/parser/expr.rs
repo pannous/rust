@@ -4787,6 +4787,23 @@ impl<'a> Parser<'a> {
         fn is_float_lit(e: &Expr) -> bool {
             matches!(&e.kind, ExprKind::Lit(lit) if lit.kind == token::LitKind::Float)
         }
+        // Check if expression is a known float constant (π, τ, pi, tau)
+        fn is_float_const(e: &Expr) -> bool {
+            if let ExprKind::Path(None, path) = &e.kind {
+                if path.segments.len() == 1 {
+                    let name = path.segments[0].ident.name.as_str();
+                    matches!(name, "π" | "τ" | "pi" | "tau")
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        }
+        // Check if expression appears to be float-like (literal or known constant)
+        fn is_float_like(e: &Expr) -> bool {
+            is_float_lit(e) || is_float_const(e)
+        }
         // Check if expression is a string literal specifically
         let is_str_lit = |e: &Expr| matches!(&e.kind, ExprKind::Lit(lit)
             if matches!(lit.kind, token::LitKind::Str | token::LitKind::StrRaw(_)));
@@ -4822,20 +4839,20 @@ impl<'a> Parser<'a> {
         }
 
         // Int-float coercion for arithmetic operations: 2 * 3.14 -> 2.0 * 3.14
-        // Only coerce when both operands are literals (one int, one float)
+        // Coerce when one operand is an int literal and the other is float-like
         let is_arithmetic = matches!(binop.node, BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div);
         if is_arithmetic {
             let lhs_is_int = is_int_lit(&lhs);
             let rhs_is_int = is_int_lit(&rhs);
-            let lhs_is_float = is_float_lit(&lhs);
-            let rhs_is_float = is_float_lit(&rhs);
+            let lhs_is_float_like = is_float_like(&lhs);
+            let rhs_is_float_like = is_float_like(&rhs);
 
-            // int literal op float literal -> coerce int to float
-            if lhs_is_int && rhs_is_float {
+            // int literal op float-like -> coerce int to float
+            if lhs_is_int && rhs_is_float_like {
                 let lhs = self.maybe_coerce_int_to_float(lhs);
                 return ExprKind::Binary(binop, lhs, rhs);
             }
-            if lhs_is_float && rhs_is_int {
+            if lhs_is_float_like && rhs_is_int {
                 let rhs = self.maybe_coerce_int_to_float(rhs);
                 return ExprKind::Binary(binop, lhs, rhs);
             }

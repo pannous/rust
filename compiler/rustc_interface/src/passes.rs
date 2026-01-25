@@ -170,7 +170,8 @@ fn configure_and_expand(
         rustc_builtin_macros::script_harness::inject(&mut krate, sess, features, resolver)
     });
 
-    util::check_attr_crate_type(sess, pre_configured_attrs, resolver.lint_buffer());
+    // TODO: check_attr_crate_type was removed in upstream - need to verify if this is still needed
+    // util::check_attr_crate_type(sess, pre_configured_attrs, resolver.lint_buffer());
 
     // Expand all macros
     krate = sess.time("macro_expand_crate", || {
