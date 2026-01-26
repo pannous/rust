@@ -230,7 +230,9 @@ impl<'a> Parser<'a> {
                 if path.segments.len() == 1 && path.segments[0].args.is_none() {
                     let ident = path.segments[0].ident;
                     this.bump(); // consume `:=`
-                    let expr = this.parse_expr()?;
+                    // Parse expression with STOP_AT_NEWLINE to enable optional semicolons
+                    let empty_attrs = AttrWrapper::empty();
+                    let (expr, _) = this.parse_expr_res(Restrictions::STOP_AT_NEWLINE, empty_attrs)?;
                     let pat = Box::new(this.mk_pat_ident(lo, ast::BindingMode::MUT, ident));
                     let local = Box::new(Local {
                         id: DUMMY_NODE_ID,

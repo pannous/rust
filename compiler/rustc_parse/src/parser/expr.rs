@@ -337,6 +337,12 @@ impl<'a> Parser<'a> {
     }
 
     fn should_continue_as_assoc_expr(&mut self, lhs: &Expr) -> bool {
+        // If STOP_AT_NEWLINE restriction is set and there's a newline, stop parsing.
+        // This enables optional semicolons for let/':=' statements.
+        if self.restrictions.contains(Restrictions::STOP_AT_NEWLINE) && self.can_infer_semi_from_newline() {
+            return false;
+        }
+
         match (self.expr_is_complete(lhs), AssocOp::from_token(&self.token)) {
             // Semi-statement forms are odd:
             // See https://github.com/rust-lang/rust/issues/29071

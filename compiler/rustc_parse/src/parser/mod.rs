@@ -121,6 +121,13 @@ bitflags::bitflags! {
         /// expression, but halts parsing the expression when reaching certain
         /// tokens like `=`.
         const IS_PAT            = 1 << 5;
+        /// Stop parsing expressions at newlines for optional semicolons.
+        ///
+        /// When parsing the right-hand side of let/':=' statements, stop
+        /// parsing at newlines to enable optional semicolons. This prevents
+        /// the parser from greedily consuming the next line as part of the
+        /// current expression.
+        const STOP_AT_NEWLINE   = 1 << 6;
     }
 }
 
