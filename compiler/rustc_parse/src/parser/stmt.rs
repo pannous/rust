@@ -245,7 +245,7 @@ impl<'a> Parser<'a> {
                     });
                     return Ok((
                         this.mk_stmt(lo.to(this.prev_token.span), StmtKind::Let(local)),
-                        Trailing::No,
+                        Trailing::from(this.token == token::Semi || this.can_infer_semi_from_newline()),
                         UsePreAttrPos::No,
                     ));
                 }
