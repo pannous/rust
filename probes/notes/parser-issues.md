@@ -40,6 +40,27 @@ as part of the current expression.
 2. Use a different, less greedy expression parser for assignment right-hand sides
 3. Implement backtracking to detect when expression parsing has gone too far
 
+## Attempted Fixes
+
+### Approach 1: STOP_AT_NEWLINE Restriction (Incomplete)
+Added a new `Restrictions::STOP_AT_NEWLINE` flag and tried to use it in the `:=`
+operator's expression parsing. The idea was to check this restriction in
+`should_continue_as_assoc_expr()` and stop parsing when a newline is detected.
+
+**Code added:**
+- `compiler/rustc_parse/src/parser/mod.rs`: Added `STOP_AT_NEWLINE` restriction
+- `compiler/rustc_parse/src/parser/expr.rs`: Added check in `should_continue_as_assoc_expr()`
+- `compiler/rustc_parse/src/parser/stmt.rs`: Used restriction in `:=` operator
+
+**Result:** Did not work. The parser still consumes across newlines.
+
+**Possible reasons:**
+1. `can_infer_semi_from_newline()` may be returning false in this context
+2. The check in `should_continue_as_assoc_expr()` may be bypassed for closures
+3. Closure parsing may have special logic that doesn't go through this path
+4. The newline detection may not work correctly for all token types
+
 ## Status
 - Workaround: Use explicit semicolons for consecutive let/:= statements
 - Test file: probes/todo/test_lambda.rust now uses semicolons
+- WIP code committed for future investigation
