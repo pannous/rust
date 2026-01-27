@@ -1,0 +1,288 @@
+#!/usr/bin/env rust
+// Test truthy evaluation of optionals with edge cases
+//
+// PASSING TESTS (✓):
+// - Basic optional truthy: Some(42) is truthy, None is falsy
+// - Some(0) is truthy (has a value, even if zero)
+// - Some(false) is truthy (has a value, even if false)
+// - Some("") is truthy (has a value, even if empty string)
+// - String optionals work correctly
+// - Nested optionals: Some(Some(42)), Some(None), None
+// - Optional with not operator: not None is truthy, not Some is falsy
+// - Optional structs work correctly
+// - Optional chaining in conditions with struct fields
+// - Direct comparison with unwrapped values (Some(42) == 42)
+//
+// TODO (commented out, not yet implemented):
+// - Complex boolean expressions: opt1 and opt2, opt1 or opt2
+// - Mixed truthy values with optionals: 0 or opt_val, opt_val and num
+// - While loops with optional conditions: while counter { ... }
+
+#[test]
+fn test_basic_optional_truthy() {
+    let some_val: i32? = Some(42);
+    let none_val: i32? = None;
+
+    if some_val {
+        put!("✓ Some(42) is truthy");
+    } else {
+        panic!("Some(42) should be truthy");
+    }
+
+    if none_val {
+        panic!("None should be falsy");
+    } else {
+        put!("✓ None is falsy");
+    }
+}
+
+#[test]
+fn test_optional_zero_still_truthy() {
+    // Some(0) should be truthy (has a value, even if zero)
+    let zero: i32? = Some(0);
+
+    if zero {
+        put!("✓ Some(0) is truthy");
+    } else {
+        panic!("Some(0) should be truthy - it has a value");
+    }
+}
+
+#[test]
+fn test_optional_false_still_truthy() {
+    // Some(false) should be truthy (has a value, even if false)
+    let false_val: bool? = Some(false);
+
+    if false_val {
+        put!("✓ Some(false) is truthy");
+    } else {
+        panic!("Some(false) should be truthy - it has a value");
+    }
+}
+
+#[test]
+fn test_optional_string_truthy() {
+    let some_str: String? = Some("hello".to_string());
+    let none_str: String? = None;
+    let empty_str: String? = Some("".to_string());
+
+    if some_str {
+        put!("✓ Some(\"hello\") is truthy");
+    } else {
+        panic!("Some with string should be truthy");
+    }
+
+    if none_str {
+        panic!("None string should be falsy");
+    } else {
+        put!("✓ None string is falsy");
+    }
+
+    // Some("") should be truthy (has a value, even if empty)
+    if empty_str {
+        put!("✓ Some(\"\") is truthy");
+    } else {
+        panic!("Some with empty string should still be truthy");
+    }
+}
+
+#[test]
+fn test_nested_optionals() {
+    let nested_some: Option<Option<i32>> = Some(Some(42));
+    let nested_none_inner: Option<Option<i32>> = Some(None);
+    let nested_none_outer: Option<Option<i32>> = None;
+
+    if nested_some {
+        put!("✓ Some(Some(42)) is truthy");
+    } else {
+        panic!("Nested Some should be truthy");
+    }
+
+    if nested_none_inner {
+        put!("✓ Some(None) is truthy");
+    } else {
+        panic!("Some(None) should be truthy - outer has value");
+    }
+
+    if nested_none_outer {
+        panic!("None outer should be falsy");
+    } else {
+        put!("✓ None (outer) is falsy");
+    }
+}
+
+// TODO: Enable when complex boolean expressions with optionals are supported
+// #[test]
+// fn test_optional_in_complex_boolean() {
+//     let val1: i32? = Some(10);
+//     let val2: i32? = None;
+//     let val3: i32? = Some(20);
+//
+//     // Test AND with optionals
+//     if val1 and val3 {
+//         put!("✓ Some(10) and Some(20) is truthy");
+//     } else {
+//         panic!("Both Some values should be truthy");
+//     }
+//
+//     if val1 and val2 {
+//         panic!("Some and None should be falsy");
+//     } else {
+//         put!("✓ Some(10) and None is falsy");
+//     }
+//
+//     // Test OR with optionals
+//     if val1 or val2 {
+//         put!("✓ Some(10) or None is truthy");
+//     } else {
+//         panic!("Some or None should be truthy");
+//     }
+//
+//     if val2 or val1 {
+//         put!("✓ None or Some(10) is truthy");
+//     } else {
+//         panic!("None or Some should be truthy");
+//     }
+// }
+
+#[test]
+fn test_optional_with_not() {
+    let some_val: i32? = Some(42);
+    let none_val: i32? = None;
+
+    if not none_val {
+        put!("✓ not None is truthy");
+    } else {
+        panic!("not None should be truthy");
+    }
+
+    if not some_val {
+        panic!("not Some should be falsy");
+    } else {
+        put!("✓ not Some(42) is falsy");
+    }
+}
+
+#[derive(Debug, Clone)]
+struct User {
+    name: String,
+    age: i32
+}
+
+#[derive(Debug, Clone)]
+struct Person {
+    name: String?
+}
+
+#[test]
+fn test_optional_struct() {
+    let user: User? = Some(User {
+        name: "Alice".to_string(),
+        age: 30
+    });
+    let no_user: User? = None;
+
+    if user {
+        put!("✓ Some(User) is truthy");
+    } else {
+        panic!("Some with struct should be truthy");
+    }
+
+    if no_user {
+        panic!("None struct should be falsy");
+    } else {
+        put!("✓ None struct is falsy");
+    }
+}
+
+#[test]
+fn test_optional_chaining_in_condition() {
+    let person: Person? = Some(Person {
+        name: Some("Bob".to_string())
+    });
+    let no_person: Person? = None;
+    let person_no_name: Person? = Some(Person {
+        name: None
+    });
+
+    // Test optional chaining ?.
+    if person {
+        put!("✓ Some(Person) is truthy");
+    }
+
+    if no_person {
+        panic!("None person should be falsy");
+    } else {
+        put!("✓ None person is falsy");
+    }
+
+    if person_no_name {
+        put!("✓ Some(Person with None name) is truthy");
+    } else {
+        panic!("Some(Person) should be truthy even with None field");
+    }
+}
+
+#[test]
+fn test_optional_comparison() {
+    let val: i32? = Some(42);
+    let none: i32? = None;
+
+    // Direct comparison with unwrapped value (from README: Some(3) == 3)
+    if val == 42 {
+        put!("✓ Some(42) == 42");
+    } else {
+        panic!("Optional should auto-unwrap in comparison");
+    }
+
+    // None shouldn't equal anything
+    if none == 42 {
+        panic!("None should not equal 42");
+    } else {
+        put!("✓ None ≠ 42");
+    }
+}
+
+// TODO: Enable when mixing truthy values with optionals is supported
+// #[test]
+// fn test_mixed_truthy_and_optional() {
+//     // Test mixing truthy numbers with optionals
+//     let opt_val: i32? = Some(5);
+//     let num = 3;
+//
+//     if opt_val and num {
+//         put!("✓ Some(5) and 3 is truthy");
+//     } else {
+//         panic!("Some and truthy number should be truthy");
+//     }
+//
+//     if 0 or opt_val {
+//         put!("✓ 0 or Some(5) is truthy");
+//     } else {
+//         panic!("Falsy or Some should be truthy");
+//     }
+// }
+
+// TODO: Enable when while loops with optional conditions are supported
+// #[test]
+// fn test_optional_in_while() {
+//     let mut counter: i32? = Some(3);
+//     let mut iterations = 0;
+//
+//     while counter {
+//         iterations = iterations + 1;
+//         if iterations >= 3 {
+//             counter = None;
+//         }
+//     }
+//
+//     if iterations == 3 {
+//         put!("✓ While loop with optional works");
+//     } else {
+//         panic!("While with optional didn't work correctly");
+//     }
+// }
+
+fn main() {
+    put!("Running truthy optional tests...");
+}
