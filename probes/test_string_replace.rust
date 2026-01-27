@@ -5,3 +5,7 @@
 fn test_string_replace() {
     eq!("hello".replace(&"h", &"H"), "Hello");
 }
+
+fn main() {
+    test_string_replace();
+}

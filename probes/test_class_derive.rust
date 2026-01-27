@@ -43,3 +43,10 @@ fn test_class_copy_clone_verify() {
     assert!(p.x == p3.x && p.y == p3.y);
     println!("✓ class auto-derives Debug, Clone, Copy");
 }
+
+fn main() {
+    test_class_copy();
+    test_class_clone();
+    test_class_debug();
+    test_class_copy_clone_verify();
+}

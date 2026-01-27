@@ -41,3 +41,12 @@ fn test_greek_letters_function() {
     }
     assert_eq!(αβγ(), 52);
 }
+
+fn main() {
+    test_greek_variable();
+    test_chinese_variable();
+    test_russian_variable();
+    test_pi_custom_variable();
+    test_chinese_function();
+    test_greek_letters_function();
+}

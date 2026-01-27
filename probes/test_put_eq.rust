@@ -23,3 +23,10 @@ fn test_eq_macro_strings() {
     let s = "test";
     eq!(s, "test");
 }
+
+fn main() {
+    test_put_macro_integer();
+    test_put_macro_string();
+    test_eq_macro_integers();
+    test_eq_macro_strings();
+}

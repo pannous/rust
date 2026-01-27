@@ -123,3 +123,20 @@ fn test_in_operator_boundary_values() {
 	assert!(!(&-1 in &range_vec));
 	assert!(!(&6 in &range_vec));
 }
+
+fn main() {
+    test_in_operator_string_contains();
+    test_in_operator_vec_contains();
+    test_in_operator_array_slice();
+    test_in_operator_string_in_condition();
+    test_in_operator_vec_in_condition();
+    test_in_operator_string_variables();
+    test_in_operator_empty_string_edge_case();
+    test_in_operator_empty_vec_edge_case();
+    test_in_operator_single_element_vec();
+    test_in_operator_string_at_boundaries();
+    test_in_operator_substring_not_found();
+    test_in_operator_single_character_search();
+    test_in_operator_repeated_elements();
+    test_in_operator_boundary_values();
+}

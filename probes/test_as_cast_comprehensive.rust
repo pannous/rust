@@ -29,3 +29,11 @@ fn test_int_to_float_cast() {
     val4 := 3 as float
     if val4 != 3.0 { panic!("3 as float failed") }
 }
+
+fn main() {
+    test_int_to_string_cast();
+    test_int_to_rune_cast();
+    test_rune_to_int_cast();
+    test_rune_to_unicode_cast();
+    test_int_to_float_cast();
+}

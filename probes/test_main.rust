@@ -5,3 +5,7 @@ fn test_hello_script() {
     println!("Hello from script!");
     assert!(true);
 }
+
+fn main() {
+    test_hello_script();
+}

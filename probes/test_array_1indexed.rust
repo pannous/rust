@@ -77,3 +77,17 @@ fn test_1indexed_complex_expression_index() {
     expr_idx := (4 - 2) + 1
     if nums#expr_idx != 30 { panic!("complex expression index failed") }
 }
+
+fn main() {
+    test_1indexed_array_char_access();
+    test_1indexed_array_numeric_access();
+    test_1indexed_array_variable_index();
+    test_1indexed_single_element_array();
+    test_1indexed_boundary_access();
+    test_1indexed_arithmetic_operations();
+    test_1indexed_variable_boundaries();
+    test_1indexed_vs_0indexed_equivalence();
+    test_1indexed_computed_index_assignment();
+    test_1indexed_char_array_boundaries();
+    test_1indexed_complex_expression_index();
+}

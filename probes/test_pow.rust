@@ -125,3 +125,31 @@ fn test_negative_base_even_exponent_result() {
 fn test_positive_base_negative_exponent() {
     assert!(2.0**(-3.0) ≈ 0.125);
 }
+
+fn main() {
+    test_basic_power_integer();
+    test_power_float_float();
+    test_power_int_float();
+    test_power_float_int();
+    test_negative_base_odd_exponent();
+    test_negative_base_odd_exponent_float();
+    test_negative_base_even_exponent();
+    test_negative_base_even_exponent_float();
+    test_zero_to_zero();
+    test_zero_to_zero_float();
+    test_zero_to_positive();
+    test_positive_to_zero();
+    test_positive_to_zero_float();
+    test_negative_exponent_half();
+    test_negative_exponent_quarter();
+    test_negative_exponent_tenth();
+    test_one_to_large_exponent();
+    test_one_to_large_exponent_float();
+    test_negative_one_even_exponent();
+    test_negative_one_odd_exponent();
+    test_fractional_exponent_square_root();
+    test_fractional_exponent_cube_root();
+    test_fractional_exponent_fourth_root();
+    test_negative_base_even_exponent_result();
+    test_positive_base_negative_exponent();
+}

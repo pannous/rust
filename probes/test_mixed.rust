@@ -30,3 +30,9 @@ fn test_program_flow() {
 	// Verify the values are as expected
 	assert_eq!(globalVar, "I'm a global variable");
 }
+
+fn main() {
+    test_global_variable_access();
+    test_helper_function();
+    test_program_flow();
+}

@@ -10,3 +10,8 @@ fn test_put_with_struct_literal() {
     let x = {a: 1, b: 2};
     put!(x);
 }
+
+fn main() {
+    test_put_with_integer();
+    test_put_with_struct_literal();
+}

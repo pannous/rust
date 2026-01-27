@@ -121,3 +121,21 @@ fn test_is_zero_values_different_types() {
     assert!(zero_float is f64);
     assert!(not (zero_int is f64));
 }
+
+fn main() {
+    test_is_i32_type();
+    test_is_char_type();
+    test_is_rune_type_alias();
+    test_is_string_type();
+    test_is_i64_and_int_alias();
+    test_is_array_fixed_size();
+    test_is_vec_type();
+    test_is_negative_cases();
+    test_is_boundary_integer_types();
+    test_is_unsigned_vs_signed();
+    test_is_float_types();
+    test_is_boolean_type();
+    test_is_empty_string();
+    test_is_array_size_variations();
+    test_is_zero_values_different_types();
+}

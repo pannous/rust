@@ -261,3 +261,37 @@ fn test_some_none_is_truthy() {
         assert!(false, "Some(None) should be truthy")
     }
 }
+
+fn main() {
+    test_zero_integer_is_falsy();
+    test_positive_integer_is_truthy();
+    test_negative_integer_is_truthy();
+    test_zero_float_is_falsy();
+    test_positive_float_is_truthy();
+    test_empty_str_is_falsy();
+    test_nonempty_str_is_truthy();
+    test_empty_string_type_is_falsy();
+    test_nonempty_string_type_is_truthy();
+    test_true_is_truthy();
+    test_false_is_falsy();
+    test_zero_u8_is_falsy();
+    test_positive_u64_is_truthy();
+    test_empty_vec_is_falsy();
+    test_nonempty_vec_is_truthy();
+    test_none_option_is_falsy();
+    test_some_option_is_truthy();
+    test_nonzero_value_in_if_condition();
+    test_option_with_value_is_truthy();
+    test_option_none_is_falsy();
+    test_some_zero_is_truthy();
+    test_some_empty_string_is_truthy();
+    test_vec_single_zero_element_is_truthy();
+    test_vec_single_empty_string_is_truthy();
+    test_negative_float_is_truthy();
+    test_small_positive_float_is_truthy();
+    test_zero_i128_is_falsy();
+    test_nonzero_i128_is_truthy();
+    test_string_whitespace_is_truthy();
+    test_nested_some_is_truthy();
+    test_some_none_is_truthy();
+}

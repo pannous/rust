@@ -140,3 +140,22 @@ fn test_null_coalesce_char() {
 	let char_result = opt_char.unwrap_or('x');
 	assert_eq!(char_result, 'x');
 }
+
+fn main() {
+    test_null_coalesce_with_some();
+    test_null_coalesce_with_none();
+    test_chained_null_coalesce();
+    test_chained_null_coalesce_all_none();
+    test_null_coalesce_double_try();
+    test_null_coalesce_combined();
+    test_null_coalesce_nested_optionals();
+    test_null_coalesce_zero_default();
+    test_null_coalesce_negative_default();
+    test_null_coalesce_complex_expression();
+    test_null_coalesce_string();
+    test_null_coalesce_multiple_none_chain();
+    test_null_coalesce_first_some_in_chain();
+    test_null_coalesce_second_some_in_chain();
+    test_null_coalesce_bool();
+    test_null_coalesce_char();
+}

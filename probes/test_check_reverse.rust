@@ -10,4 +10,7 @@ fn test_reverse_checks_passed() {
     println!("all checks passed!\n");
 }
 
-
+fn main() {
+    test_string_reverse();
+    test_reverse_checks_passed();
+}

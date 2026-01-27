@@ -41,3 +41,13 @@ fn test_map_boolean_values() {
     let bools := {isActive: true, isDeleted: false}
     put!("booleans map = %v\n", bools)
 }
+
+fn main() {
+    test_untyped_map_mixed_values();
+    test_homogeneous_map();
+    test_empty_map();
+    test_single_element_map();
+    test_map_duplicate_keys();
+    test_map_negative_values();
+    test_map_boolean_values();
+}

@@ -6,3 +6,7 @@ fn test_explicit_main_function() {
     let output = "Explicit main still works!";
     assert_eq!(output, "Explicit main still works!");
 }
+
+fn main() {
+    test_explicit_main_function();
+}

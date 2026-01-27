@@ -17,3 +17,9 @@ fn test_s_macro_with_string_slice() {
     let y = s!(slice);
     eq!(y, String::from("test"));
 }
+
+fn main() {
+    test_s_macro_basic();
+    test_s_macro_inline();
+    test_s_macro_with_string_slice();
+}

@@ -22,3 +22,8 @@ fn test_hash_comments_with_variables() {
     println!("{}", x + y); // prints 3
     assert_eq!(x + y, 3);
 }
+
+fn main() {
+    test_hash_comments_inline();
+    test_hash_comments_with_variables();
+}

@@ -42,3 +42,12 @@ fn test_empty_vec_equality_second_pair() {
     let h: Vec<i32> = vec![];
     assert!(g == h);
 }
+
+fn main() {
+    test_list_equality_two_elements();
+    test_single_element_list_equality();
+    test_two_elements_list_equality();
+    test_list_equality_another_pair();
+    test_empty_vec_equality();
+    test_empty_vec_equality_second_pair();
+}

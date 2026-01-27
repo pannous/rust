@@ -11,3 +11,7 @@ fn test_continue_statement() {
 		put!(i)
 	}
 }
+
+fn main() {
+    test_continue_statement();
+}

@@ -127,3 +127,28 @@ fn test_xor_negative_one_with_zero() {
 fn test_xor_negative_five_with_itself() {
     assert!((-5) xor (-5) == 0);
 }
+
+fn main() {
+    test_xor_operator_on_integers();
+    test_xor_operator_caret_equivalent();
+    test_xor_with_true_false();
+    test_xor_with_same_bool();
+    test_xor_with_false_false();
+    test_xor_zeros();
+    test_xor_all_ones();
+    test_xor_ones_with_zeros();
+    test_xor_is_commutative_integers();
+    test_xor_is_commutative_bools();
+    test_xor_is_commutative_binary();
+    test_xor_chained_true_false_true();
+    test_xor_chained_true_true_true();
+    test_xor_chained_false_false_false();
+    test_xor_powers_of_two_1();
+    test_xor_powers_of_two_2();
+    test_xor_decimal_one_two();
+    test_xor_same_number_is_zero();
+    test_xor_self_inverse_property_binary();
+    test_xor_self_inverse_property_bool();
+    test_xor_negative_one_with_zero();
+    test_xor_negative_five_with_itself();
+}

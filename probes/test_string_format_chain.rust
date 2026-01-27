@@ -7,3 +7,7 @@ fn test_string_format_chain() {
     let greeting = "Hello %s, you are %d years old" % name % age;
     eq!(greeting, "Hello Alice, you are 25 years old");
 }
+
+fn main() {
+    test_string_format_chain();
+}

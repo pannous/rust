@@ -5,3 +5,7 @@ fn test_string_format_with_modulo_operator() {
     let result = "my %v modulo" % "cool";
     eq!(result, "my cool modulo");
 }
+
+fn main() {
+    test_string_format_with_modulo_operator();
+}

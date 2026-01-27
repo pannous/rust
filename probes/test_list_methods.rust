@@ -243,3 +243,40 @@ fn test_sorted_on_ascending() {
     let asc := [1, 2, 3, 4, 5]
     eq!( asc.sorted() , vec![1, 2, 3, 4, 5] )
 }
+
+fn main() {
+    test_list_indexing();
+    test_list_first_last();
+    test_list_len_methods();
+    test_list_contains();
+    test_list_in_operator();
+    test_list_sort();
+    test_list_to_vec();
+    test_string_list_join();
+    test_list_iter();
+    test_list_get();
+    test_list_is_empty();
+    test_vec_reverse();
+    test_list_indexof();
+    test_list_slice();
+    test_list_copy();
+    test_list_append();
+    test_list_prepend();
+    test_list_insert();
+    test_list_reversed();
+    test_list_sorted();
+    test_list_sorted_desc();
+    test_len_function();
+    test_empty_collection_edge_cases();
+    test_single_element_collection();
+    test_boundary_slice_operations();
+    test_indexof_with_duplicates();
+    test_insert_at_boundaries();
+    test_append_prepend_single_element();
+    test_join_on_empty_and_single_element();
+    test_get_with_boundary_indices();
+    test_contains_with_boundary_elements();
+    test_in_operator_with_boundaries();
+    test_sorted_desc_on_descending();
+    test_sorted_on_ascending();
+}

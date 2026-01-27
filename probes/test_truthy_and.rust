@@ -153,3 +153,24 @@ fn test_single_element_slice_is_truthy() {
         assert!(false, "@[0] should be truthy")
     }
 }
+
+fn main() {
+    test_numeric_zero_is_falsy();
+    test_numeric_nonzero_is_truthy();
+    test_empty_string_is_falsy();
+    test_nonempty_string_is_truthy();
+    test_empty_vec_is_falsy();
+    test_empty_slice_is_falsy();
+    test_nonempty_slice_is_truthy();
+    test_true_is_truthy();
+    test_false_is_falsy();
+    test_none_option_is_falsy();
+    test_some_option_is_truthy();
+    test_vec_with_capacity_but_empty_is_falsy();
+    test_vec_with_zero_element_is_truthy();
+    test_vec_with_false_element_is_truthy();
+    test_some_zero_is_truthy();
+    test_negative_zero_is_falsy();
+    test_empty_string_from_is_falsy();
+    test_single_element_slice_is_truthy();
+}

@@ -31,3 +31,10 @@ fn test_which_synonym() {
     let expected = [2, 4, 6];
     eq!(evens, expected);
 }
+
+fn main() {
+    test_select_synonym();
+    test_chose_synonym();
+    test_that_synonym();
+    test_which_synonym();
+}

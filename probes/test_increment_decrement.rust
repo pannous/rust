@@ -28,3 +28,10 @@ fn test_increment_array_index() {
     arr[0]++;
     assert_eq!(arr[0], 1);
 }
+
+fn main() {
+    test_increment_operator();
+    test_decrement_operator();
+    test_increment_field_access();
+    test_increment_array_index();
+}

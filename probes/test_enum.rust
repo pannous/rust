@@ -15,3 +15,7 @@ fn test_enum_basic_functionality() {
 	eq!( status , OK);
 	eqs!( status , "OK");
 }
+
+fn main() {
+    test_enum_basic_functionality();
+}

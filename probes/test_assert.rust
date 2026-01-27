@@ -4,3 +4,7 @@
 fn test_basic_assert() {
     assert!(1>0)
 }
+
+fn main() {
+    test_basic_assert();
+}

@@ -8,3 +8,7 @@ fn test_exit_macro_default() {
     put!("Testing exit! macro");
     put!("exit!() with default exit code 0 is available");
 }
+
+fn main() {
+    test_exit_macro_default();
+}

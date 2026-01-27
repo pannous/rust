@@ -8,3 +8,7 @@ fn test_power_operator_parsing() {
     let result = a ** b;
     eq!(result, 8);
 }
+
+fn main() {
+    test_power_operator_parsing();
+}

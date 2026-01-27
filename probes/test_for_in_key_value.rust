@@ -46,3 +46,10 @@ fn test_pairs_continue_skip_odd_indices() {
     }
     eq!(even_idx_sum, 90);
 }
+
+fn main() {
+    test_pairs_single_element();
+    test_pairs_index_accumulation();
+    test_pairs_break_on_first();
+    test_pairs_continue_skip_odd_indices();
+}

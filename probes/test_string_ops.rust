@@ -90,3 +90,20 @@ fn test_whitespace_only_string() {
     eq!("   ".first(), " ");
     eq!("   ".last(), " ");
 }
+
+fn main() {
+    test_string_concat_basic();
+    test_string_methods_first_last();
+    test_string_methods_size_and_length();
+    test_empty_string_first_last();
+    test_empty_string_size_and_length();
+    test_single_character_first_last();
+    test_single_character_size_and_length();
+    test_unicode_cafe_size_and_methods();
+    test_chinese_characters_size_and_methods();
+    test_emoji_size_and_methods();
+    test_mixed_ascii_emoji_size_and_methods();
+    test_special_characters_newline_and_tab();
+    test_special_characters_quotes();
+    test_whitespace_only_string();
+}

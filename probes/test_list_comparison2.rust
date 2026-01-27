@@ -28,3 +28,10 @@ fn test_empty_vec_equality_alternative() {
     let h: Vec<i32> = vec![];
     assert!(g == h);
 }
+
+fn main() {
+    test_list_equality_two_elements();
+    test_different_slices_same_content();
+    test_empty_vec_equality();
+    test_empty_vec_equality_alternative();
+}

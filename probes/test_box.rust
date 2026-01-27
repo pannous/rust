@@ -21,3 +21,9 @@ fn test_box_vector() {
     assert_eq!(z.len(), 3);
     assert_eq!(*z, vec![1, 2, 3]);
 }
+
+fn main() {
+    test_box_integer();
+    test_box_string();
+    test_box_vector();
+}

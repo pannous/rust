@@ -32,3 +32,9 @@ fn test_struct_field_access() {
 
 	put!("No conflicts detected!")
 }
+
+fn main() {
+    test_leading_dot_floats();
+    test_tuple_field_access();
+    test_struct_field_access();
+}

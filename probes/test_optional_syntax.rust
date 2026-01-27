@@ -175,3 +175,29 @@ fn test_process_with_zero_value() {
 fn test_process_with_negative_value() {
     assert_eq!(process(Some(-5), Some("test".to_string())), Some(false));
 }
+
+fn main() {
+    test_basic_explicit_some_none();
+    test_automatic_wrapping();
+    test_function_return_some();
+    test_function_return_none();
+    test_multiple_optional_params();
+    test_struct_fields_with_optionals();
+    test_nested_optionals_flatten();
+    test_auto_wrap_in_function_return();
+    test_auto_wrap_in_struct_initialization();
+    test_auto_wrap_in_function_arguments();
+    test_nested_none_outer();
+    test_nested_none_inner();
+    test_triple_nesting();
+    test_chain_with_early_return_both_some();
+    test_chain_with_early_return_first_none();
+    test_chain_with_early_return_second_none();
+    test_nested_struct_with_optional_some();
+    test_nested_struct_with_optional_none();
+    test_zero_value_auto_wrap();
+    test_empty_string_auto_wrap();
+    test_process_with_first_none();
+    test_process_with_zero_value();
+    test_process_with_negative_value();
+}

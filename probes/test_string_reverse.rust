@@ -81,3 +81,19 @@ fn test_reverse_whitespace() {
     eq!(" leading".reverse(), "gnidael ");
     eq!("trailing ".reverse(), " gniliart");
 }
+
+fn main() {
+    test_reverse_basic();
+    test_reverse_unicode_accented();
+    test_reverse_chinese_characters();
+    test_reverse_emoji();
+    test_reverse_empty_string();
+    test_reverse_single_ascii_character();
+    test_reverse_single_unicode_character();
+    test_reverse_two_characters();
+    test_reverse_palindromes();
+    test_reverse_special_characters();
+    test_reverse_mixed_unicode_and_ascii();
+    test_reverse_numbers_in_strings();
+    test_reverse_whitespace();
+}

@@ -13,3 +13,8 @@ fn test_array_vec_seq_equality() {
     let ys := @[1, 2, 3]
     seq!( xs , ys )
 }
+
+fn main() {
+    test_vec_array_equality();
+    test_array_vec_seq_equality();
+}

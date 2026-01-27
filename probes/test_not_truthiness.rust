@@ -128,3 +128,23 @@ fn test_not_with_i128() {
 	let max_i128 = i128::MAX;
 	assert!(max_i128 != 0);
 }
+
+fn main() {
+    test_not_with_numeric_literals();
+    test_not_with_boolean_literals();
+    test_not_with_variables();
+    test_not_with_slice();
+    test_not_with_empty_slice();
+    test_not_with_floats();
+    test_not_with_different_integer_types();
+    test_not_with_option_values();
+    test_not_with_negative_numbers();
+    test_not_with_single_element_vec();
+    test_not_with_whitespace_string();
+    test_not_with_string_zero();
+    test_double_negation();
+    test_not_with_float_edge_cases();
+    test_not_with_unsigned_integers();
+    test_not_with_string_constructors();
+    test_not_with_i128();
+}

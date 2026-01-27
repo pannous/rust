@@ -13,3 +13,8 @@ fn test_select_odd_numbers() {
     let odds = xs.select(x => x%2 == 1);
     eq!(odds, [1, 3, 5]);
 }
+
+fn main() {
+    test_select_even_numbers();
+    test_select_odd_numbers();
+}

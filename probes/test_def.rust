@@ -12,3 +12,7 @@ fn test_def_with_return_type() {
 	hello();
 	println!("Meaning of life is {}", meaning());
 }
+
+fn main() {
+    test_def_with_return_type();
+}

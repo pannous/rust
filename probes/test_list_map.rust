@@ -8,3 +8,6 @@ fn test_list_apply_double() {
     eq!( ys , @[2, 4, 6])
 }
 
+fn main() {
+    test_list_apply_double();
+}

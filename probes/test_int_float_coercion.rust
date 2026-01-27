@@ -59,3 +59,14 @@ fn test_boundary_behavior_near_zero() {
     assert!(1 / 1000.0 ≈ 0.001);
     assert!(0.0001 * 10000 ≈ 1.0);
 }
+
+fn main() {
+    test_multiplication_int_float();
+    test_division_int_float();
+    test_addition_int_float();
+    test_subtraction_int_float();
+    test_combined_expressions();
+    test_zero_edge_cases_with_coercion();
+    test_large_number_coercion();
+    test_boundary_behavior_near_zero();
+}

@@ -20,3 +20,7 @@ fn test_transform_synonyms() {
     put!("🛡️ No map keyword conflict!");
     put!("🎉 Transform synonyms working safely!");
 }
+
+fn main() {
+    test_transform_synonyms();
+}

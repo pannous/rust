@@ -13,3 +13,8 @@ fn test_byte_zero() {
     println!("{}", zero);
     assert_eq!(zero, 0);
 }
+
+fn main() {
+    test_byte_max_value();
+    test_byte_zero();
+}

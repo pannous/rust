@@ -10,3 +10,7 @@ fn test_implicit_return() {
     assert_eq!(meaning(), 42);
     println!("Meaning of life is {}", meaning());
 }
+
+fn main() {
+    test_implicit_return();
+}

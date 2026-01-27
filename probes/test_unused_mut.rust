@@ -6,3 +6,7 @@ fn test_unused_mut_suppressed() {
     let mut y = "hello";
     println!("{}", x);
 }
+
+fn main() {
+    test_unused_mut_suppressed();
+}

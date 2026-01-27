@@ -66,3 +66,15 @@ fn test_string_replace_synonyms() {
     eq!(text.replace("World", "Go"), text.substitute("World", "Go"));
     eq!(text.substitute("World", "Go"), text.swap("World", "Go"));
 }
+
+fn main() {
+    test_map_synonyms();
+    test_filter_synonyms();
+    test_string_first_synonyms();
+    test_string_last_synonyms();
+    test_string_size_synonyms();
+    test_string_reverse();
+    test_string_contains_synonyms();
+    test_string_find_synonyms();
+    test_string_replace_synonyms();
+}

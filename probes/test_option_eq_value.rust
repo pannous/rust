@@ -106,3 +106,21 @@ fn test_mixed_sign_comparison() {
 	assert_eq!(mixed.first(), Some(&-1));
 	assert_eq!(mixed[1..].first(), Some(&0));
 }
+
+fn main() {
+    test_option_equals_primitive();
+    test_array_first_comparison();
+    test_option_with_different_numeric_types();
+    test_option_with_str_references();
+    test_option_comparing_with_zero();
+    test_option_comparing_with_negative();
+    test_empty_array_first();
+    test_none_explicit_comparison();
+    test_array_last_comparison();
+    test_floating_point_edge_values();
+    test_multiple_comparisons_in_expression();
+    test_option_string_comparison();
+    test_char_array_first();
+    test_single_element_array();
+    test_mixed_sign_comparison();
+}

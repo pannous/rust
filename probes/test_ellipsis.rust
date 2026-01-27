@@ -14,3 +14,8 @@ fn test_char_ellipsis_range() {
 	eq!( ('a'…'d').collect::<Vec<_>>() , vec!['a', 'b', 'c', 'd'] );
 	put!("Range checks passed!\n")
 }
+
+fn main() {
+    test_integer_ellipsis_range();
+    test_char_ellipsis_range();
+}

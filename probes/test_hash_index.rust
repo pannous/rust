@@ -188,3 +188,29 @@ fn test_hash_index_modification_preserves_array() {
 	assert_eq!(modifiable#1, 1);
 	assert_eq!(modifiable#3, 3);
 }
+
+fn main() {
+    test_hash_index_basic_access();
+    test_hash_index_vs_zero_indexed();
+    test_hash_index_with_comparison_operators();
+    test_hash_index_with_arithmetic();
+    test_hash_index_with_logical_operators();
+    test_hash_index_with_variable_index();
+    test_hash_index_with_parentheses();
+    test_hash_index_assignment();
+    test_hash_index_chained_access();
+    test_hash_index_mixed_indexing();
+    test_hash_index_single_element_array();
+    test_hash_index_boundary_first_element();
+    test_hash_index_boundary_last_element();
+    test_hash_index_triple_nested_access();
+    test_hash_index_complex_arithmetic();
+    test_hash_index_assignment_at_boundaries();
+    test_hash_index_in_conditions();
+    test_hash_index_chained_comparison();
+    test_hash_index_with_computed_index();
+    test_hash_index_matrix_single_row();
+    test_hash_index_matrix_single_column();
+    test_hash_index_boolean_context();
+    test_hash_index_modification_preserves_array();
+}

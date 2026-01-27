@@ -21,3 +21,9 @@ fn test_hash_index_minimal_chained() {
 	assert_eq!(matrix#1#1, 1);
 	assert_eq!(matrix#2#2, 4);
 }
+
+fn main() {
+    test_hash_index_minimal_basic();
+    test_hash_index_minimal_variable_index();
+    test_hash_index_minimal_chained();
+}

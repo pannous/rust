@@ -109,3 +109,20 @@ fn test_vec_shift_preserves_remaining_order() {
     eq!(ordered[1], 3);
     eq!(ordered[2], 4);
 }
+
+fn main() {
+    test_vec_indexing();
+    test_vec_shift_basic();
+    test_vec_sortdesc_basic();
+    test_vec_shift_on_empty();
+    test_vec_shift_single_element();
+    test_vec_shift_until_empty();
+    test_vec_sortdesc_single_element();
+    test_vec_sortdesc_two_elements();
+    test_vec_sortdesc_with_duplicates();
+    test_vec_sortdesc_preserves_original();
+    test_vec_shift_after_sortdesc();
+    test_vec_is_empty();
+    test_vec_sortdesc_negative_numbers();
+    test_vec_shift_preserves_remaining_order();
+}

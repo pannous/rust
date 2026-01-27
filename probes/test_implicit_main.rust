@@ -17,3 +17,8 @@ fn test_implicit_main_with_variable() {
 	let x = 421;
 	put!("The answer is: ", x, "\n");
 }
+
+fn main() {
+    test_implicit_main_output();
+    test_implicit_main_with_variable();
+}

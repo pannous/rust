@@ -45,3 +45,11 @@ fn test_short_circuit_or_true_left_side() {
     };
     assert!(result);
 }
+
+fn main() {
+    test_or_and_precedence_true_or_false_and_false();
+    test_and_or_precedence_false_and_true_or_true();
+    test_comparison_with_and_operator();
+    test_short_circuit_and_false_left_side();
+    test_short_circuit_or_true_left_side();
+}

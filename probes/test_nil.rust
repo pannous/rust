@@ -80,3 +80,17 @@ fn test_nil_compared_to_empty_string() {
 	assert_ne!(empty_str, None);
 	assert!(empty_str.is_some());
 }
+
+fn main() {
+    test_nil_assignment();
+    test_nil_with_explicit_type();
+    test_some_value_not_equal_to_nil();
+    test_function_returning_nil();
+    test_nil_with_zero();
+    test_nil_with_negative();
+    test_nil_with_explicit_string_type();
+    test_function_returning_nil_complex_type();
+    test_nil_in_struct_field();
+    test_nil_compared_to_false_value();
+    test_nil_compared_to_empty_string();
+}

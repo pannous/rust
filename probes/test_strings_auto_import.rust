@@ -17,3 +17,8 @@ fn test_lowercase_synonyms() {
     eq!("HELLO".toLower(), "hello");
     eq!("HELLO".lowercase(), "hello");
 }
+
+fn main() {
+    test_uppercase_synonyms();
+    test_lowercase_synonyms();
+}

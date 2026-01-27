@@ -95,3 +95,15 @@ fn test_while_nested_break_condition() {
     }
     eq!(outer, 3);
 }
+
+fn main() {
+    test_while_loop_with_condition();
+    test_while_loop_with_break();
+    test_while_loop_never_executes();
+    test_while_loop_single_iteration();
+    test_while_break_on_first_iteration();
+    test_while_continue_with_counter();
+    test_while_early_break();
+    test_while_false_never_executes();
+    test_while_nested_break_condition();
+}

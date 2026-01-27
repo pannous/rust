@@ -138,3 +138,29 @@ fn test_mixed_types_chained() {
     let result22 = "mixed: " + 1 + " and " + 2.5 + " and " + true;
     eq!(result22, "mixed: 1 and 2.5 and ✔️");
 }
+
+fn main() {
+    test_string_plus_string();
+    test_string_plus_integer();
+    test_string_plus_larger_integer();
+    test_integer_to_string_plus_string();
+    test_string_plus_negative_integer();
+    test_integer_to_string_plus_string_with_spaces();
+    test_string_plus_float();
+    test_chained_concatenation();
+    test_string_plus_boolean_true();
+    test_string_plus_boolean_false();
+    test_empty_string_plus_string();
+    test_string_plus_empty_string();
+    test_empty_string_plus_empty_string();
+    test_empty_string_plus_integer();
+    test_string_plus_zero();
+    test_string_plus_zero_float();
+    test_string_plus_unicode_chinese();
+    test_string_plus_emoji();
+    test_string_plus_quote();
+    test_string_plus_newline();
+    test_string_plus_tab();
+    test_string_plus_very_large_number();
+    test_mixed_types_chained();
+}

@@ -9,3 +9,8 @@ fn test_string_equality_double_quotes() {
 fn test_string_equality_single_quotes() {
     eq!('Alice', "Alice".to_string());
 }
+
+fn main() {
+    test_string_equality_double_quotes();
+    test_string_equality_single_quotes();
+}

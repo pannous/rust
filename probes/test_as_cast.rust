@@ -14,3 +14,9 @@ fn test_int_to_float_cast() {
 fn test_int_to_bool_cast() {
     eq!( 1 as bool , true );
 }
+
+fn main() {
+    test_float_to_int_cast();
+    test_int_to_float_cast();
+    test_int_to_bool_cast();
+}

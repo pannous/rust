@@ -8,3 +8,7 @@ fn test_simple_def_definitions() {
 	def main(){
 	}
 }
+
+fn main() {
+    test_simple_def_definitions();
+}

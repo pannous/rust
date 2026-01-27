@@ -29,3 +29,9 @@ fn test_dynexport_static() {
 fn test_dynexport_greet() {
     eq!(greet("World"), "Hello, World!");
 }
+
+fn main() {
+    test_dynexport_function();
+    test_dynexport_static();
+    test_dynexport_greet();
+}

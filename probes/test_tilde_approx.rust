@@ -87,3 +87,19 @@ fn test_tilde_extreme_precision_boundaries() {
     let h = 0.123456789012346;
     assert!(g ~ h);
 }
+
+fn main() {
+    test_tilde_floating_point_precision();
+    test_tilde_near_identical_floats();
+    test_tilde_with_implicit_multiplication();
+    test_tilde_negative_values();
+    test_tilde_zero_and_near_zero();
+    test_tilde_fractional_pi_and_tau();
+    test_tilde_large_values();
+    test_tilde_very_small_values();
+    test_tilde_complex_expressions();
+    test_tilde_mixed_operations_with_negatives();
+    test_tilde_squared_values();
+    test_tilde_reciprocals();
+    test_tilde_extreme_precision_boundaries();
+}

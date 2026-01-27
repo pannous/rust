@@ -21,3 +21,8 @@ fn test_at_vec_empty() {
 //     let nested = @[vec![1], vec![2, 3]];
 //     println!("nested: {:?}", nested);
 // }
+
+fn main() {
+    test_at_vec_creation();
+    test_at_vec_empty();
+}

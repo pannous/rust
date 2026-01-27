@@ -82,3 +82,14 @@ fn test_for_loop_continue_skip_even() {
 	}
 	eq!(odd_sum, 9);
 }
+
+fn main() {
+    test_for_loop_basic_sum();
+    test_for_loop_slice_iteration();
+    test_for_loop_map_iteration();
+    test_for_loop_single_element();
+    test_for_loop_break_immediate();
+    test_for_loop_continue_skip_all();
+    test_for_loop_break_partial();
+    test_for_loop_continue_skip_even();
+}

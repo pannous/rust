@@ -18,3 +18,8 @@ fn test_class_field_access() {
     eq!(point.x, 10);
     eq!(point.y, 20);
 }
+
+fn main() {
+    test_class_instantiation();
+    test_class_field_access();
+}

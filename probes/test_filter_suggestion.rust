@@ -7,3 +7,7 @@ fn test_select_suggestion_over_filter() {
     let evens = xs.select(x => x%2 == 0);
     eq!(evens, [2, 4]);
 }
+
+fn main() {
+    test_select_suggestion_over_filter();
+}

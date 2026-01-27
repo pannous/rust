@@ -36,3 +36,7 @@ fn test_enum_string_conversion() {
 
 	// put!("All tests passed!\n")
 }
+
+fn main() {
+    test_enum_string_conversion();
+}

@@ -24,3 +24,10 @@ fn test_empty_slice() {
     let empty : Vec<i32> = @[]
     put!("Empty slice: {:?}\n", empty)
 }
+
+fn main() {
+    test_slice_literal_syntax();
+    test_slice_element_access();
+    test_mixed_type_slice();
+    test_empty_slice();
+}

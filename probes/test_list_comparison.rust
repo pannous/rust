@@ -80,3 +80,17 @@ fn test_different_list_content() {
     assert!(arr1 == arr2);
     assert!(!(arr1 == arr3));
 }
+
+fn main() {
+    test_simple_integer_equality();
+    test_list_equality_with_if_statement();
+    test_three_element_list_equality();
+    test_list_equality_repeated();
+    test_basic_type_comparisons();
+    test_single_element_list_comparison();
+    test_two_element_list_comparison();
+    test_empty_vec_equality();
+    test_empty_vec_length();
+    test_nil_vec_equality();
+    test_different_list_content();
+}

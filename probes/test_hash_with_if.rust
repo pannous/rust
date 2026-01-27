@@ -7,3 +7,7 @@ fn test_hash_index_with_if_statements() {
 	if z#2 != 'b' { panic!("Second element failed"); }
 	if z#3 != 'c' { panic!("Third element failed"); }
 }
+
+fn main() {
+    test_hash_index_with_if_statements();
+}

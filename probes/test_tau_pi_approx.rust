@@ -84,3 +84,18 @@ fn test_squared_pi_and_tau() {
     assert!(π * π ≈ 9.869604401089358);
     assert!(τ * τ ≈ 4.0 * π * π);
 }
+
+fn main() {
+    test_tau_equals_two_pi();
+    test_basic_approximate_equality();
+    test_floating_point_precision();
+    test_negative_tau_and_pi();
+    test_fractional_multiples_of_pi();
+    test_zero_and_near_zero();
+    test_large_multiples();
+    test_division_by_pi();
+    test_expressions_with_mixed_operations();
+    test_negative_fractional_multiples();
+    test_very_small_differences();
+    test_squared_pi_and_tau();
+}

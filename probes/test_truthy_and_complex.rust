@@ -89,3 +89,11 @@ fn test_user_with_empty_name() {
     }
     assert!(user_empty_name.is_some());
 }
+
+fn main() {
+    test_user_filter_and_first();
+    test_empty_users_list();
+    test_user_with_age_exactly_eighteen();
+    test_all_users_under_age();
+    test_user_with_empty_name();
+}

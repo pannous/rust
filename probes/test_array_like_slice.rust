@@ -19,3 +19,9 @@ fn test_slice_1indexed_variable_index() {
     idx := 2
     if z#idx ≠ 'b' { panic!("First element via #idx fails") }
 }
+
+fn main() {
+    test_slice_1indexed_char_access();
+    test_slice_1indexed_numeric_array();
+    test_slice_1indexed_variable_index();
+}

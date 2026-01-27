@@ -40,3 +40,10 @@ fn test_single_iteration_array() {
     }
     eq!(result, 555);
 }
+
+fn main() {
+    test_single_entry_map_iteration();
+    test_break_immediately_in_map_iteration();
+    test_accumulate_values_from_array();
+    test_single_iteration_array();
+}

@@ -34,3 +34,13 @@ fn test_float_to_string_conversion() {
 fn test_string_to_int_conversion() {
     eq!( "1" as int , 1 );
 }
+
+fn main() {
+    test_int_to_string_conversion();
+    test_int_to_rune_conversion();
+    test_rune_to_int_conversion();
+    test_int_to_float_conversion();
+    test_float_to_int_conversion();
+    test_float_to_string_conversion();
+    test_string_to_int_conversion();
+}

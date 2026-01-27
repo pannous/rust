@@ -24,3 +24,7 @@ fn test_struct_creation_and_sum() {
     display(t);
     eq!(sum(t), 7);
 }
+
+fn main() {
+    test_struct_creation_and_sum();
+}

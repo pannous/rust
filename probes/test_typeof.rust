@@ -50,3 +50,15 @@ fn test_typeid_bool_literal() {
 fn test_typeid_slice() {
     eq!(typeid!(&[1, 2, 3]), "&[i32; 3]");
 }
+
+fn main() {
+    test_typeid_integer();
+    test_typeid_string_literal();
+    test_typeid_string_to_string();
+    test_typeid_string_from_literal();
+    test_typeid_vec();
+    test_typeid_float();
+    test_typeid_u8_literal();
+    test_typeid_bool_literal();
+    test_typeid_slice();
+}

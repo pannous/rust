@@ -11,3 +11,8 @@ fn test_power_operator_const_eval() {
     const A: i32 = 2 ** 3;
     eq!(A, 8);
 }
+
+fn main() {
+    test_power_operator_basic();
+    test_power_operator_const_eval();
+}

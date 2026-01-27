@@ -95,3 +95,16 @@ fn test_optional_tuple_field_1() {
 	let none_field = none_tuple.as_ref().map(|t| &t.1);
 	assert_eq!(none_field, None);
 }
+
+fn main() {
+    test_optional_field_access_some();
+    test_optional_field_access_none();
+    test_optional_method_call_some();
+    test_optional_method_call_none();
+    test_optional_method_with_argument();
+    test_optional_tuple_field_access();
+    test_chained_optional_field_access();
+    test_chained_optional_none();
+    test_optional_method_chain_on_none();
+    test_optional_tuple_field_1();
+}

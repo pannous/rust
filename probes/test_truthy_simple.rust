@@ -108,3 +108,19 @@ fn test_i32_min_is_truthy() {
         assert!(false, "i32::MIN should be truthy")
     }
 }
+
+fn main() {
+    test_zero_is_falsy();
+    test_positive_is_truthy();
+    test_empty_string_is_falsy();
+    test_nonempty_string_is_truthy();
+    test_true_is_truthy();
+    test_false_is_falsy();
+    test_negative_zero_is_falsy();
+    test_negative_number_is_truthy();
+    test_single_char_string_is_truthy();
+    test_whitespace_string_is_truthy();
+    test_string_zero_is_truthy();
+    test_i32_max_is_truthy();
+    test_i32_min_is_truthy();
+}

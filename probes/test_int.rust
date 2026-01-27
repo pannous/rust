@@ -45,3 +45,13 @@ fn test_float_alias_addition() {
     var sum: float = my_pi + e;
     assert!((sum - 5.85987265358979).abs() < 1e-10);
 }
+
+fn main() {
+    test_int_alias_basic();
+    test_int_alias_negative();
+    test_int_alias_addition();
+    test_int_alias_max_value();
+    test_float_alias_basic();
+    test_float_alias_eulers_number();
+    test_float_alias_addition();
+}

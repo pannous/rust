@@ -87,3 +87,18 @@ fn test_in_operator_negative_with_variables() {
 	let bools2 = [true, true];
 	assert!(not (ok2 in bools2));
 }
+
+fn main() {
+    test_in_operator_integer_slice();
+    test_in_operator_char_slice();
+    test_in_operator_string_slice();
+    test_in_operator_float_slice();
+    test_in_operator_bool_slice();
+    test_in_operator_with_variables();
+    test_in_operator_negative_integer();
+    test_in_operator_negative_char();
+    test_in_operator_negative_string();
+    test_in_operator_negative_float();
+    test_in_operator_negative_bool();
+    test_in_operator_negative_with_variables();
+}

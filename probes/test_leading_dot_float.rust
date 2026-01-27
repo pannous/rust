@@ -65,3 +65,16 @@ fn test_leading_dots_comparisons() {
     assert!(.5 > .4);
     assert!(.999 < 1.0);
 }
+
+fn main() {
+    test_leading_dot_half();
+    test_leading_dot_decimal();
+    test_leading_dot_addition();
+    test_leading_dot_with_type_suffix();
+    test_negative_leading_dot_floats();
+    test_zero_leading_edge_cases();
+    test_leading_dots_multiplication_division();
+    test_leading_dots_subtraction();
+    test_very_small_leading_dot_values();
+    test_leading_dots_comparisons();
+}

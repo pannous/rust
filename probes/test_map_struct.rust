@@ -23,3 +23,10 @@ fn test_empty_map_literal() {
     let empty := {}
     put!("Empty: %v\n", empty)
 }
+
+fn main() {
+    test_map_literal_with_string_keys();
+    test_map_literal_with_identifier_keys();
+    test_map_literal_with_commas();
+    test_empty_map_literal();
+}

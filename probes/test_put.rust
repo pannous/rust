@@ -19,3 +19,10 @@ fn test_put_bool() {
 fn test_put_float() {
     put!(3.14);
 }
+
+fn main() {
+    test_put_integer();
+    test_put_string();
+    test_put_bool();
+    test_put_float();
+}
