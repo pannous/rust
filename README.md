@@ -9,12 +9,13 @@ Philosophy:
 # Features   
 ## working features  
 
-### Convenience  
-• shebang support: #!/usr/bin/env rust  
-• run rust as scripts with implicit main  
-• exit!() and exit() function  
-• put!(...) macro for generous printing  
-• Some(3) == 3  auto unwrap  
+### Convenience
+• shebang support: #!/usr/bin/env rust
+• run rust as scripts with implicit main
+• exit!() and exit() function
+• put!(...) macro for generous printing
+• Some(3) == 3  auto unwrap
+• unused_mut warnings suppressed in script mode  
 
 
 ### Syntax Sugar  
