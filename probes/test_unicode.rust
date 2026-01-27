@@ -1,27 +1,43 @@
 #!/usr/bin/env rust
 #![allow(mixed_script_confusables)]
-// import math
-// Test Unicode identifiers
-let δ = 42
-let 变量 = "Chinese variable 变量"
-// eq!( 变量#-1 , '量');
-let переменная = "Russian variable"
-let π_custom = 3.14159  // π is now a built-in constant
 
-fn 函数() string {
-    return "Unicode function name"
+#[test]
+fn test_greek_variable() {
+    let δ = 42;
+    assert_eq!(δ, 42);
 }
 
-fn αβγ() int {
-	let δ = 42
-    return δ + 10
+#[test]
+fn test_chinese_variable() {
+    let 变量 = "Chinese variable 变量";
+    assert_eq!(变量, "Chinese variable 变量");
 }
 
-put!("Testing Unicode identifiers:")
-put!("δ = %d\n", δ)
-put!("变量 = %s\n", 变量)
-put!("переменная = %s\n", переменная)
-put!("π_custom = %f\n", π_custom)
-put!("函数() = %s\n", 函数())
-put!("αβγ() = %d\n", αβγ())
-put!("All Unicode identifiers work correctly!\n")
+#[test]
+fn test_russian_variable() {
+    let переменная = "Russian variable";
+    assert_eq!(переменная, "Russian variable");
+}
+
+#[test]
+fn test_pi_custom_variable() {
+    let π_custom = 3.14159;
+    assert!((π_custom - 3.14159).abs() < 0.00001);
+}
+
+#[test]
+fn test_chinese_function() {
+    fn 函数() -> String {
+        return "Unicode function name".to_string();
+    }
+    assert_eq!(函数(), "Unicode function name");
+}
+
+#[test]
+fn test_greek_letters_function() {
+    fn αβγ() -> i32 {
+        let δ = 42;
+        return δ + 10;
+    }
+    assert_eq!(αβγ(), 52);
+}

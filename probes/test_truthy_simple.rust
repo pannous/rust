@@ -1,106 +1,110 @@
 #!/usr/bin/env rust
 
-// Simple truthy test - integers and strings only
-
-// Test numeric truthiness
-if 0 {
-    put!("FAIL: 0 should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: 0 is falsy")
+#[test]
+fn test_zero_is_falsy() {
+    if 0 {
+        assert!(false, "0 should be falsy")
+    }
 }
 
-if 42 {
-    put!("PASS: 42 is truthy")
-} else {
-    put!("FAIL: 42 should be truthy")
-    assert!(false)
+#[test]
+fn test_positive_is_truthy() {
+    if 42 {
+        // pass
+    } else {
+        assert!(false, "42 should be truthy")
+    }
 }
 
-// Test string truthiness
-if "" {
-    put!("FAIL: empty string should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: empty string is falsy")
+#[test]
+fn test_empty_string_is_falsy() {
+    if "" {
+        assert!(false, "empty string should be falsy")
+    }
 }
 
-if "hello" {
-    put!("PASS: non-empty string is truthy")
-} else {
-    put!("FAIL: non-empty string should be truthy")
-    assert!(false)
+#[test]
+fn test_nonempty_string_is_truthy() {
+    if "hello" {
+        // pass
+    } else {
+        assert!(false, "non-empty string should be truthy")
+    }
 }
 
-// Test boolean (should work normally)
-if true {
-    put!("PASS: true is truthy")
-} else {
-    put!("FAIL: true should be truthy")
-    assert!(false)
+#[test]
+fn test_true_is_truthy() {
+    if true {
+        // pass
+    } else {
+        assert!(false, "true should be truthy")
+    }
 }
 
-if false {
-    put!("FAIL: false should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: false is falsy")
+#[test]
+fn test_false_is_falsy() {
+    if false {
+        assert!(false, "false should be falsy")
+    }
 }
 
-// Edge case: negative zero
-if -0 {
-    put!("FAIL: -0 should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: -0 is falsy")
+#[test]
+fn test_negative_zero_is_falsy() {
+    if -0 {
+        assert!(false, "-0 should be falsy")
+    }
 }
 
-// Edge case: negative numbers
-if -5 {
-    put!("PASS: -5 is truthy")
-} else {
-    put!("FAIL: -5 should be truthy")
-    assert!(false)
+#[test]
+fn test_negative_number_is_truthy() {
+    if -5 {
+        // pass
+    } else {
+        assert!(false, "-5 should be truthy")
+    }
 }
 
-// Edge case: single character string
-if "x" {
-    put!("PASS: single char string is truthy")
-} else {
-    put!("FAIL: single char string should be truthy")
-    assert!(false)
+#[test]
+fn test_single_char_string_is_truthy() {
+    if "x" {
+        // pass
+    } else {
+        assert!(false, "single char string should be truthy")
+    }
 }
 
-// Edge case: whitespace string
-if " " {
-    put!("PASS: whitespace string is truthy")
-} else {
-    put!("FAIL: whitespace string should be truthy")
-    assert!(false)
+#[test]
+fn test_whitespace_string_is_truthy() {
+    if " " {
+        // pass
+    } else {
+        assert!(false, "whitespace string should be truthy")
+    }
 }
 
-// Edge case: string with "0"
-if "0" {
-    put!("PASS: string '0' is truthy")
-} else {
-    put!("FAIL: string '0' should be truthy")
-    assert!(false)
+#[test]
+fn test_string_zero_is_truthy() {
+    if "0" {
+        // pass
+    } else {
+        assert!(false, "string '0' should be truthy")
+    }
 }
 
-// Edge case: maximum integer value
-if i32::MAX {
-    put!("PASS: i32::MAX is truthy")
-} else {
-    put!("FAIL: i32::MAX should be truthy")
-    assert!(false)
+#[test]
+fn test_i32_max_is_truthy() {
+    if i32::MAX {
+        // pass
+    } else {
+        assert!(false, "i32::MAX should be truthy")
+    }
 }
 
-// Edge case: minimum integer value
-if i32::MIN {
-    put!("PASS: i32::MIN is truthy")
-} else {
-    put!("FAIL: i32::MIN should be truthy")
-    assert!(false)
+#[test]
+fn test_i32_min_is_truthy() {
+    if i32::MIN {
+        // pass
+    } else {
+        assert!(false, "i32::MIN should be truthy")
+    }
 }
-
-put!("All tests passed!")

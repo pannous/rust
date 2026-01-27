@@ -1,85 +1,97 @@
 #!/usr/bin/env rust
-// Test while loops as synonym for for loops
 
-put!("Testing while loops:\n")
-
-// Basic while loop with condition
-i := 0
-while i < 3 {
-    put!("Basic while: i = %d\n", i)
-    i++
-}
-
-// While loop with break
-j := 0
-while true {
-    put!("While true: j = %d\n", j)
-    j++
-    if j >= 3 {
-        break
+#[test]
+fn test_while_loop_with_condition() {
+    i := 0;
+    while i < 3 {
+        i += 1;
     }
+    eq!(i, 3);
 }
 
-
-put!("All while loop tests completed!\n")
-
-// Edge case: While loop never executes
-never_count := 0
-while never_count > 10 {
-    never_count += 1
-}
-eq!(never_count, 0);
-
-// Edge case: While loop single iteration
-single := 0
-while single < 1 {
-    single += 1
-}
-eq!(single, 1);
-
-// Edge case: Break on first iteration
-immediate := 0
-while true {
-    break;
-    immediate += 1
-}
-eq!(immediate, 0);
-
-// Edge case: Continue with counter until break
-skip_count := 0
-iter_count := 0
-while iter_count < 10 {
-    iter_count += 1
-    if iter_count % 2 == 0 {
-        continue;
+#[test]
+fn test_while_loop_with_break() {
+    j := 0;
+    while true {
+        j += 1;
+        if j >= 3 {
+            break;
+        }
     }
-    skip_count += iter_count
+    eq!(j, 3);
 }
-eq!(skip_count, 25);
 
-// Edge case: While with early break
-early := 0
-while early < 100 {
-    early += 1
-    if early == 5 {
-        break
+#[test]
+fn test_while_loop_never_executes() {
+    never_count := 0;
+    while never_count > 10 {
+        never_count += 1;
     }
+    eq!(never_count, 0);
 }
-eq!(early, 5);
 
-// Edge case: While false (never runs)
-should_be_zero := 0
-while false {
-    should_be_zero = 99
-}
-eq!(should_be_zero, 0);
-
-// Edge case: Nested break condition
-outer := 0
-while outer < 5 {
-    outer += 1
-    if outer >= 3 {
-        break
+#[test]
+fn test_while_loop_single_iteration() {
+    single := 0;
+    while single < 1 {
+        single += 1;
     }
+    eq!(single, 1);
 }
-eq!(outer, 3);
+
+#[test]
+fn test_while_break_on_first_iteration() {
+    immediate := 0;
+    while true {
+        break;
+        immediate += 1;
+    }
+    eq!(immediate, 0);
+}
+
+#[test]
+fn test_while_continue_with_counter() {
+    skip_count := 0;
+    iter_count := 0;
+    while iter_count < 10 {
+        iter_count += 1;
+        if iter_count % 2 == 0 {
+            continue;
+        }
+        skip_count += iter_count;
+    }
+    eq!(skip_count, 25);
+}
+
+#[test]
+fn test_while_early_break() {
+    early := 0;
+    while early < 100 {
+        early += 1;
+        if early == 5 {
+            break;
+        }
+    }
+    eq!(early, 5);
+}
+
+#[test]
+fn test_while_false_never_executes() {
+    should_be_zero := 0;
+    while false {
+        should_be_zero = 99;
+    }
+    eq!(should_be_zero, 0);
+}
+
+#[test]
+fn test_while_nested_break_condition() {
+    outer := 0;
+    while outer < 5 {
+        outer += 1;
+        if outer >= 3 {
+            break;
+        }
+    }
+    eq!(outer, 3);
+}

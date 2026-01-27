@@ -1,160 +1,155 @@
 #!/usr/bin/env rust
 
-// Test numeric truthiness
-if 0 {
-	put!("FAIL: 0 should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: 0 is falsy")
+#[test]
+fn test_numeric_zero_is_falsy() {
+    if 0 {
+        assert!(false, "0 should be falsy")
+    }
 }
 
-if 42 {
-	put!("PASS: 42 is truthy")
-} else {
-	put!("FAIL: 42 should be truthy")
-	assert!(false)
+#[test]
+fn test_numeric_nonzero_is_truthy() {
+    if 42 {
+        // pass
+    } else {
+        assert!(false, "42 should be truthy")
+    }
 }
 
-// Test string truthiness
-if "" {
-	put!("FAIL: empty string should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: empty string is falsy")
+#[test]
+fn test_empty_string_is_falsy() {
+    if "" {
+        assert!(false, "empty string should be falsy")
+    }
 }
 
-if "hello" {
-	put!("PASS: non-empty string is truthy")
-} else {
-	put!("FAIL: non-empty string should be truthy")
-	assert!(false)
+#[test]
+fn test_nonempty_string_is_truthy() {
+    if "hello" {
+        // pass
+    } else {
+        assert!(false, "non-empty string should be truthy")
+    }
 }
 
-// Test slice truthiness (empty vec is falsy in script mode)
-let nilSlice: Vec<i32> = vec![]
-if nilSlice {
-	put!("FAIL: empty slice should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: empty slice is falsy")
+#[test]
+fn test_empty_vec_is_falsy() {
+    let nilSlice: Vec<i32> = vec![];
+    if nilSlice {
+        assert!(false, "empty slice should be falsy")
+    }
 }
 
-let emptySlice: Vec<i32> = vec![]
-if emptySlice {
-	put!("FAIL: empty slice should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: empty slice is falsy")
+#[test]
+fn test_empty_slice_is_falsy() {
+    let emptySlice: Vec<i32> = vec![];
+    if emptySlice {
+        assert!(false, "empty slice should be falsy")
+    }
 }
 
-nonEmptySlice := @[1, 2, 3]
-if nonEmptySlice {
-	put!("PASS: non-empty slice is truthy")
-} else {
-	put!("FAIL: non-empty slice should be truthy")
-	assert!(false)
+#[test]
+fn test_nonempty_slice_is_truthy() {
+    nonEmptySlice := @[1, 2, 3];
+    if nonEmptySlice {
+        // pass
+    } else {
+        assert!(false, "non-empty slice should be truthy")
+    }
 }
 
-// Test boolean (should work normally)
-if true {
-	put!("PASS: true is truthy")
-} else {
-	put!("FAIL: true should be truthy")
-	assert!(false)
+#[test]
+fn test_true_is_truthy() {
+    if true {
+        // pass
+    } else {
+        assert!(false, "true should be truthy")
+    }
 }
 
-if false {
-	put!("FAIL: false should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: false is falsy")
+#[test]
+fn test_false_is_falsy() {
+    if false {
+        assert!(false, "false should be falsy")
+    }
 }
 
-// Test Option truthiness
-let nilOpt: Option<i32> = None
-if nilOpt {
-	put!("FAIL: None should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: None is falsy")
+#[test]
+fn test_none_option_is_falsy() {
+    let nilOpt: Option<i32> = None;
+    if nilOpt {
+        assert!(false, "None should be falsy")
+    }
 }
 
-someOpt := Some(42)
-if someOpt {
-	put!("PASS: Some is truthy")
-} else {
-	put!("FAIL: Some should be truthy")
-	assert!(false)
+#[test]
+fn test_some_option_is_truthy() {
+    someOpt := Some(42);
+    if someOpt {
+        // pass
+    } else {
+        assert!(false, "Some should be truthy")
+    }
 }
 
-// Edge case: Vec with capacity but no elements
-let vecWithCapacity: Vec<i32> = Vec::with_capacity(10)
-if vecWithCapacity {
-	put!("FAIL: Vec with capacity but empty should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: Vec with capacity but empty is falsy")
+#[test]
+fn test_vec_with_capacity_but_empty_is_falsy() {
+    let vecWithCapacity: Vec<i32> = Vec::with_capacity(10);
+    if vecWithCapacity {
+        assert!(false, "Vec with capacity but empty should be falsy")
+    }
 }
 
-// Edge case: slice from vec![0]
-zeroVec := vec![0]
-if zeroVec {
-	put!("PASS: vec![0] is truthy")
-} else {
-	put!("FAIL: vec![0] should be truthy")
-	assert!(false)
+#[test]
+fn test_vec_with_zero_element_is_truthy() {
+    zeroVec := vec![0];
+    if zeroVec {
+        // pass
+    } else {
+        assert!(false, "vec![0] should be truthy")
+    }
 }
 
-// Edge case: slice with false boolean
-boolVec := vec![false]
-if boolVec {
-	put!("PASS: vec![false] is truthy")
-} else {
-	put!("FAIL: vec![false] should be truthy")
-	assert!(false)
+#[test]
+fn test_vec_with_false_element_is_truthy() {
+    boolVec := vec![false];
+    if boolVec {
+        // pass
+    } else {
+        assert!(false, "vec![false] should be truthy")
+    }
 }
 
-// Edge case: Some(0) vs 0
-if Some(0) {
-	put!("PASS: Some(0) is truthy")
-} else {
-	put!("FAIL: Some(0) should be truthy")
-	assert!(false)
+#[test]
+fn test_some_zero_is_truthy() {
+    if Some(0) {
+        // pass
+    } else {
+        assert!(false, "Some(0) should be truthy")
+    }
 }
 
-// Edge case: Some with empty vec
-// TODO: type inference for empty vec in Some not working
-// if Some(vec![]) {
-// 	put!("PASS: Some(empty vec) is truthy")
-// } else {
-// 	put!("FAIL: Some(empty vec) should be truthy")
-// 	assert!(false)
-// }
-
-// Edge case: negative zero
-if -0 {
-	put!("FAIL: -0 should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: -0 is falsy")
+#[test]
+fn test_negative_zero_is_falsy() {
+    if -0 {
+        assert!(false, "-0 should be falsy")
+    }
 }
 
-// Edge case: String::from("") vs ""
-emptyString := String::from("")
-if emptyString {
-	put!("FAIL: String::from(\"\") should be falsy")
-	assert!(false)
-} else {
-	put!("PASS: String::from(\"\") is falsy")
+#[test]
+fn test_empty_string_from_is_falsy() {
+    emptyString := String::from("");
+    if emptyString {
+        assert!(false, "String::from(\"\") should be falsy")
+    }
 }
 
-// Edge case: slice from array literal with single element
-singleElemSlice := @[0]
-if singleElemSlice {
-	put!("PASS: @[0] is truthy")
-} else {
-	put!("FAIL: @[0] should be truthy")
-	assert!(false)
+#[test]
+fn test_single_element_slice_is_truthy() {
+    singleElemSlice := @[0];
+    if singleElemSlice {
+        // pass
+    } else {
+        assert!(false, "@[0] should be truthy")
+    }
 }
-
-put!("All truthy_and tests passed!")

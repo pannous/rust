@@ -1,89 +1,111 @@
 #!/usr/bin/env rust
-// Test Vec extension methods: shift, sortDesc
 
-aList := vec![1, 2, 3]
-eq!( aList[0] , 1);
+#[test]
+fn test_vec_indexing() {
+    aList := vec![1, 2, 3];
+    eq!(aList[0], 1);
+}
 
-// Test shift - removes and returns first element
-let first = aList.shift();
-put!("shift result: %v\n", first)
-eq!( first , 1);
-eq!( first , Some(1));
-eq!( aList.len() , 2);
-eq!( aList[0] , 2);
+#[test]
+fn test_vec_shift_basic() {
+    aList := vec![1, 2, 3];
+    let first = aList.shift();
+    eq!(first, 1);
+    eq!(first, Some(1));
+    eq!(aList.len(), 2);
+    eq!(aList[0], 2);
+}
 
-// Test sortDesc - returns sorted copy in descending order
-bList := vec![3, 1, 4, 1, 5, 9, 2, 6]
-let sorted = bList.sortDesc();
-put!("sortDesc result: %v\n", sorted)
-eq!( sorted[0] , 9);
-eq!( sorted[1] , 6);
-eq!( sorted[7] , 1);
-// Original unchanged
-eq!( bList[0] , 3);
+#[test]
+fn test_vec_sortdesc_basic() {
+    bList := vec![3, 1, 4, 1, 5, 9, 2, 6];
+    let sorted = bList.sortDesc();
+    eq!(sorted[0], 9);
+    eq!(sorted[1], 6);
+    eq!(sorted[7], 1);
+    eq!(bList[0], 3);
+}
 
-// Test shift on empty vec
-emptyList := vec![] as Vec<i32>
-let empty_shift = emptyList.shift();
-put!("shift on empty: %v\n", empty_shift)
-eq!( empty_shift , None);
+#[test]
+fn test_vec_shift_on_empty() {
+    emptyList := vec![] as Vec<i32>;
+    let empty_shift = emptyList.shift();
+    eq!(empty_shift, None);
+}
 
-// ===== EDGE CASE TESTS =====
+#[test]
+fn test_vec_shift_single_element() {
+    single := vec![99];
+    eq!(single.shift(), Some(99));
+    eq!(single.len(), 0);
+    eq!(single.is_empty(), true);
+}
 
-// shift on single-element vec
-single := vec![99]
-eq!( single.shift() , Some(99) )
-eq!( single.len() , 0 )
-eq!( single.is_empty() , true )
+#[test]
+fn test_vec_shift_until_empty() {
+    countdown := vec![3, 2, 1];
+    eq!(countdown.shift(), Some(3));
+    eq!(countdown.shift(), Some(2));
+    eq!(countdown.shift(), Some(1));
+    eq!(countdown.shift(), None);
+    eq!(countdown.len(), 0);
+}
 
-// shift until empty
-countdown := vec![3, 2, 1]
-eq!( countdown.shift() , Some(3) )
-eq!( countdown.shift() , Some(2) )
-eq!( countdown.shift() , Some(1) )
-eq!( countdown.shift() , None )
-eq!( countdown.len() , 0 )
+#[test]
+fn test_vec_sortdesc_single_element() {
+    single_desc := vec![42];
+    eq!(single_desc.sortDesc(), vec![42]);
+}
 
-// sortDesc on single element
-single_desc := vec![42]
-eq!( single_desc.sortDesc() , vec![42] )
+#[test]
+fn test_vec_sortdesc_two_elements() {
+    two := vec![2, 1];
+    eq!(two.sortDesc(), vec![2, 1]);
+}
 
-// sortDesc on two elements
-two := vec![2, 1]
-eq!( two.sortDesc() , vec![2, 1] )
+#[test]
+fn test_vec_sortdesc_with_duplicates() {
+    dups := vec![3, 1, 3, 2, 1];
+    let dups_sorted = dups.sortDesc();
+    eq!(dups_sorted[0], 3);
+    eq!(dups_sorted[1], 3);
+    eq!(dups_sorted[4], 1);
+}
 
-// sortDesc on duplicates
-dups := vec![3, 1, 3, 2, 1]
-let dups_sorted = dups.sortDesc()
-eq!( dups_sorted[0] , 3 )
-eq!( dups_sorted[1] , 3 )
-eq!( dups_sorted[4] , 1 )
+#[test]
+fn test_vec_sortdesc_preserves_original() {
+    orig := vec![5, 1, 3];
+    let desc_copy = orig.sortDesc();
+    eq!(orig[0], 5);
+    eq!(desc_copy[0], 5);
+    eq!(desc_copy[2], 1);
+}
 
-// sortDesc preserves original
-orig := vec![5, 1, 3]
-let desc_copy = orig.sortDesc()
-eq!( orig[0] , 5 )
-eq!( desc_copy[0] , 5 )
-eq!( desc_copy[2] , 1 )
+#[test]
+fn test_vec_shift_after_sortdesc() {
+    mixed := vec![9, 1, 5];
+    let mut sorted_mix = mixed.sortDesc();
+    eq!(sorted_mix.shift(), Some(9));
+    eq!(sorted_mix.shift(), Some(5));
+}
 
-// shift after sortDesc
-mixed := vec![9, 1, 5]
-let mut sorted_mix = mixed.sortDesc()
-eq!( sorted_mix.shift() , Some(9) )
-eq!( sorted_mix.shift() , Some(5) )
+#[test]
+fn test_vec_is_empty() {
+    emptyList := vec![] as Vec<i32>;
+    eq!(emptyList.is_empty(), true);
+}
 
-// Empty vec is_empty
-eq!( emptyList.is_empty() , true )
+#[test]
+fn test_vec_sortdesc_negative_numbers() {
+    negatives := vec![-3, -1, -2];
+    eq!(negatives.sortDesc(), vec![-1, -2, -3]);
+}
 
-// Vec with negative numbers
-negatives := vec![-3, -1, -2]
-eq!( negatives.sortDesc() , vec![-1, -2, -3] )
-
-// Shift preserves remaining order
-ordered := vec![1, 2, 3, 4]
-ordered.shift()
-eq!( ordered[0] , 2 )
-eq!( ordered[1] , 3 )
-eq!( ordered[2] , 4 )
-
-put!("All Vec method tests passed!\n")
+#[test]
+fn test_vec_shift_preserves_remaining_order() {
+    ordered := vec![1, 2, 3, 4];
+    ordered.shift();
+    eq!(ordered[0], 2);
+    eq!(ordered[1], 3);
+    eq!(ordered[2], 4);
+}

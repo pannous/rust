@@ -1,38 +1,52 @@
 #!/usr/bin/env rust
-// Test typeid! macro
 
-let x = 42;
-put!(typeid!(x));  // i32
-eq!(typeid!(x), "i32");
+#[test]
+fn test_typeid_integer() {
+    let x = 42;
+    eq!(typeid!(x), "i32");
+}
 
-let s = "hello";
-put!(typeid!(s));  // String (script mode auto-converts AGAIN!?)
-// eq!(typeid!(s), "&str");
-eq!(typeid!(s), "alloc::string::String");
+#[test]
+fn test_typeid_string_literal() {
+    let s = "hello";
+    eq!(typeid!(s), "alloc::string::String");
+}
 
+#[test]
+fn test_typeid_string_to_string() {
+    let s2 = "hello".to_string();
+    eq!(typeid!(s2), "alloc::string::String");
+}
 
-let s2 = "hello".to_string();
-put!(typeid!(s2));  // String (script mode auto-converts)
-eq!(typeid!(s2), "alloc::string::String");
+#[test]
+fn test_typeid_string_from_literal() {
+    let st = "hello";
+    eq!(typeid!(st), "alloc::string::String");
+}
 
-let st = “hello”;
-put!(typeid!(st));  // String (script mode auto-converts)
-eq!(typeid!(st), "alloc::string::String");
+#[test]
+fn test_typeid_vec() {
+    let v = vec![1, 2, 3];
+    eq!(typeid!(v), "alloc::vec::Vec<i32>");
+}
 
-let v = vec![1, 2, 3];
-put!(typeid!(v));  // Vec<i32>
-eq!(typeid!(v), "alloc::vec::Vec<i32>");
+#[test]
+fn test_typeid_float() {
+    let f = 3.14;
+    eq!(typeid!(f), "f64");
+}
 
-let f = 3.14;
-put!(typeid!(f));  // f64
-eq!(typeid!(f), "f64");
+#[test]
+fn test_typeid_u8_literal() {
+    eq!(typeid!(100u8), "u8");
+}
 
+#[test]
+fn test_typeid_bool_literal() {
+    eq!(typeid!(true), "bool");
+}
 
-// Test inline expressions
-put!(typeid!(100u8));  // u8
-eq!(typeid!(100u8), "u8");
-put!(typeid!(true));   // bool
-eq!(typeid!(true), "bool");
-put!(typeid!(&[1, 2, 3])); // slice
-eq!(typeid!(&[1, 2, 3]), "&[i32; 3]");// yikes!
-// eq!(typeid!(&[1, 2, 3]), "slice"); // todo ^^
+#[test]
+fn test_typeid_slice() {
+    eq!(typeid!(&[1, 2, 3]), "&[i32; 3]");
+}

@@ -1,245 +1,263 @@
 #!/usr/bin/env rust
 
-// Test numeric truthiness
-if 0 {
-    put!("FAIL: 0 should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: 0 is falsy")
+#[test]
+fn test_zero_integer_is_falsy() {
+    if 0 {
+        assert!(false, "0 should be falsy")
+    }
 }
 
-if 42 {
-    put!("PASS: 42 is truthy")
-} else {
-    put!("FAIL: 42 should be truthy")
-    assert!(false)
+#[test]
+fn test_positive_integer_is_truthy() {
+    if 42 {
+        // pass
+    } else {
+        assert!(false, "42 should be truthy")
+    }
 }
 
-if -1 {
-    put!("PASS: -1 is truthy")
-} else {
-    put!("FAIL: -1 should be truthy")
-    assert!(false)
+#[test]
+fn test_negative_integer_is_truthy() {
+    if -1 {
+        // pass
+    } else {
+        assert!(false, "-1 should be truthy")
+    }
 }
 
-// Test float truthiness
-if 0.0 {
-    put!("FAIL: 0.0 should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: 0.0 is falsy")
+#[test]
+fn test_zero_float_is_falsy() {
+    if 0.0 {
+        assert!(false, "0.0 should be falsy")
+    }
 }
 
-if 3.14 {
-    put!("PASS: 3.14 is truthy")
-} else {
-    put!("FAIL: 3.14 should be truthy")
-    assert!(false)
+#[test]
+fn test_positive_float_is_truthy() {
+    if 3.14 {
+        // pass
+    } else {
+        assert!(false, "3.14 should be truthy")
+    }
 }
 
-// Test string truthiness
-if "" {
-    put!("FAIL: empty string should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: empty string is falsy")
+#[test]
+fn test_empty_str_is_falsy() {
+    if "" {
+        assert!(false, "empty string should be falsy")
+    }
 }
 
-if "hello" {
-    put!("PASS: non-empty string is truthy")
-} else {
-    put!("FAIL: non-empty string should be truthy")
-    assert!(false)
+#[test]
+fn test_nonempty_str_is_truthy() {
+    if "hello" {
+        // pass
+    } else {
+        assert!(false, "non-empty string should be truthy")
+    }
 }
 
-// Test String type truthiness
-if String::new() {
-    put!("FAIL: empty String should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: empty String is falsy")
+#[test]
+fn test_empty_string_type_is_falsy() {
+    if String::new() {
+        assert!(false, "empty String should be falsy")
+    }
 }
 
-if String::from("hello") {
-    put!("PASS: non-empty String is truthy")
-} else {
-    put!("FAIL: non-empty String should be truthy")
-    assert!(false)
+#[test]
+fn test_nonempty_string_type_is_truthy() {
+    if String::from("hello") {
+        // pass
+    } else {
+        assert!(false, "non-empty String should be truthy")
+    }
 }
 
-// Test boolean (should work normally)
-if true {
-    put!("PASS: true is truthy")
-} else {
-    put!("FAIL: true should be truthy")
-    assert!(false)
+#[test]
+fn test_true_is_truthy() {
+    if true {
+        // pass
+    } else {
+        assert!(false, "true should be truthy")
+    }
 }
 
-if false {
-    put!("FAIL: false should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: false is falsy")
+#[test]
+fn test_false_is_falsy() {
+    if false {
+        assert!(false, "false should be falsy")
+    }
 }
 
-// Test unsigned integers
-if 0u8 {
-    put!("FAIL: 0u8 should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: 0u8 is falsy")
+#[test]
+fn test_zero_u8_is_falsy() {
+    if 0u8 {
+        assert!(false, "0u8 should be falsy")
+    }
 }
 
-if 1u64 {
-    put!("PASS: 1u64 is truthy")
-} else {
-    put!("FAIL: 1u64 should be truthy")
-    assert!(false)
+#[test]
+fn test_positive_u64_is_truthy() {
+    if 1u64 {
+        // pass
+    } else {
+        assert!(false, "1u64 should be truthy")
+    }
 }
 
-// Test Vec truthiness
-if Vec::<i32>::new() {
-    put!("FAIL: empty Vec should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: empty Vec is falsy")
+#[test]
+fn test_empty_vec_is_falsy() {
+    if Vec::<i32>::new() {
+        assert!(false, "empty Vec should be falsy")
+    }
 }
 
-if vec![1, 2, 3] {
-    put!("PASS: non-empty Vec is truthy")
-} else {
-    put!("FAIL: non-empty Vec should be truthy")
-    assert!(false)
+#[test]
+fn test_nonempty_vec_is_truthy() {
+    if vec![1, 2, 3] {
+        // pass
+    } else {
+        assert!(false, "non-empty Vec should be truthy")
+    }
 }
 
-// Test Option truthiness
-if None::<i32> {
-    put!("FAIL: None should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: None is falsy")
+#[test]
+fn test_none_option_is_falsy() {
+    if None::<i32> {
+        assert!(false, "None should be falsy")
+    }
 }
 
-if Some(42) {
-    put!("PASS: Some is truthy")
-} else {
-    put!("FAIL: Some should be truthy")
-    assert!(false)
+#[test]
+fn test_some_option_is_truthy() {
+    if Some(42) {
+        // pass
+    } else {
+        assert!(false, "Some should be truthy")
+    }
 }
 
-// Test else-if chain
-x := 5
-if x {
-    put!("PASS: x equals 5 ≠ 0")
-} else if x == 5 {
-	put!("PASS: x equals 5")
-} else {
-    put!("FAIL: else-if not working correctly")
-    assert!(false)
+#[test]
+fn test_nonzero_value_in_if_condition() {
+    x := 5;
+    if x {
+        // pass - x is 5, which is nonzero
+    } else {
+        assert!(false, "x equals 5 ≠ 0")
+    }
 }
 
-let y : i32? =1
-if y {
-    put!("PASS: y is truthy")
-} else {
-    put!("FAIL: y should be truthy")
-    assert!(false)
+#[test]
+fn test_option_with_value_is_truthy() {
+    let y : i32? = 1;
+    if y {
+        // pass
+    } else {
+        assert!(false, "y should be truthy")
+    }
 }
 
-let z : i32? = None
-if z {
-    put!("FAIL: z should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: z is falsy")
+#[test]
+fn test_option_none_is_falsy() {
+    let z : i32? = None;
+    if z {
+        assert!(false, "z should be falsy")
+    }
 }
 
-// Edge case: Some(0) should be truthy (it's Some, not None)
-if Some(0) {
-    put!("PASS: Some(0) is truthy")
-} else {
-    put!("FAIL: Some(0) should be truthy")
-    assert!(false)
+#[test]
+fn test_some_zero_is_truthy() {
+    if Some(0) {
+        // pass
+    } else {
+        assert!(false, "Some(0) should be truthy")
+    }
 }
 
-// Edge case: Some with empty string
-if Some("") {
-    put!("PASS: Some(\"\") is truthy")
-} else {
-    put!("FAIL: Some(\"\") should be truthy")
-    assert!(false)
+#[test]
+fn test_some_empty_string_is_truthy() {
+    if Some("") {
+        // pass
+    } else {
+        assert!(false, "Some(\"\") should be truthy")
+    }
 }
 
-// Edge case: Vec with single zero element
-if vec![0] {
-    put!("PASS: vec![0] is truthy")
-} else {
-    put!("FAIL: vec![0] should be truthy")
-    assert!(false)
+#[test]
+fn test_vec_single_zero_element_is_truthy() {
+    if vec![0] {
+        // pass
+    } else {
+        assert!(false, "vec![0] should be truthy")
+    }
 }
 
-// Edge case: Vec with empty string element
-if vec![""] {
-    put!("PASS: vec![\"\"] is truthy")
-} else {
-    put!("FAIL: vec![\"\"] should be truthy")
-    assert!(false)
+#[test]
+fn test_vec_single_empty_string_is_truthy() {
+    if vec![""] {
+        // pass
+    } else {
+        assert!(false, "vec![\"\"] should be truthy")
+    }
 }
 
-// Edge case: negative float
-if -3.14 {
-    put!("PASS: -3.14 is truthy")
-} else {
-    put!("FAIL: -3.14 should be truthy")
-    assert!(false)
+#[test]
+fn test_negative_float_is_truthy() {
+    if -3.14 {
+        // pass
+    } else {
+        assert!(false, "-3.14 should be truthy")
+    }
 }
 
-// Edge case: very small positive float
-if 0.0001 {
-    put!("PASS: 0.0001 is truthy")
-} else {
-    put!("FAIL: 0.0001 should be truthy")
-    assert!(false)
+#[test]
+fn test_small_positive_float_is_truthy() {
+    if 0.0001 {
+        // pass
+    } else {
+        assert!(false, "0.0001 should be truthy")
+    }
 }
 
-// Edge case: i128 zero
-if 0i128 {
-    put!("FAIL: 0i128 should be falsy")
-    assert!(false)
-} else {
-    put!("PASS: 0i128 is falsy")
+#[test]
+fn test_zero_i128_is_falsy() {
+    if 0i128 {
+        assert!(false, "0i128 should be falsy")
+    }
 }
 
-// Edge case: i128 non-zero
-if 1i128 {
-    put!("PASS: 1i128 is truthy")
-} else {
-    put!("FAIL: 1i128 should be truthy")
-    assert!(false)
+#[test]
+fn test_nonzero_i128_is_truthy() {
+    if 1i128 {
+        // pass
+    } else {
+        assert!(false, "1i128 should be truthy")
+    }
 }
 
-// Edge case: String with just whitespace
-if String::from(" ") {
-    put!("PASS: String with whitespace is truthy")
-} else {
-    put!("FAIL: String with whitespace should be truthy")
-    assert!(false)
+#[test]
+fn test_string_whitespace_is_truthy() {
+    if String::from(" ") {
+        // pass
+    } else {
+        assert!(false, "String with whitespace should be truthy")
+    }
 }
 
-// Edge case: nested Some
-if Some(Some(42)) {
-    put!("PASS: Some(Some(42)) is truthy")
-} else {
-    put!("FAIL: Some(Some(42)) should be truthy")
-    assert!(false)
+#[test]
+fn test_nested_some_is_truthy() {
+    if Some(Some(42)) {
+        // pass
+    } else {
+        assert!(false, "Some(Some(42)) should be truthy")
+    }
 }
 
-// Edge case: Some(None) - contains None but itself is Some
-if Some(None::<i32>) {
-    put!("PASS: Some(None) is truthy")
-} else {
-    put!("FAIL: Some(None) should be truthy")
-    assert!(false)
+#[test]
+fn test_some_none_is_truthy() {
+    if Some(None::<i32>) {
+        // pass
+    } else {
+        assert!(false, "Some(None) should be truthy")
+    }
 }
-
-put!("All truthy tests passed!")
