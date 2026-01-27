@@ -1,5 +1,16 @@
 #!/usr/bin/env rust
+
 // Test ellipsis range syntax - collect to vec for comparison
-eq!( (1…4).collect::<Vec<_>>() , vec![1, 2, 3, 4] ); // range 1..4 gives [1,2,3]
-eq!( ('a'…'d').collect::<Vec<_>>() , vec!['a', 'b', 'c', 'd'] ); // char range
-put!("Range checks passed!\n")
+
+#[test]
+fn test_integer_ellipsis_range() {
+	// range 1…4 gives [1,2,3,4]
+	eq!( (1…4).collect::<Vec<_>>() , vec![1, 2, 3, 4] );
+}
+
+#[test]
+fn test_char_ellipsis_range() {
+	// char range
+	eq!( ('a'…'d').collect::<Vec<_>>() , vec!['a', 'b', 'c', 'd'] );
+	put!("Range checks passed!\n")
+}

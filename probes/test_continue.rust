@@ -1,10 +1,13 @@
 #!/usr/bin/env rust
 
-// No one needs these old loops.
-// for i := 0; i < 5; i++ {
-for i in 0..5 {
-	if i == 2 {
-		continue
-    }
-	put!(i)
+#[test]
+fn test_continue_statement() {
+	// No one needs these old loops.
+	// for i := 0; i < 5; i++ {
+	for i in 0..5 {
+		if i == 2 {
+			continue
+		}
+		put!(i)
+	}
 }

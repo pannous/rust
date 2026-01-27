@@ -1,32 +1,38 @@
 #!/usr/bin/env rust
+
 #![allow(unused)]
+
 // #[derive(Debug, Clone, PartialEq)]  // todo automatic to_string Display how??
 enum State { OK, ERROR, PENDING }
 use State::*;
-put!("Testing enum String() method:")
 
-// Test normal cases
-let mut s:State = OK
-put!("OK.String() = %v\n", s) // wait, this works? Then the following should also work.
-eqs!( s , "OK");
-eq!( s as string , "OK"); // I see can we have sprintf("{}", s) as fallback?
+#[test]
+fn test_enum_string_conversion() {
+	put!("Testing enum String() method:")
 
-// s = ERROR
-// put!("ERROR.String() = %s\n", s.String())
-// eq!( s as string , "ERROR");
+	// Test normal cases
+	let mut s:State = OK
+	put!("OK.String() = %v\n", s) // wait, this works? Then the following should also work.
+	eqs!( s , "OK");
+	eq!( s as string , "OK"); // I see can we have sprintf("{}", s) as fallback?
 
-// s = PENDING
-// put!("PENDING.String() = %s\n", s.String())
-// eq!( s as string , "PENDING");
+	// s = ERROR
+	// put!("ERROR.String() = %s\n", s.String())
+	// eq!( s as string , "ERROR");
 
-// // Test unknown value (should return "UNKNOWN")
-// // try{
-	// // s = State(999)
-	// // put!("State(999).String() = %s\n", s.String())
-// // } catch err{
-	// // put!("OK! Caught error for unknown enum value:", err)
-// // }
-// // Test direct string formatting
-// put!("Direct formatting: %s\n", OK)
+	// s = PENDING
+	// put!("PENDING.String() = %s\n", s.String())
+	// eq!( s as string , "PENDING");
 
-// put!("All tests passed!\n")
+	// // Test unknown value (should return "UNKNOWN")
+	// // try{
+		// // s = State(999)
+		// // put!("State(999).String() = %s\n", s.String())
+	// // } catch err{
+		// // put!("OK! Caught error for unknown enum value:", err)
+	// // }
+	// // Test direct string formatting
+	// put!("Direct formatting: %s\n", OK)
+
+	// put!("All tests passed!\n")
+}
