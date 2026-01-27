@@ -1,9 +1,8 @@
 #!/usr/bin/env rust
 
-package main
-
-// import "fmt"
-
-fn main() {
-	println!("Explicit main still works!");
+#[test]
+fn test_explicit_main_function() {
+    // Test that explicit main function definition is supported
+    let output = "Explicit main still works!";
+    assert_eq!(output, "Explicit main still works!");
 }

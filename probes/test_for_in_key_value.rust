@@ -1,73 +1,48 @@
 #!/usr/bin/env rust
-put!("Test for-in with both single and double variable patterns\n")
 
-# TODO: HashMap pairs needs separate trait implementation
-# my_map := {
-# 	apple:  1,
-# 	banana: 2,
-# 	cherry: 3,
-# }
-# for (key, value) in my_map.pairs() { ... }
-
-put!("Testing with slice:\n")
-numbers := [10, 20, 30]
-
-put!("Single variable (values):\n")
-for num in numbers {
-	printf!("Value: {} \n", num)
+#[test]
+fn test_pairs_single_element() {
+    let single = [99];
+    let mut index_sum = 0;
+    let mut value_sum = 0;
+    for (i, v) in single.pairs() {
+        index_sum += i;
+        value_sum += v;
+    }
+    eq!(index_sum, 0);
+    eq!(value_sum, 99);
 }
 
-put!("\nDouble variable (index-value pairs):\n")
-for (i, num) in numbers.pairs() {
-	printf!("Index: {}, Value: {}\n", i, num)
+#[test]
+fn test_pairs_index_accumulation() {
+    let mut idx_accum = 0;
+    for (i, _v) in [100, 200, 300, 400].pairs() {
+        idx_accum += i;
+    }
+    eq!(idx_accum, 6);
 }
 
-put!("\nAll key-value tests completed!")
-
-// Edge case: Empty array with pairs
-// TODO: empty array type inference not working
-// empty := []
-// pair_count := 0
-// for (i, v) in empty.pairs() {
-// 	pair_count += 1
-// }
-// eq!(pair_count, 0);
-
-// Edge case: Single element with pairs
-single := [99]
-index_sum := 0
-value_sum := 0
-for (i, v) in single.pairs() {
-	index_sum += i
-	value_sum += v
+#[test]
+fn test_pairs_break_on_first() {
+    let mut first_idx = 999;
+    let mut first_val = 999;
+    for (i, v) in [5, 10, 15].pairs() {
+        first_idx = i;
+        first_val = v;
+        break;
+    }
+    eq!(first_idx, 0);
+    eq!(first_val, 5);
 }
-eq!(index_sum, 0);
-eq!(value_sum, 99);
 
-// Edge case: Index accumulation
-idx_accum := 0
-for (i, v) in [100, 200, 300, 400].pairs() {
-	idx_accum += i
+#[test]
+fn test_pairs_continue_skip_odd_indices() {
+    let mut even_idx_sum = 0;
+    for (i, v) in [10, 20, 30, 40, 50].pairs() {
+        if i % 2 != 0 {
+            continue;
+        }
+        even_idx_sum += v;
+    }
+    eq!(even_idx_sum, 90);
 }
-eq!(idx_accum, 6);
-
-// Edge case: Break in pairs loop
-first_idx := 999
-first_val := 999
-for (i, v) in [5, 10, 15].pairs() {
-	first_idx = i
-	first_val = v
-	break
-}
-eq!(first_idx, 0);
-eq!(first_val, 5);
-
-// Edge case: Continue in pairs skipping odd indices
-even_idx_sum := 0
-for (i, v) in [10, 20, 30, 40, 50].pairs() {
-	if i % 2 != 0 {
-		continue
-	}
-	even_idx_sum += v
-}
-eq!(even_idx_sum, 90);

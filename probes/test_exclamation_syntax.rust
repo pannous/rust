@@ -1,20 +1,8 @@
 #!/usr/bin/env rust
-// import "slices"
-print!("Testing exclamation syntax for modifying methods can't work in Rust because it's reserved for macros.")
 
-// numbers := @[3, 1, 4, 1, 5]
-// put!("Original:", numbers)
-
-// // Test modifying methods with ! syntax
-// numbers.sort!()  // should modify in-place
-// put!("After sort!():", numbers)
-
-// numbers.reverse!()  // should modify in-place
-// put!("After reverse!():", numbers)
-
-// // Test non-modifying methods (return new slice)
-// sorted := @[5, 2, 8, 1].sorted()  // should return new sorted slice
-// put!("Sorted (new slice):", sorted)
-
-// reversed := @[1, 2, 3, 4].reversed()  // should return new reversed slice
-// put!("Reversed (new slice):", reversed)
+#[test]
+fn test_exclamation_syntax_not_available() {
+    // Testing exclamation syntax for modifying methods can't work in Rust because it's reserved for macros.
+    // This test documents that ! syntax cannot be used for mutating methods in script context
+    print!("Testing exclamation syntax for modifying methods can't work in Rust because it's reserved for macros.");
+}

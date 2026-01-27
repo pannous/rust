@@ -1,73 +1,42 @@
 #!/usr/bin/env rust
-// Test for-in with both single and double variable patterns
-my_map := {
-	apple:  1,
-	banana: 2,
-	cherry: 3,
+
+#[test]
+fn test_single_entry_map_iteration() {
+    let single_map = { solo: 123 };
+    let mut found = 0;
+    for _k in single_map {
+        found += 1;
+    }
+    eq!(found, 1);
 }
 
-put!("Single variable (keys only):\n")
-for key in my_map {
-	put!(key)
+#[test]
+fn test_break_immediately_in_map_iteration() {
+    let map_with_data = { a: 1, b: 2, c: 3 };
+    let mut break_count = 0;
+    for _k in map_with_data {
+        break;
+        break_count += 1;
+    }
+    eq!(break_count, 0);
 }
 
-put!("\nTesting with slice:")
-numbers := [10, 20, 30]
-
-put!("Single variable (values):\n")
-for num in numbers {
-	printf!("Value: {} \n", num)
+#[test]
+fn test_accumulate_values_from_array() {
+    let vals = [7, 14, 21];
+    let mut total = 0;
+    for v in vals {
+        total += v;
+    }
+    eq!(total, 42);
 }
 
-put!("All key-value tests completed!")
-
-// Edge case: Empty map
-// TODO: empty map literal type inference not working
-// empty_map := {}
-// key_count := 0
-// for k in empty_map {
-// 	key_count += 1
-// }
-// eq!(key_count, 0);
-
-// Edge case: Single entry map
-single_map := { solo: 123 }
-found := 0
-for k in single_map {
-	found += 1
+#[test]
+fn test_single_iteration_array() {
+    let one_item = [555];
+    let mut result = 0;
+    for v in one_item {
+        result = v;
+    }
+    eq!(result, 555);
 }
-eq!(found, 1);
-
-// Edge case: Empty array iteration
-// TODO: empty array type inference not working
-// empty_arr := []
-// arr_count := 0
-// for v in empty_arr {
-// 	arr_count += 1
-// }
-// eq!(arr_count, 0);
-
-// Edge case: Break immediately in map iteration
-map_with_data := { a: 1, b: 2, c: 3 }
-break_count := 0
-for k in map_with_data {
-	break;
-	break_count += 1
-}
-eq!(break_count, 0);
-
-// Edge case: Accumulate values from array
-vals := [7, 14, 21]
-total := 0
-for v in vals {
-	total += v
-}
-eq!(total, 42);
-
-// Edge case: Single iteration array
-one_item := [555]
-result := 0
-for v in one_item {
-	result = v
-}
-eq!(result, 555);

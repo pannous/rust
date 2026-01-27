@@ -1,26 +1,33 @@
 #!/usr/bin/env rust
-// import "slices"
 
-nums := [1, 2, 3, 4, 5, 6]
+#[test]
+fn test_select_synonym() {
+    let nums = [1, 2, 3, 4, 5, 6];
+    let evens = nums.select(x => x%2 == 0);
+    let expected = [2, 4, 6];
+    eq!(evens, expected);
+}
 
-// Test all the synonyms
-// evens1 := nums.filter(x => x%2 == 0) built-in with different semantics.
-// evens2 := nums.where(x => x%2 == 0)    built-in keyword!
-evens3 := nums.select(x => x%2 == 0)
-evens3 := nums.chose(x => x%2 == 0)
-evens4 := nums.that(x => x%2 == 0)
-evens5 := nums.which(x => x%2 == 0)
+#[test]
+fn test_chose_synonym() {
+    let nums = [1, 2, 3, 4, 5, 6];
+    let evens = nums.chose(x => x%2 == 0);
+    let expected = [2, 4, 6];
+    eq!(evens, expected);
+}
 
-expected := @[2, 4, 6]
+#[test]
+fn test_that_synonym() {
+    let nums = [1, 2, 3, 4, 5, 6];
+    let evens = nums.that(x => x%2 == 0);
+    let expected = [2, 4, 6];
+    eq!(evens, expected);
+}
 
-eq!( evens3 , expected);
-eq!( evens4 , expected);
-eq!( evens5 , expected);
-
-put!("⚠️ filter() built-in has different semantics")
-put!("⚠️ where() is a built-in keyword!")
-put!("✅ select() works")
-put!("✅ chose() works")
-put!("✅ that() works")
-put!("✅ which() works")
-put!("🎉 All filter synonyms working perfectly (except filter itself;) !")
+#[test]
+fn test_which_synonym() {
+    let nums = [1, 2, 3, 4, 5, 6];
+    let evens = nums.which(x => x%2 == 0);
+    let expected = [2, 4, 6];
+    eq!(evens, expected);
+}
