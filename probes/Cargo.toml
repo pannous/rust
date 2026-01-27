@@ -1,3 +1,7 @@
+[workspace]
+# Declare this as an independent workspace to prevent IDEs from
+# indexing the parent Rust compiler workspace during rebuilds
+
 [package]
 name = "probes"
 version = "0.1.0"
