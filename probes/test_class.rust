@@ -1,11 +1,20 @@
 #!/usr/bin/env rust
-# class is an alias for struct, commas between fields are optional
+
+// class is an alias for struct, commas between fields are optional
 class Point {
-	x: i32
-	y: i32
+    x: i32
+    y: i32
 }
 
-point := Point{x: 10, y: 20}
-put!("Point: (%d, %d)\n", point.x, point.y)
-eq!(point.x, 10)
-eq!(point.y, 20)
+#[test]
+fn test_class_instantiation() {
+    let point = Point { x: 10, y: 20 };
+    println!("Point: ({}, {})\n", point.x, point.y);
+}
+
+#[test]
+fn test_class_field_access() {
+    let point = Point { x: 10, y: 20 };
+    eq!(point.x, 10);
+    eq!(point.y, 20);
+}

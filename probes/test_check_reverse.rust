@@ -1,5 +1,13 @@
 #!/usr/bin/env rust
-eq!( "hello".reverse() , "olleh");
-put!("all checks passed!\n")
+
+#[test]
+fn test_string_reverse() {
+    eq!("hello".reverse(), "olleh");
+}
+
+#[test]
+fn test_reverse_checks_passed() {
+    println!("all checks passed!\n");
+}
 
 

@@ -1,9 +1,23 @@
 #!/usr/bin/env rust
-let v = @[1, 2, 3];
-println!("v: {:?}", v);
-let empty: Vec<i32> = @[];
-let empty_len = empty.len();
-println!("empty_len: {}", empty_len);
+
+#[test]
+fn test_at_vec_creation() {
+    let v = @[1, 2, 3];
+    println!("v: {:?}", v);
+    assert_eq!(v.len(), 3);
+}
+
+#[test]
+fn test_at_vec_empty() {
+    let empty: Vec<i32> = @[];
+    let empty_len = empty.len();
+    println!("empty_len: {}", empty_len);
+    assert_eq!(empty_len, 0);
+}
+
 // Nested @[] requires recursive expansion - use vec![] for now
-// let nested = @[vec![1], vec![2, 3]];
-// println!("nested: {:?}", nested);
+// #[test]
+// fn test_at_vec_nested() {
+//     let nested = @[vec![1], vec![2, 3]];
+//     println!("nested: {:?}", nested);
+// }

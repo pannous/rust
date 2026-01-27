@@ -1,20 +1,45 @@
 #!/usr/bin/env rust
-# Test that class auto-derives Debug, Clone, Copy
+
+// Test that class auto-derives Debug, Clone, Copy
 
 class Point { x: i32, y: i32 }
 
-let p = Point { x: 1, y: 2 }
-# Copy works
-let p2 = p
-# Clone works
-let p3 = p.clone()
-# Debug works
-put!("{:?}", p);
-put!("{:?}", p2);
-put!("{:?}", p3);
+#[test]
+fn test_class_copy() {
+    let p = Point { x: 1, y: 2 };
+    // Copy works
+    let p2 = p;
+    assert_eq!(p2.x, 1);
+    assert_eq!(p2.y, 2);
+}
 
-# Verify they're the same
-assert!(p.x == p2.x and p.y == p2.y)
-assert!(p.x == p3.x and p.y == p3.y)
+#[test]
+fn test_class_clone() {
+    let p = Point { x: 1, y: 2 };
+    // Clone works
+    let p3 = p.clone();
+    assert_eq!(p3.x, 1);
+    assert_eq!(p3.y, 2);
+}
 
-put!("✓ class auto-derives Debug, Clone, Copy")
+#[test]
+fn test_class_debug() {
+    let p = Point { x: 1, y: 2 };
+    let p2 = p;
+    let p3 = p.clone();
+    // Debug works
+    println!("{:?}", p);
+    println!("{:?}", p2);
+    println!("{:?}", p3);
+}
+
+#[test]
+fn test_class_copy_clone_verify() {
+    let p = Point { x: 1, y: 2 };
+    let p2 = p;
+    let p3 = p.clone();
+    // Verify they're the same
+    assert!(p.x == p2.x && p.y == p2.y);
+    assert!(p.x == p3.x && p.y == p3.y);
+    println!("✓ class auto-derives Debug, Clone, Copy");
+}

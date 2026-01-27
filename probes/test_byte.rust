@@ -1,5 +1,15 @@
 #!/usr/bin/env rust
-var b: byte = 255
-put!(b)
-var zero: byte = 0
-put!(zero)
+
+#[test]
+fn test_byte_max_value() {
+    let b: byte = 255;
+    println!("{}", b);
+    assert_eq!(b, 255);
+}
+
+#[test]
+fn test_byte_zero() {
+    let zero: byte = 0;
+    println!("{}", zero);
+    assert_eq!(zero, 0);
+}
