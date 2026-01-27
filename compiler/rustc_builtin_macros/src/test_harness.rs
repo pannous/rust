@@ -62,8 +62,9 @@ pub fn inject(
     // even in non-test builds
     let test_runner = get_test_runner(dcx, krate);
 
-    // Enable test harness for: explicit --test flag OR script mode
-    let should_test = sess.is_test_crate() || sess.is_script_mode();
+    // Enable test harness for: explicit --test flag OR (script mode AND has tests)
+    let has_tests = has_test_items(krate);
+    let should_test = sess.is_test_crate() || (sess.is_script_mode() && has_tests);
 
     if should_test {
         let panic_strategy = match (panic_strategy, sess.opts.unstable_opts.panic_abort_tests) {
@@ -387,6 +388,16 @@ fn mk_tests_slice(cx: &TestCtxt<'_>, sp: Span) -> Box<ast::Expr> {
 
 fn get_test_name(i: &ast::Item) -> Option<Symbol> {
     attr::first_attr_value_str_by_name(&i.attrs, sym::rustc_test_marker)
+}
+
+/// Check if the crate has any test items (with #[rustc_test_marker]).
+fn has_test_items(krate: &ast::Crate) -> bool {
+    for item in &krate.items {
+        if get_test_name(item).is_some() {
+            return true;
+        }
+    }
+    false
 }
 
 fn get_test_runner(dcx: DiagCtxtHandle<'_>, krate: &ast::Crate) -> Option<ast::Path> {
