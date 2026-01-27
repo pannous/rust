@@ -1,0 +1,9 @@
+[build]
+# Use custom rustc from parent directory
+rustc = "/opt/other/rust/rustc"
+
+[target.aarch64-apple-darwin]
+# Can add target-specific settings here if needed
+
+[target.x86_64-apple-darwin]
+# Can add target-specific settings here if needed

@@ -17,6 +17,8 @@ Session.vim
 .cproject
 .idea
 !probes/.idea/runConfigurations/
+.cargo
+!probes/.cargo/config.toml
 *.iml
 .vscode
 .project
