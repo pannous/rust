@@ -1,60 +1,91 @@
 #!/usr/bin/env rust
-class User {
-    name:string,
-    age:int
+
+struct User {
+    name: string,
+    age: int,
 }
 
-// users := @[User{name: "Bob", age: 17}, User{name: "Charlie", age: 22}, User{name: "Alice", age: 20}]
-users := vec![User{name: "Bob", age: 17}, User{name: "Charlie", age: 22}, User{name: "Alice", age: 20}]
-// let user = users.chose(|u| u.age > 18).first_cloned() // todo vs .head()
-let user = users.chose(|u| u.age > 18).first().cloned() // todo vs .head()
-// let user = users.chose(|u| u.age > 18).first()
+#[test]
+fn test_user_filter_and_first() {
+    let users = vec![
+        User { name: "Bob".to_string(), age: 17 },
+        User { name: "Charlie".to_string(), age: 22 },
+        User { name: "Alice".to_string(), age: 20 },
+    ];
 
-let result:string
-if user and user.?name {
-    result = user.?name ?? "Anonymous"
-} else {
-    result = "Anonymous"
+    let user = users.chose(|u| u.age > 18).first().cloned();
+
+    let result: string;
+    if user && user.?.name {
+        result = user.?.name ?? "Anonymous".to_string();
+    } else {
+        result = "Anonymous".to_string();
+    }
+
+    put!("First user over 18: ", result);
+    eq!(result, "Charlie");
 }
 
-put!("First user over 18: ", result)
+#[test]
+fn test_empty_users_list() {
+    let empty_users: Vec<User> = vec![];
+    let empty_result = empty_users.chose(|u| u.age > 18).first().cloned();
 
-// Edge case: empty users list
-let emptyUsers: Vec<User> = vec![]
-let emptyResult = emptyUsers.chose(|u| u.age > 18).first().cloned()
-if emptyResult and emptyResult.?name {
-    put!("FAIL: emptyResult should be None")
-    assert!(false)
-} else {
-    put!("PASS: emptyResult is None")
+    if empty_result && empty_result.?.name {
+        panic!("FAIL: emptyResult should be None");
+    } else {
+        put!("PASS: emptyResult is None");
+    }
+    assert!(empty_result.is_none());
 }
 
-// Edge case: user with age exactly 18
-borderUsers := vec![User{name: "Border", age: 18}]
-let borderUser = borderUsers.chose(|u| u.age > 18).first().cloned()
-if borderUser {
-    put!("FAIL: user with age 18 should not match > 18")
-    assert!(false)
-} else {
-    put!("PASS: age 18 does not match > 18 filter")
+#[test]
+fn test_user_with_age_exactly_eighteen() {
+    let border_users = vec![User {
+        name: "Border".to_string(),
+        age: 18,
+    }];
+
+    let border_user = border_users.chose(|u| u.age > 18).first().cloned();
+
+    if border_user {
+        panic!("FAIL: user with age 18 should not match > 18");
+    } else {
+        put!("PASS: age 18 does not match > 18 filter");
+    }
+    assert!(border_user.is_none());
 }
 
-// Edge case: all users under age
-youngUsers := vec![User{name: "Kid1", age: 10}, User{name: "Kid2", age: 15}]
-let youngResult = youngUsers.chose(|u| u.age > 18).first().cloned()
-if youngResult {
-    put!("FAIL: no users should match > 18")
-    assert!(false)
-} else {
-    put!("PASS: no users match age filter")
+#[test]
+fn test_all_users_under_age() {
+    let young_users = vec![
+        User { name: "Kid1".to_string(), age: 10 },
+        User { name: "Kid2".to_string(), age: 15 },
+    ];
+
+    let young_result = young_users.chose(|u| u.age > 18).first().cloned();
+
+    if young_result {
+        panic!("FAIL: no users should match > 18");
+    } else {
+        put!("PASS: no users match age filter");
+    }
+    assert!(young_result.is_none());
 }
 
-// Edge case: user with empty name
-usersEmptyName := vec![User{name: "", age: 25}]
-let userEmptyName = usersEmptyName.chose(|u| u.age > 18).first().cloned()
-if userEmptyName and userEmptyName.?name {
-    put!("PASS: user exists with empty name")
-} else {
-    put!("FAIL: user with empty name should still exist")
-    assert!(false)
+#[test]
+fn test_user_with_empty_name() {
+    let users_empty_name = vec![User {
+        name: "".to_string(),
+        age: 25,
+    }];
+
+    let user_empty_name = users_empty_name.chose(|u| u.age > 18).first().cloned();
+
+    if user_empty_name && user_empty_name.?.name {
+        put!("PASS: user exists with empty name");
+    } else {
+        panic!("FAIL: user with empty name should still exist");
+    }
+    assert!(user_empty_name.is_some());
 }

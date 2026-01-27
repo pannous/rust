@@ -1,64 +1,89 @@
 #!/usr/bin/env rust
-// Test ~ as synonym for ≈ (approximate equality)
 
-c := 0.1 + 0.2
-d := 0.3
-put!("(0.1 + 0.2) ~ 0.3:", c ~ d)
-assert!(c ~ d)
+#[test]
+fn test_tilde_floating_point_precision() {
+    let c = 0.1 + 0.2;
+    let d = 0.3;
+    put!("(0.1 + 0.2) ~ 0.3:", c ~ d);
+    assert!(c ~ d);
+}
 
-a := 1.00000000001
-b := 1.00000000002
-put!("near-identical floats:", a ~ b)
-assert!(a ~ b)
+#[test]
+fn test_tilde_near_identical_floats() {
+    let a = 1.00000000001;
+    let b = 1.00000000002;
+    put!("near-identical floats:", a ~ b);
+    assert!(a ~ b);
+}
 
-// Test ~ with implicit multiplication
-put!("τ ~ 2.0π:", τ ~ 2.0π)
-assert!(τ ~ 2.0π)
+#[test]
+fn test_tilde_with_implicit_multiplication() {
+    put!("τ ~ 2.0π:", τ ~ 2.0π);
+    assert!(τ ~ 2.0π);
+}
 
-// Edge case: negative values with ~
-assert!(-τ ~ -2π)
-assert!(-0.1 - 0.2 ~ -0.3)
+#[test]
+fn test_tilde_negative_values() {
+    assert!(-τ ~ -2π);
+    assert!(-0.1 - 0.2 ~ -0.3);
+}
 
-// Edge case: zero and near-zero with ~
-assert!(0.0 ~ 1e-15)
-assert!(π - π ~ 0.0)
-assert!(τ - 2.0π ~ 0.0)
+#[test]
+fn test_tilde_zero_and_near_zero() {
+    assert!(0.0 ~ 1e-15);
+    assert!(π - π ~ 0.0);
+    assert!(τ - 2.0π ~ 0.0);
+}
 
-// Edge case: fractional π and τ with ~
-assert!(π/2.0 ~ τ/4.0)
-assert!(π/4.0 ~ 0.7853981633974483)
-assert!(τ/6.0 ~ π/3.0)
+#[test]
+fn test_tilde_fractional_pi_and_tau() {
+    assert!(π / 2.0 ~ τ / 4.0);
+    assert!(π / 4.0 ~ 0.7853981633974483);
+    assert!(τ / 6.0 ~ π / 3.0);
+}
 
-// Edge case: large values with ~
-assert!(1000000.0 ~ 1000000.0000001)
-assert!(1e10 ~ 1e10 + 1.0)
+#[test]
+fn test_tilde_large_values() {
+    assert!(1000000.0 ~ 1000000.0000001);
+    assert!(1e10 ~ 1e10 + 1.0);
+}
 
-// Edge case: very small values near threshold
-e := 1.0 + 1e-11
-f := 1.0 + 1.5e-11
-assert!(e ~ f)
+#[test]
+fn test_tilde_very_small_values() {
+    let e = 1.0 + 1e-11;
+    let f = 1.0 + 1.5e-11;
+    assert!(e ~ f);
+}
 
-// Edge case: complex expressions with ~
-assert!(π + π ~ τ)
-assert!(3π ~ τ + π)
-assert!(τ/π ~ 2.0)
+#[test]
+fn test_tilde_complex_expressions() {
+    assert!(π + π ~ τ);
+    assert!(3π ~ τ + π);
+    assert!(τ / π ~ 2.0);
+}
 
-// Edge case: mixed operations with negative values
-assert!(-π/2.0 ~ -τ/4.0)
-assert!(π - τ ~ -π)
-assert!(-10π ~ -5τ)
+#[test]
+fn test_tilde_mixed_operations_with_negatives() {
+    assert!(-π / 2.0 ~ -τ / 4.0);
+    assert!(π - τ ~ -π);
+    assert!(-10π ~ -5τ);
+}
 
-// Edge case: squared values with ~
-assert!(π*π ~ 9.869604401089358)
-assert!(τ*τ ~ 39.478417604357434)
+#[test]
+fn test_tilde_squared_values() {
+    assert!(π * π ~ 9.869604401089358);
+    assert!(τ * τ ~ 39.478417604357434);
+}
 
-// Edge case: reciprocals with ~
-assert!(1.0/π ~ 0.3183098861837907)
-assert!(1.0/τ ~ 0.15915494309189535)
+#[test]
+fn test_tilde_reciprocals() {
+    assert!(1.0 / π ~ 0.3183098861837907);
+    assert!(1.0 / τ ~ 0.15915494309189535);
+}
 
-// Edge case: extreme precision boundaries
-g := 0.123456789012345
-h := 0.123456789012346
-assert!(g ~ h)
-
-put!("~ works as ≈")
+#[test]
+fn test_tilde_extreme_precision_boundaries() {
+    let g = 0.123456789012345;
+    let h = 0.123456789012346;
+    assert!(g ~ h);
+}

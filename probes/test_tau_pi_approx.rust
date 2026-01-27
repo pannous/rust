@@ -1,62 +1,86 @@
 #!/usr/bin/env rust
-// Test τ ≈ 2π equality
 
-put!("τ ≈ 2π (implicit multiplication):", τ ≈ 2π)  // Julia-style: 2π -> 2.0 * π
-put!("τ ≈ 2.0*π:", τ ≈ 2.0*π)
-put!("τ value:", τ)
-put!("2π value:", 2.0*π)
+#[test]
+fn test_tau_equals_two_pi() {
+    put!("τ ≈ 2π (implicit multiplication):", τ ≈ 2π);
+    put!("τ ≈ 2.0*π:", τ ≈ 2.0 * π);
+    put!("τ value:", τ);
+    put!("2π value:", 2.0 * π);
 
-assert!(τ ≈ 2.0*π)
-assert!(τ ≈ 2.0π)  // implicit multiplication with explicit float
-assert!(τ ≈ 2π)    // implicit multiplication coerces int to float
+    assert!(τ ≈ 2.0 * π);
+    assert!(τ ≈ 2.0π);
+    assert!(τ ≈ 2π);
+}
 
-// Test some basic approximate equalities
-a := 3.14159
-b := 3.14160
-put!("3.14159 ≈ 3.14160:", a ≈ b)
-// assert!(a ≈ b) relative epsilon (1e-9) too low  todo: how to adjust?
+#[test]
+fn test_basic_approximate_equality() {
+    let a = 3.14159;
+    let b = 3.14160;
+    put!("3.14159 ≈ 3.14160:", a ≈ b);
+}
 
-c := 0.1 + 0.2
-d := 0.3
-put!("(0.1 + 0.2) ≈ 0.3:", c ≈ d)
-put!("(0.1 + 0.2) == 0.3:", c == d)
-assert!(c ≈ d)
+#[test]
+fn test_floating_point_precision() {
+    let c = 0.1 + 0.2;
+    let d = 0.3;
+    put!("(0.1 + 0.2) ≈ 0.3:", c ≈ d);
+    put!("(0.1 + 0.2) == 0.3:", c == d);
+    assert!(c ≈ d);
+}
 
-// Edge case: negative τ and π
-assert!(-τ ≈ -2π)
-assert!(-τ ≈ -2.0π)
+#[test]
+fn test_negative_tau_and_pi() {
+    assert!(-τ ≈ -2π);
+    assert!(-τ ≈ -2.0π);
+}
 
-// Edge case: fractional multiples of π
-assert!(π/2.0 ≈ 1.5707963267948966)
-assert!(τ/4.0 ≈ π/2.0)
-assert!(3π ≈ τ + π)
+#[test]
+fn test_fractional_multiples_of_pi() {
+    assert!(π / 2.0 ≈ 1.5707963267948966);
+    assert!(τ / 4.0 ≈ π / 2.0);
+    assert!(3π ≈ τ + π);
+}
 
-// Edge case: zero and near-zero with π
-assert!(π - π ≈ 0.0)
-assert!(τ - 2π ≈ 0.0)
+#[test]
+fn test_zero_and_near_zero() {
+    assert!(π - π ≈ 0.0);
+    assert!(τ - 2π ≈ 0.0);
+}
 
-// Edge case: large multiples
-assert!(10π ≈ 5τ)
-assert!(100τ ≈ 200π)
+#[test]
+fn test_large_multiples() {
+    assert!(10π ≈ 5τ);
+    assert!(100τ ≈ 200π);
+}
 
-// Edge case: division by π
-assert!(τ/π ≈ 2.0)
-assert!(2π/τ ≈ 1.0)
+#[test]
+fn test_division_by_pi() {
+    assert!(τ / π ≈ 2.0);
+    assert!(2π / τ ≈ 1.0);
+}
 
-// Edge case: expressions with mixed operations
-assert!(π + π ≈ τ)
-assert!(τ - π ≈ π)
-assert!(τ/2.0 + π/2.0 ≈ 3.0*π/2.0)
+#[test]
+fn test_expressions_with_mixed_operations() {
+    assert!(π + π ≈ τ);
+    assert!(τ - π ≈ π);
+    assert!(τ / 2.0 + π / 2.0 ≈ 3.0 * π / 2.0);
+}
 
-// Edge case: negative fractional multiples
-assert!(-π/4.0 ≈ -0.7853981633974483)
-assert!(-τ/8.0 ≈ -π/4.0)
+#[test]
+fn test_negative_fractional_multiples() {
+    assert!(-π / 4.0 ≈ -0.7853981633974483);
+    assert!(-τ / 8.0 ≈ -π / 4.0);
+}
 
-// Edge case: very small differences near threshold
-e := 1.0 + 1e-10
-f := 1.0 + 2e-10
-assert!(e ≈ f)
+#[test]
+fn test_very_small_differences() {
+    let e = 1.0 + 1e-10;
+    let f = 1.0 + 2e-10;
+    assert!(e ≈ f);
+}
 
-// Edge case: π squared and τ squared relationships
-assert!(π*π ≈ 9.869604401089358)
-assert!(τ*τ ≈ 4.0*π*π)
+#[test]
+fn test_squared_pi_and_tau() {
+    assert!(π * π ≈ 9.869604401089358);
+    assert!(τ * τ ≈ 4.0 * π * π);
+}

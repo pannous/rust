@@ -1,21 +1,22 @@
 #!/usr/bin/env rust
-// import "slices"
 
-nums := [1, 2, 3]
+#[test]
+fn test_transform_synonyms() {
+    let nums = [1, 2, 3];
 
-// Test transform synonyms (without conflicting "map" keyword)
-result1 := nums.apply(x => x*2)
-result2 := nums.transform(x => x*2) 
-result3 := nums.convert(x => x*2)
+    let result1 = nums.apply(x => x * 2);
+    let result2 = nums.transform(x => x * 2);
+    let result3 = nums.convert(x => x * 2);
 
-expected := @[2, 4, 6]
+    let expected = @[2, 4, 6];
 
-eq!( result1 , expected);
-eq!( result2 , expected  );
-eq!( result3 , expected);
+    eq!(result1, expected);
+    eq!(result2, expected);
+    eq!(result3, expected);
 
-put!("✅ apply() works")
-put!("✅ transform() works")
-put!("✅ convert() works")
-put!("🛡️ No map keyword conflict!")
-put!("🎉 Transform synonyms working safely!")
+    put!("✅ apply() works");
+    put!("✅ transform() works");
+    put!("✅ convert() works");
+    put!("🛡️ No map keyword conflict!");
+    put!("🎉 Transform synonyms working safely!");
+}
