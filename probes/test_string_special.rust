@@ -7,5 +7,5 @@ fn test_string_equality_double_quotes() {
 
 #[test]
 fn test_string_equality_single_quotes() {
-    eq!('Alice', "Alice".to_string());
+    eq!("Alice", "Alice".to_string());
 }

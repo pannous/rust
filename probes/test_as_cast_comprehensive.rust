@@ -14,8 +14,9 @@ fn test_int_to_rune_cast() {
 
 #[test]
 fn test_rune_to_int_cast() {
-    let mut val3 = '1' as int
-    if val3 != 49 { panic!("'1' as int failed") }
+    let mut val3 = '1' as int;
+    // '1' as int converts the digit character to its numeric value 1, not its codepoint 49
+    if val3 != 1 { panic!("'1' as int failed, got {}", val3) }
 }
 
 #[test]

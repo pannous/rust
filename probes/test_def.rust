@@ -2,10 +2,10 @@
 
 #[test]
 fn test_def_with_return_type() {
-	def meaning() -> i32 {return 42}
-	# def meaning() -> i32 {42} // alternative with implicit return
-	# def meaning(){return 42} // without explicit return type
-	def hello() {
+	fn meaning() -> i32 {return 42}
+	# fn meaning() -> i32 {42} // alternative with implicit return
+	# fn meaning(){return 42} // without explicit return type
+	fn hello() {
 		println!("Hello from def");
 	}
 

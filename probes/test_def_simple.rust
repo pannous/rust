@@ -2,9 +2,9 @@
 
 #[test]
 fn test_simple_def_definitions() {
-	def hello() {
+	fn hello() {
 	}
 
-	def main(){
+	fn main(){
 	}
 }

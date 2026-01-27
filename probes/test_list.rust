@@ -2,25 +2,25 @@
 
 #[test]
 fn test_slice_literal_syntax() {
-    let z =@[1, 2, 3]
-    put!("Slice z: {:?}\n", z)
+    let z =@[1, 2, 3];
+    put!("Slice z: {:?}\n", z);
 }
 
 #[test]
 fn test_slice_element_access() {
-    let z =@[1, 2, 3]
-    put!("First element: {}\n", z[0])
-    put!("Second element: {}\n", z[1])
+    let z =@[1, 2, 3];
+    put!("First element: {}\n", z[0]);
+    put!("Second element: {}\n", z[1]);
 }
 
 #[test]
 fn test_mixed_type_slice() {
-    let mixed =@["hello", 42, true]
-    put!("Mixed slice: {:?}\n", mixed)
+    let mixed =@["hello", 42, true];
+    put!("Mixed slice: {:?}\n", mixed);
 }
 
 #[test]
 fn test_empty_slice() {
-    let empty : Vec<i32> = @[]
-    put!("Empty slice: {:?}\n", empty)
+    let empty : Vec<i32> = @[];
+    put!("Empty slice: {:?}\n", empty);
 }

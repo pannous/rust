@@ -5,30 +5,30 @@
 #[test]
 fn test_leading_dot_floats() {
 	// Leading dot floats should work
-	let mut x = .5
-	put!(".5 =", x)
+	let mut x = .5;
+	put!(".5 =", x);
 }
 
 #[test]
 fn test_tuple_field_access() {
 	// Tuple field access should still work
-	let mut t = (1, 2, 3)
-	put!("tuple.0 =", t.0)
-	put!("tuple.1 =", t.1)
-	put!("tuple.2 =", t.2)
+	let mut t = (1, 2, 3);
+	put!("tuple.0 =", t.0);
+	put!("tuple.1 =", t.1);
+	put!("tuple.2 =", t.2);
 
 	// Make sure they don't conflict
-	assert!(t.0 == 1)
-	assert!(t.1 == 2)
+	assert!(t.0 == 1);
+	assert!(t.1 == 2);
 }
 
 #[test]
 fn test_struct_field_access() {
 	// Struct field access also works
 	struct Point { x: i32, y: i32 }
-	let mut p = Point { x: 10, y: 20 }
-	put!("point.x =", p.x)
-	assert!(p.x == 10)
+	let mut p = Point { x: 10, y: 20 };
+	put!("point.x =", p.x);
+	assert!(p.x == 10);
 
-	put!("No conflicts detected!")
+	put!("No conflicts detected!");
 }
