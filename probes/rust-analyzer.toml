@@ -1,3 +1,16 @@
 [cargo]
 # Required for building rustc compiler internals without bootstrap
 extraEnv = { "RUSTC_BOOTSTRAP" = "1" }
+
+# Note: Files in this directory use custom Rust syntax extensions
+# They must be run with the custom rustc via ./run_all_tests.sh
+# IDE support is limited but provides basic navigation and structure
+
+[diagnostics]
+# Disable some diagnostics since we use custom syntax
+disabled = ["syntax-error", "unresolved-macro-call"]
+
+[check]
+# Don't run cargo check automatically (it will fail with custom syntax)
+command = "clippy"
+enable = false
