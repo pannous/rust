@@ -241,6 +241,34 @@ impl Session {
         self.opts.test
     }
 
+    /// Returns true if we're in script mode (shebang or -Z script flag).
+    pub fn is_script_mode(&self) -> bool {
+        if self.opts.unstable_opts.script {
+            return true;
+        }
+
+        // Check for shebang
+        match &self.io.input {
+            Input::File(path) => {
+                if let Ok(content) = std::fs::read_to_string(path) {
+                    if let Some(rest) = content.strip_prefix("#!") {
+                        let next_char = rest.chars().next();
+                        return next_char != Some('[');
+                    }
+                }
+                false
+            }
+            Input::Str { input, .. } => {
+                if let Some(rest) = input.strip_prefix("#!") {
+                    let next_char = rest.chars().next();
+                    next_char != Some('[')
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
     /// `feature` must be a language feature.
     #[track_caller]
     pub fn create_feature_err<'a>(&'a self, err: impl Diagnostic<'a>, feature: Symbol) -> Diag<'a> {

@@ -217,7 +217,8 @@ fn configure_and_expand(
             features,
             recursion_limit,
             trace_mac: sess.opts.unstable_opts.trace_macros,
-            should_test: sess.is_test_crate(),
+            // Enable test mode for explicit --test flag OR script mode (which has cfg(test) enabled)
+            should_test: sess.is_test_crate() || sess.is_script_mode(),
             span_debug: sess.opts.unstable_opts.span_debug,
             proc_macro_backtrace: sess.opts.unstable_opts.proc_macro_backtrace,
         };

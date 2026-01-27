@@ -62,7 +62,10 @@ pub fn inject(
     // even in non-test builds
     let test_runner = get_test_runner(dcx, krate);
 
-    if sess.is_test_crate() {
+    // Enable test harness for: explicit --test flag OR script mode
+    let should_test = sess.is_test_crate() || sess.is_script_mode();
+
+    if should_test {
         let panic_strategy = match (panic_strategy, sess.opts.unstable_opts.panic_abort_tests) {
             (PanicStrategy::Abort | PanicStrategy::ImmediateAbort, true) => panic_strategy,
             (PanicStrategy::Abort | PanicStrategy::ImmediateAbort, false) => {

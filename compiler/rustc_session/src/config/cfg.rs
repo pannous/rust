@@ -301,7 +301,8 @@ pub(crate) fn default_configuration(sess: &Session) -> Cfg {
     ins_sym!(sym::target_vendor, sess.target.vendor_symbol());
 
     // If the user wants a test runner, then add the test cfg.
-    if sess.is_test_crate() {
+    // Also enable for script mode to allow test macros to expand properly.
+    if sess.is_test_crate() || sess.is_script_mode() {
         ins_none!(sym::test);
     }
 
