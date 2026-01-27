@@ -2662,6 +2662,12 @@ impl<'a, 'tcx> MirBorrowckCtxt<'a, '_, 'tcx> {
 
     fn lint_unused_mut(&self) {
         let tcx = self.infcx.tcx;
+
+        // Skip unused_mut lint in script mode
+        if tcx.sess.is_script_mode() {
+            return;
+        }
+
         let body = self.body;
         for local in body.mut_vars_and_args_iter().filter(|local| !self.used_mut.contains(local)) {
             let local_decl = &body.local_decls[local];
