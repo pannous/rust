@@ -110,6 +110,30 @@ fn inject_helpers(krate: &mut ast::Crate, sess: &Session, def_site: Span, call_s
     // Partition items and optionally build main
     let (module_items, main_stmts) = partition_items(&krate.items);
 
+    // Check if we need to generate main, and what kind
+    let main_to_add = if !has_main {
+        // Check if we have test functions
+        let has_tests = module_items.iter().any(|item| {
+            if let ast::ItemKind::Fn(_) = &item.kind {
+                contains_name(&item.attrs, sym::test)
+            } else {
+                false
+            }
+        });
+
+        if has_tests && main_stmts.is_empty() {
+            // Test-only file: generate test runner main
+            Some(build_test_runner_main(def_site, &module_items))
+        } else if !main_stmts.is_empty() {
+            // Regular script: wrap statements in main
+            Some(build_main(def_site, main_stmts))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     // Rebuild crate: use statements and helpers first, then module items
     krate.items = use_statements;
     krate.items.extend(type_aliases);
@@ -118,9 +142,8 @@ fn inject_helpers(krate: &mut ast::Crate, sess: &Session, def_site: Span, call_s
     krate.items.extend(parsed_extensions);
     krate.items.extend(module_items);
 
-    // Only generate main if file doesn't have one
-    if !has_main && !main_stmts.is_empty() {
-        let main_fn = build_main(def_site, main_stmts);
+    // Add generated main if any
+    if let Some(main_fn) = main_to_add {
         krate.items.push(main_fn);
     }
 }
@@ -451,6 +474,66 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
     // Node IDs will be assigned during macro expansion
     Box::new(ast::Item {
         attrs: vec![allow_unused_mut, allow_unused_variables].into(),
+        id: ast::DUMMY_NODE_ID,
+        kind: main_fn,
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Public, tokens: None },
+        span,
+        tokens: None,
+    })
+}
+
+/// Build a test runner main function for script mode with only tests.
+/// Generates: fn main() { } (empty for now, tests need --test flag)
+fn build_test_runner_main(span: Span, _items: &[Box<ast::Item>]) -> Box<ast::Item> {
+    use rustc_span::hygiene::SyntaxContext;
+
+    // For now, just generate an empty main
+    // TODO: Implement proper test runner or guide user to use --test flag
+    let test_calls = ThinVec::new();
+
+    // Use SyntaxContext::root() for the main name so entry point detection finds it
+    let main_ident = Ident::new(sym::main, span.with_ctxt(SyntaxContext::root()));
+
+    // Build empty return type ()
+    let ret_ty = Box::new(ast::Ty {
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::TyKind::Tup(ThinVec::new()),
+        span,
+        tokens: None,
+    });
+
+    let decl = Box::new(ast::FnDecl {
+        inputs: ThinVec::new(),
+        output: ast::FnRetTy::Ty(ret_ty),
+    });
+
+    let sig = ast::FnSig {
+        decl,
+        header: ast::FnHeader::default(),
+        span,
+    };
+
+    let main_body = Box::new(ast::Block {
+        stmts: test_calls,
+        id: ast::DUMMY_NODE_ID,
+        rules: ast::BlockCheckMode::Default,
+        span,
+        tokens: None,
+    });
+
+    let main_fn = ast::ItemKind::Fn(Box::new(ast::Fn {
+        defaultness: ast::Defaultness::Final,
+        sig,
+        ident: main_ident,
+        generics: ast::Generics::default(),
+        contract: None,
+        body: Some(main_body),
+        define_opaque: None,
+        eii_impls: ThinVec::new(),
+    }));
+
+    Box::new(ast::Item {
+        attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: main_fn,
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Public, tokens: None },
