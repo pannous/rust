@@ -1,37 +1,44 @@
 #!/usr/bin/env rust
 
-a := @[1, 2]
-b := @[1, 2]
+#[test]
+fn test_list_equality_two_elements() {
+    a := @[1, 2];
+    b := @[1, 2];
+    let result = a == b;
+    assert!(result);
+}
 
-// This should trigger the generation of slice equality function
-result := a == b
-put!("Result: {}\n", result)
+#[test]
+fn test_single_element_list_equality() {
+    a1 := @[1];
+    b1 := @[1];
+    assert!(a1 == b1);
+}
 
-// Test very simple case
-a1 := @[1]
-b1 := @[1]
+#[test]
+fn test_two_elements_list_equality() {
+    c := @[1, 2];
+    d := @[1, 2];
+    assert!(c == d);
+}
 
-put!("Single element: {:?} == {:?}: {}\n", a1, b1, a1 == b1)
+#[test]
+fn test_list_equality_another_pair() {
+    s1 := @[1, 2];
+    s2 := @[1, 2];
+    assert!(s1 == s2);
+}
 
-// Test two elements  
-c := @[1, 2]
-d := @[1, 2]
+#[test]
+fn test_empty_vec_equality() {
+    let e: Vec<i32> = vec![];
+    let f: Vec<i32> = vec![];
+    assert!(e == f);
+}
 
-put!("Two elements: {:?} == {:?}: {}\n", c, d, c == d)
-
-s1 := @[1, 2]
-s2 := @[1, 2]
-put!("s1 == s2: {}", s1 == s2)
-
-// Test simple cases to debug
-put!("Testing slice comparisons:")
-
-// Test empty slices
-let e: Vec<i32> = vec![]
-let f: Vec<i32> = vec![]
-put!("Empty slices e,f: {}\n", e == f)
-
-// Test more empty slices
-let g: Vec<i32> = vec![]
-let h: Vec<i32> = vec![]
-put!("Empty slices g,h: {}\n", g == h)
+#[test]
+fn test_empty_vec_equality_second_pair() {
+    let g: Vec<i32> = vec![];
+    let h: Vec<i32> = vec![];
+    assert!(g == h);
+}

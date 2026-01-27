@@ -1,24 +1,47 @@
 #!/usr/bin/env rust
-// test int and float type aliases
 
-var x: int = 42
-put!(x)
+#[test]
+fn test_int_alias_basic() {
+    var x: int = 42;
+    assert_eq!(x, 42);
+}
 
-var y: int = -100
-put!(y)
+#[test]
+fn test_int_alias_negative() {
+    var y: int = -100;
+    assert_eq!(y, -100);
+}
 
-var z: int = x + y
-put!(z)
+#[test]
+fn test_int_alias_addition() {
+    var x: int = 42;
+    var y: int = -100;
+    var z: int = x + y;
+    assert_eq!(z, -58);
+}
 
-var big: int = 9_223_372_036_854_775_807
-put!(big)
+#[test]
+fn test_int_alias_max_value() {
+    var big: int = 9_223_372_036_854_775_807;
+    assert_eq!(big, 9_223_372_036_854_775_807);
+}
 
-// test float alias for f64
-var my_pi: float = 3.14159265358979
-put!(my_pi)
+#[test]
+fn test_float_alias_basic() {
+    var my_pi: float = 3.14159265358979;
+    assert!((my_pi - 3.14159265358979).abs() < 1e-10);
+}
 
-var e: float = 2.71828
-put!(e)
+#[test]
+fn test_float_alias_eulers_number() {
+    var e: float = 2.71828;
+    assert!((e - 2.71828).abs() < 1e-10);
+}
 
-var sum: float = my_pi + e
-put!(sum)
+#[test]
+fn test_float_alias_addition() {
+    var my_pi: float = 3.14159265358979;
+    var e: float = 2.71828;
+    var sum: float = my_pi + e;
+    assert!((sum - 5.85987265358979).abs() < 1e-10);
+}

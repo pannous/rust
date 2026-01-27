@@ -1,51 +1,67 @@
 #!/usr/bin/env rust
-// Test .4 syntax for 0.4 (leading dot floats)
 
-x := .5
-put!(".5 =", x)
-assert!(x == 0.5)
+#[test]
+fn test_leading_dot_half() {
+    x := .5;
+    assert!(x == 0.5);
+}
 
-y := .123
-put!(".123 =", y)
-assert!(y == 0.123)
+#[test]
+fn test_leading_dot_decimal() {
+    y := .123;
+    assert!(y == 0.123);
+}
 
-// Test in expressions
-z := .25 + .75
-put!(".25 + .75 =", z)
-assert!(z == 1.0)
+#[test]
+fn test_leading_dot_addition() {
+    z := .25 + .75;
+    assert!(z == 1.0);
+}
 
-// Test with explicit type suffix
-w := .5f32
-put!(".5f32 =", w)
+#[test]
+fn test_leading_dot_with_type_suffix() {
+    w := .5f32;
+    assert!(w == 0.5f32);
+}
 
-// Negative leading dot floats
-assert!(-.5 == -0.5)
-assert!(-.25 + .75 == 0.5)
-assert!(-(.5) == -0.5)
+#[test]
+fn test_negative_leading_dot_floats() {
+    assert!(-.5 == -0.5);
+    assert!(-.25 + .75 == 0.5);
+    assert!(-(.5) == -0.5);
+}
 
-// Zero-leading edge cases
-assert!(.0 == 0.0)
-assert!(.00 == 0.0)
-assert!(.0 + .0 == 0.0)
+#[test]
+fn test_zero_leading_edge_cases() {
+    assert!(.0 == 0.0);
+    assert!(.00 == 0.0);
+    assert!(.0 + .0 == 0.0);
+}
 
-// Multiplication and division with leading dots
-assert!(.5 * 2.0 == 1.0)
-assert!(.25 * .5 == 0.125)
-assert!(.5 / .25 == 2.0)
-assert!(1.0 / .5 == 2.0)
+#[test]
+fn test_leading_dots_multiplication_division() {
+    assert!(.5 * 2.0 == 1.0);
+    assert!(.25 * .5 == 0.125);
+    assert!(.5 / .25 == 2.0);
+    assert!(1.0 / .5 == 2.0);
+}
 
-// Leading dots with subtraction
-assert!(1.0 - .5 == 0.5)
-assert!(.75 - .25 == 0.5)
-assert!(.5 - 1.0 == -0.5)
+#[test]
+fn test_leading_dots_subtraction() {
+    assert!(1.0 - .5 == 0.5);
+    assert!(.75 - .25 == 0.5);
+    assert!(.5 - 1.0 == -0.5);
+}
 
-// Very small leading dot values
-assert!(.001 * 1000.0 == 1.0)
-assert!(.0001 + .0001 == 0.0002)
+#[test]
+fn test_very_small_leading_dot_values() {
+    assert!(.001 * 1000.0 == 1.0);
+    assert!(.0001 + .0001 == 0.0002);
+}
 
-// Leading dots in comparisons
-assert!(.5 < .6)
-assert!(.5 > .4)
-assert!(.999 < 1.0)
-
-put!("Leading dot floats work!")
+#[test]
+fn test_leading_dots_comparisons() {
+    assert!(.5 < .6);
+    assert!(.5 > .4);
+    assert!(.999 < 1.0);
+}

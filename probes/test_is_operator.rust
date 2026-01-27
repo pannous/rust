@@ -1,106 +1,123 @@
 #!/usr/bin/env rust
 
-// Simple test of IS operator
+#[test]
+fn test_is_i32_type() {
+    x := 1;
+    ok := x is i32;
+    assert!(ok);
+}
 
-// Test with i32 (default integer literal type)
-x := 1
-ok := x is i32
-assert!(ok)
-put!("1 is i32:", ok)
+#[test]
+fn test_is_char_type() {
+    r := 'a';
+    assert!(r is char);
+}
 
-// Test with char/rune
-r := 'a'
-assert!(r is char)
-assert!(r is rune)  // rune is alias for char
-put!("'a' is rune:", r is rune)
+#[test]
+fn test_is_rune_type_alias() {
+    r := 'a';
+    assert!(r is rune);
+}
 
-// Test with String (script mode auto-converts string literals to String)
-str := "hello"
-ok2 := str is String
-assert!(ok2)
-put!("hello is String:", ok2)
+#[test]
+fn test_is_string_type() {
+    str := "hello";
+    ok2 := str is String;
+    assert!(ok2);
+}
 
-// Test with explicit i64/int
-let y: i64 = 42
-ok3 := y is int  // int is alias for i64
-assert!(ok3)
-put!("42_i64 is int:", ok3)
+#[test]
+fn test_is_i64_and_int_alias() {
+    let y: i64 = 42;
+    ok3 := y is int;
+    assert!(ok3);
+}
 
-// Test with array (fixed size)
-arr := [1, 2, 3]
-ok4 := arr is [i32; 3]
-assert!(ok4)
-put!("[1,2,3] is [i32; 3]:", ok4)
+#[test]
+fn test_is_array_fixed_size() {
+    arr := [1, 2, 3];
+    ok4 := arr is [i32; 3];
+    assert!(ok4);
+}
 
-// Test with Vec (using @[] syntax)
-vec := @[1, 2, 3]
-ok5 := vec is Vec<i32>
-assert!(ok5)
-put!("@[1,2,3] is Vec<i32>:", ok5)
+#[test]
+fn test_is_vec_type() {
+    vec := @[1, 2, 3];
+    ok5 := vec is Vec<i32>;
+    assert!(ok5);
+}
 
-// Negative tests - is should return false for wrong types
-assert!(not (x is i64))
-assert!(not (x is String))
-assert!(not (str is i32))
-assert!(not (r is i32))
-put!("Negative tests passed")
+#[test]
+fn test_is_negative_cases() {
+    x := 1;
+    assert!(not (x is i64));
+    assert!(not (x is String));
+    str := "hello";
+    assert!(not (str is i32));
+    r := 'a';
+    assert!(not (r is i32));
+}
 
-// Edge case: boundary integer types
-let tiny: i8 = 127
-let small: i16 = 32767
-let big: i64 = 9223372036854775807
-assert!(tiny is i8)
-assert!(small is i16)
-assert!(big is i64)
-assert!(not (tiny is i16))
-assert!(not (small is i32))
+#[test]
+fn test_is_boundary_integer_types() {
+    let tiny: i8 = 127;
+    let small: i16 = 32767;
+    let big: i64 = 9223372036854775807;
+    assert!(tiny is i8);
+    assert!(small is i16);
+    assert!(big is i64);
+    assert!(not (tiny is i16));
+    assert!(not (small is i32));
+}
 
-// Edge case: unsigned vs signed
-let unsigned: u32 = 42
-let signed: i32 = 42
-assert!(unsigned is u32)
-assert!(signed is i32)
-assert!(not (unsigned is i32))
-assert!(not (signed is u32))
+#[test]
+fn test_is_unsigned_vs_signed() {
+    let unsigned: u32 = 42;
+    let signed: i32 = 42;
+    assert!(unsigned is u32);
+    assert!(signed is i32);
+    assert!(not (unsigned is i32));
+    assert!(not (signed is u32));
+}
 
-// Edge case: float types
-let f32_val: f32 = 3.14
-let f64_val: f64 = 3.14159
-assert!(f32_val is f32)
-assert!(f64_val is f64)
-assert!(not (f32_val is f64))
-assert!(not (f64_val is f32))
+#[test]
+fn test_is_float_types() {
+    let f32_val: f32 = 3.14;
+    let f64_val: f64 = 3.14159;
+    assert!(f32_val is f32);
+    assert!(f64_val is f64);
+    assert!(not (f32_val is f64));
+    assert!(not (f64_val is f32));
+}
 
-// Edge case: boolean type
-let flag = true
-assert!(flag is bool)
-assert!(not (flag is i32))
+#[test]
+fn test_is_boolean_type() {
+    let flag = true;
+    assert!(flag is bool);
+    assert!(not (flag is i32));
+}
 
-// Edge case: empty string and empty collections
-empty_str := ""
-// TODO: empty @ array type inference not working
-// empty_vec := @[]
-assert!(empty_str is String)
-// assert!(empty_vec is Vec<i32>)
+#[test]
+fn test_is_empty_string() {
+    empty_str := "";
+    assert!(empty_str is String);
+}
 
-// Edge case: nested types
-// TODO: nested @ arrays not yet supported
-// nested := @[@[1, 2], @[3, 4]]
-// assert!(nested is Vec<Vec<i32>>)
-// assert!(not (nested is Vec<i32>))
+#[test]
+fn test_is_array_size_variations() {
+    arr3 := [1, 2, 3];
+    arr4 := [1, 2, 3, 4];
+    assert!(arr3 is [i32; 3]);
+    assert!(arr4 is [i32; 4]);
+    assert!(not (arr3 is [i32; 4]));
+    assert!(not (arr4 is [i32; 3]));
+}
 
-// Edge case: array size variations
-arr3 := [1, 2, 3]
-arr4 := [1, 2, 3, 4]
-assert!(arr3 is [i32; 3])
-assert!(arr4 is [i32; 4])
-assert!(not (arr3 is [i32; 4]))
-assert!(not (arr4 is [i32; 3]))
-
-// Edge case: zero values of different types
-zero_int := 0
-let zero_float: f64 = 0.0
-assert!(zero_int is i32)
-assert!(zero_float is f64)
-assert!(not (zero_int is f64))
-
+#[test]
+fn test_is_zero_values_different_types() {
+    zero_int := 0;
+    let zero_float: f64 = 0.0;
+    assert!(zero_int is i32);
+    assert!(zero_float is f64);
+    assert!(not (zero_int is f64));
+}

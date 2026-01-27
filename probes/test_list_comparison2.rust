@@ -1,26 +1,30 @@
 #!/usr/bin/env rust
 
-a := @[1, 2]
-b := @[1, 2]
+#[test]
+fn test_list_equality_two_elements() {
+    a := @[1, 2];
+    b := @[1, 2];
+    let result = a == b;
+    assert!(result);
+}
 
-// This should trigger the generation of slice equality function
-result := a == b
-put!("Result: {}\n", result)
+#[test]
+fn test_different_slices_same_content() {
+    c := @[1, 2];
+    d := @[1, 2];
+    assert!(c == d);
+}
 
+#[test]
+fn test_empty_vec_equality() {
+    let e: Vec<i32> = vec![];
+    let f: Vec<i32> = vec![];
+    assert!(e == f);
+}
 
-// Test different slices with same content
-c := @[1, 2]
-d := @[1, 2]
-put!("Different slices, same content: {}\n", c == d)
-
-// Test empty slices
-let e: Vec<i32> = vec![]
-let f: Vec<i32> = vec![]
-put!("Empty slices e,f: {}\n", e == f)
-
-// Test more empty slices
-let g: Vec<i32> = vec![]
-let h: Vec<i32> = vec![]
-put!("Empty slices g,h: {}\n", g == h)
-
-put!("All tests completed successfully.\n")
+#[test]
+fn test_empty_vec_equality_alternative() {
+    let g: Vec<i32> = vec![];
+    let h: Vec<i32> = vec![];
+    assert!(g == h);
+}
