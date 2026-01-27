@@ -22,4 +22,48 @@ fn get_opt() -> Option<i32> {
 result := get_opt()
 if result == nil { put!("✓ function returned nil") } else { put!("✗ function did not return nil"); exit(1) }
 
+# Edge case: nil in match-like comparisons
+# TODO: nil type inference without context not yet supported
+# opt3 := nil
+# if opt3 == None && opt3 == nil { put!("✓ nil == None == nil") } else { put!("✗ nil inconsistent"); exit(1) }
+
+# Edge case: Some value not equal to nil
+val := Some(0)
+if val != nil { put!("✓ Some(0) != nil") } else { put!("✗ Some(0) == nil"); exit(1) }
+
+# Edge case: Negative value in Some not equal to nil
+neg := Some(-1)
+if neg != nil { put!("✓ Some(-1) != nil") } else { put!("✗ Some(-1) == nil"); exit(1) }
+
+# Edge case: nil in variable assignment chain
+# TODO: nil type inference without context not yet supported
+# x := nil
+# y := x
+# if y == nil { put!("✓ nil assignment chain") } else { put!("✗ nil chain broken"); exit(1) }
+
+# Edge case: nil with explicit type annotation
+let explicit: Option<String> = nil
+if explicit.is_none() { put!("✓ explicit String nil") } else { put!("✗ explicit String nil failed"); exit(1) }
+
+# Edge case: Function returning nil with complex type
+fn get_complex() -> Option<Vec<i32>> {
+	return nil
+}
+complex_result := get_complex()
+if complex_result == nil { put!("✓ complex type nil") } else { put!("✗ complex type nil failed"); exit(1) }
+
+# Edge case: nil in struct field
+struct Container {
+	value: Option<i32>
+}
+container := Container { value: nil }
+if container.value == nil { put!("✓ nil in struct field") } else { put!("✗ struct field nil failed"); exit(1) }
+
+# Edge case: Comparing nil to Some with false-like value
+false_opt := Some(false)
+if false_opt != nil { put!("✓ Some(false) != nil") } else { put!("✗ Some(false) == nil"); exit(1) }
+
+empty_str := Some("")
+if empty_str != nil { put!("✓ Some(\"\") != nil") } else { put!("✗ Some(\"\") == nil"); exit(1) }
+
 put!("All nil tests passed!")

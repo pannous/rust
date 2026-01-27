@@ -18,4 +18,34 @@ assert!(z == 1.0)
 w := .5f32
 put!(".5f32 =", w)
 
+// Negative leading dot floats
+assert!(-.5 == -0.5)
+assert!(-.25 + .75 == 0.5)
+assert!(-(.5) == -0.5)
+
+// Zero-leading edge cases
+assert!(.0 == 0.0)
+assert!(.00 == 0.0)
+assert!(.0 + .0 == 0.0)
+
+// Multiplication and division with leading dots
+assert!(.5 * 2.0 == 1.0)
+assert!(.25 * .5 == 0.125)
+assert!(.5 / .25 == 2.0)
+assert!(1.0 / .5 == 2.0)
+
+// Leading dots with subtraction
+assert!(1.0 - .5 == 0.5)
+assert!(.75 - .25 == 0.5)
+assert!(.5 - 1.0 == -0.5)
+
+// Very small leading dot values
+assert!(.001 * 1000.0 == 1.0)
+assert!(.0001 + .0001 == 0.0002)
+
+// Leading dots in comparisons
+assert!(.5 < .6)
+assert!(.5 > .4)
+assert!(.999 < 1.0)
+
 put!("Leading dot floats work!")

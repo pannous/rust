@@ -9,4 +9,52 @@ eq!("café".reverse(), "éfac");
 eq!("日本語".reverse(), "語本日");
 eq!("🎉🎊".reverse(), "🎊🎉");
 
+// Edge cases: Empty string
+eq!("".reverse(), "");
+
+// Edge cases: Single character
+eq!("a".reverse(), "a");
+eq!("X".reverse(), "X");
+eq!("5".reverse(), "5");
+
+// Edge cases: Single unicode character
+eq!("世".reverse(), "世");
+eq!("é".reverse(), "é");
+eq!("🎉".reverse(), "🎉");
+
+// Edge cases: Two characters
+eq!("ab".reverse(), "ba");
+eq!("xy".reverse(), "yx");
+
+// Edge cases: Palindromes (should equal themselves)
+eq!("aba".reverse(), "aba");
+eq!("racecar".reverse(), "racecar");
+eq!("noon".reverse(), "noon");
+
+// Edge cases: Special characters
+eq!("\n\t".reverse(), "\t\n");
+eq!("a\nb".reverse(), "b\na");
+eq!("\"'".reverse(), "'\"");
+eq!("\\//".reverse(), "//\\");
+
+// Edge cases: Mixed unicode and ASCII
+eq!("hello世界".reverse(), "界世olleh");
+eq!("café☕".reverse(), "☕éfac");
+eq!("a🎉b🎊c".reverse(), "c🎊b🎉a");
+
+// Edge cases: Numbers in strings
+eq!("12345".reverse(), "54321");
+eq!("abc123".reverse(), "321cba");
+
+// Edge cases: Whitespace
+eq!("   ".reverse(), "   ");
+eq!("a b c".reverse(), "c b a");
+eq!(" leading".reverse(), "gnidael ");
+eq!("trailing ".reverse(), " gniliart");
+
+// Edge cases: Complex emoji sequences
+// TODO: grapheme cluster reversal not yet supported
+// eq!("👨‍👩‍👧‍👦".reverse(), "👨‍👩‍👧‍👦");
+// eq!("🏳️‍🌈".reverse(), "🏳️‍🌈");
+
 put!("All checks passed!\n")

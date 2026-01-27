@@ -50,5 +50,63 @@ result9 := "a " + false
 eq!( result9 , "a ✖️" );
 put!("Test 9: " + result9)
 
+// Edge cases: Empty strings
+result10 := "" + "hello"
+eq!( result10 , "hello");
+put!("Test 10: " + result10)
+
+result11 := "hello" + ""
+eq!( result11 , "hello");
+put!("Test 11: " + result11)
+
+result12 := "" + ""
+eq!( result12 , "");
+put!("Test 12: " + result12)
+
+result13 := "" + 42
+eq!( result13 , "42");
+put!("Test 13: " + result13)
+
+// Edge cases: Zero values
+result14 := "value: " + 0
+eq!( result14 , "value: 0");
+put!("Test 14: " + result14)
+
+result15 := "float: " + 0.0
+eq!( result15 , "float: 0");
+put!("Test 15: " + result15)
+
+// Edge cases: Unicode characters
+result16 := "Hello " + "世界"
+eq!( result16 , "Hello 世界");
+put!("Test 16: " + result16)
+
+result17 := "emoji: " + "🎉"
+eq!( result17 , "emoji: 🎉");
+put!("Test 17: " + result17)
+
+// Edge cases: Special characters
+result18 := "quote: " + "\""
+eq!( result18 , "quote: \"");
+put!("Test 18: " + result18)
+
+result19 := "newline" + "\n" + "next"
+eq!( result19 , "newline\nnext");
+put!("Test 19: " + result19)
+
+result20 := "tab" + "\t" + "separated"
+eq!( result20 , "tab\tseparated");
+put!("Test 20: " + result20)
+
+// Edge cases: Very large numbers
+result21 := "big: " + 999999999
+eq!( result21 , "big: 999999999");
+put!("Test 21: " + result21)
+
+// Edge cases: Multiple types chained
+result22 := "mixed: " + 1 + " and " + 2.5 + " and " + true
+eq!( result22 , "mixed: 1 and 2.5 and ✔️");
+put!("Test 22: " + result22)
+
 
 put!("All string concatenation tests passed!")

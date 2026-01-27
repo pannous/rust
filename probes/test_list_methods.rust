@@ -93,4 +93,81 @@ eq!( len(emptyVec) , 0 )
 eq!( len(@[1]) , 1 )
 eq!( len(@[1,2,3]) , 3 )
 
+// ===== EDGE CASE TESTS =====
+
+// Empty collection edge cases
+let empty_arr: [i32; 0] = []
+eq!( empty_arr.first() , None )
+eq!( empty_arr.last() , None )
+eq!( empty_arr.indexOf(&1) , -1 )
+eq!( empty_arr.contains(&1) , false )
+eq!( empty_arr.reversed() , vec![] as Vec<i32> )
+
+// Single-element collection
+single := [42]
+eq!( single.first() , Some(&42) )
+eq!( single.last() , Some(&42) )
+eq!( single.indexOf(&42) , 0 )
+eq!( single.len() , 1 )
+eq!( single.reversed() , vec![42] )
+eq!( single.sorted() , vec![42] )
+eq!( single.sortDesc() , vec![42] )
+
+// Boundary slice operations
+three := [1, 2, 3]
+eq!( three.slice(0, 0) , vec![] as Vec<i32> )
+eq!( three.slice(0, 3) , vec![1, 2, 3] )
+eq!( three.slice(2, 3) , vec![3] )
+eq!( three.slice(3, 3) , vec![] as Vec<i32> )
+
+// indexOf with duplicates (returns first occurrence)
+dups := [1, 2, 2, 3, 2]
+eq!( dups.indexOf(&2) , 1 )
+eq!( dups.indexOf(&3) , 3 )
+
+// insert at boundaries
+eq!( three.insert(0, 99) , vec![99, 1, 2, 3] )
+eq!( three.insert(3, 99) , vec![1, 2, 3, 99] )
+
+// append/prepend on single element
+eq!( single.append(99) , vec![42, 99] )
+eq!( single.prepend(99) , vec![99, 42] )
+
+// join on empty and single element
+let empty_str: [&str; 0] = []
+eq!( empty_str.join(",") , "" )
+eq!( ["solo"].join(",") , "solo" )
+
+// Nested collections
+// TODO: mixed size nested arrays not supported
+// nested := [[1, 2], [3, 4], [5]]
+// eq!( nested.len() , 3 )
+// eq!( nested[0].len() , 2 )
+// eq!( nested[2].len() , 1 )
+// eq!( nested.first() , Some(&vec![1, 2]) )
+// eq!( nested.last() , Some(&vec![5]) )
+
+// get with boundary indices
+eq!( my_list.get(0) , Some(&1) )
+eq!( my_list.get(2) , Some(&3) )
+eq!( my_list.get(3) , None )
+
+// contains with first and last elements
+eq!( my_list.contains(&1) , true )
+eq!( my_list.contains(&3) , true )
+
+// 'in' operator with boundaries
+eq!( 1 in my_list , true )
+eq!( 3 in my_list , true )
+eq!( 0 in my_list , false )
+eq!( 4 in my_list , false )
+
+// sortDesc on already descending
+desc := [5, 4, 3, 2, 1]
+eq!( desc.sortDesc() , vec![5, 4, 3, 2, 1] )
+
+// sorted on already ascending
+asc := [1, 2, 3, 4, 5]
+eq!( asc.sorted() , vec![1, 2, 3, 4, 5] )
+
 put!("All list method tests passed!\n")

@@ -27,4 +27,56 @@ let words = ["hello", "world"];
 assert!(words.first() == "hello");
 assert!(Some("test") == "test");
 
+// Edge case: Comparing with zero
+assert!(Some(0) == 0);
+assert!(Some(0) != 1);
+
+// Edge case: Comparing with negative
+assert!(Some(-5) == -5);
+assert!(Some(-5) != 5);
+
+// Edge case: Empty array first()
+let empty_nums: [i32; 0] = [];
+assert!(empty_nums.first() != 0);
+assert!(empty_nums.first() != -1);
+
+// Edge case: None explicit comparison
+let none_opt: Option<i32> = None;
+assert!(none_opt != 0);
+assert!(none_opt != 42);
+
+// Edge case: last() comparison
+let arr = [10, 20, 30];
+assert!(arr.last() == 30);
+assert!(arr.last() != 10);
+
+// Edge case: Floating point edge values
+assert!(Some(0.0) == 0.0);
+assert!(Some(-0.0) == -0.0);
+
+// Edge case: Multiple comparisons in expression
+let opt_val = Some(7);
+assert!(opt_val == 7 && opt_val != 8);
+assert!(!(opt_val == 8 || opt_val != 7));
+
+// Edge case: String comparison
+let opt_string = Some("hello".to_string());
+assert!(opt_string == "hello".to_string());
+assert!(opt_string != "world".to_string());
+
+// Edge case: Char array first()
+let chars = ['a', 'b', 'c'];
+assert!(chars.first() == 'a');
+assert!(chars.first() != 'z');
+
+// Edge case: Single element array
+let single = [999];
+assert!(single.first() == 999);
+assert!(single.last() == 999);
+
+// Edge case: Mixed sign comparison
+let mixed = [-1, 0, 1];
+assert!(mixed.first() == -1);
+assert!(mixed[1..].first() == 0);
+
 println!("All Option == T tests passed!");

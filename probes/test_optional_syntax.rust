@@ -71,4 +71,48 @@ fn takes_optional(x: i32?) -> i32 {
 assert_eq!(takes_optional(42), 42);  // 42 auto-wrapped to Some(42)
 assert_eq!(takes_optional(None), 0);
 
+// Edge case: Nested optionals with None at different levels
+let nested_none_outer: i32?? = None;
+assert_eq!(nested_none_outer.flatten(), None);
+
+let nested_none_inner: i32?? = Some(None);
+assert_eq!(nested_none_inner.flatten(), None);
+
+// Edge case: Triple nesting
+let triple: i32??? = Some(Some(Some(7)));
+assert_eq!(triple.flatten().flatten(), Some(7));
+
+// Edge case: Auto-wrap with ? operator in function
+fn chain_with_early_return(x: i32?, y: i32?) -> i32? {
+    let val = x? + y?;
+    val * 2
+}
+assert_eq!(chain_with_early_return(Some(5), Some(3)), Some(16));
+assert_eq!(chain_with_early_return(None, Some(3)), None);
+assert_eq!(chain_with_early_return(Some(5), None), None);
+
+// Edge case: Nested struct with optional fields
+struct Outer {
+    inner: Config?,
+}
+let outer = Outer { inner: Some(Config { name: "test".to_string(), port: 80 }) };
+assert!(outer.inner.is_some());
+
+let outer_none = Outer { inner: None };
+assert!(outer_none.inner.is_none());
+
+// Edge case: Zero value auto-wrap
+let zero: i32? = 0;
+assert_eq!(zero, Some(0));
+assert!(zero.is_some());
+
+// Edge case: Empty string auto-wrap
+let empty: String? = "".to_string();
+assert_eq!(empty, Some("".to_string()));
+
+// Edge case: Process with mixed Some/None
+assert_eq!(process(None, Some("test".to_string())), None);
+assert_eq!(process(Some(0), Some("test".to_string())), Some(false));
+assert_eq!(process(Some(-5), Some("test".to_string())), Some(false));
+
 println!("All optional syntax tests passed!");

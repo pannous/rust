@@ -15,4 +15,49 @@ if nums#4 != 40 { panic!("nums#4 failed") }
 idx := 2
 if z#idx != 'b' { panic!("z#idx failed") }
 
+// ===== EDGE CASE TESTS =====
+
+// Single-element array
+single := @['x']
+if single#1 != 'x' { panic!("single#1 failed") }
+
+// Boundary access (last element)
+if nums#4 != 40 { panic!("last element access failed") }
+
+// 1-indexed with arithmetic
+if (nums#1 + nums#2) != 30 { panic!("arithmetic with 1-indexed failed") }
+if (nums#3 - nums#1) != 20 { panic!("subtraction with 1-indexed failed") }
+
+// Variable index at boundaries
+first_idx := 1
+last_idx := 4
+if nums#first_idx != 10 { panic!("first via variable failed") }
+if nums#last_idx != 40 { panic!("last via variable failed") }
+
+// Nested arrays with 1-indexed
+// TODO: nested @ arrays not yet supported
+// matrix := @[@[1, 2], @[3, 4], @[5, 6]]
+// if matrix#1#1 != 1 { panic!("nested 1-1 failed") }
+// if matrix#1#2 != 2 { panic!("nested 1-2 failed") }
+// if matrix#3#2 != 6 { panic!("nested 3-2 failed") }
+
+// Mixed indexing styles in same expression
+mixed := @[100, 200, 300]
+if mixed#1 != mixed[0] { panic!("1-indexed != 0-indexed") }
+if mixed#3 != mixed[2] { panic!("last element mismatch") }
+
+// Assignment with computed index
+writable := @[10, 20, 30]
+writable#(1+1) = 99
+if writable#2 != 99 { panic!("computed index assignment failed") }
+
+// Array of chars at boundaries
+chars := @['a', 'b', 'c', 'd', 'e']
+if chars#1 != 'a' { panic!("first char failed") }
+if chars#5 != 'e' { panic!("last char failed") }
+
+// Expression index with multiple operations
+expr_idx := (4 - 2) + 1
+if nums#expr_idx != 30 { panic!("complex expression index failed") }
+
 put!("all tests passing")

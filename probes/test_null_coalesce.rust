@@ -54,4 +54,64 @@ fn combined() -> Result<i32, ()> {
 }
 assert_eq!(combined(), Ok(999));
 
+// Edge case: Nested optionals with ??
+let nested: Option<Option<i32>> = Some(None);
+let inner = nested.flatten() ?? 77;
+assert_eq!(inner, 77);
+
+let nested_some: Option<Option<i32>> = Some(Some(88));
+let inner_val = nested_some.flatten() ?? 77;
+assert_eq!(inner_val, 88);
+
+// Edge case: Zero as default
+let none_val2: Option<i32> = None;
+let zero_default = none_val2 ?? 0;
+assert_eq!(zero_default, 0);
+
+// Edge case: Negative default
+let neg_default = none_val2 ?? -1;
+assert_eq!(neg_default, -1);
+
+// Edge case: Complex expression as default
+let computation = none_val2 ?? (10 + 20 * 2);
+assert_eq!(computation, 50);
+
+// Edge case: String coalescing
+let opt_str: Option<String> = None;
+let str_result = opt_str ?? "fallback".to_string();
+assert_eq!(str_result, "fallback");
+
+let some_str: Option<String> = Some("original".to_string());
+let str_result2 = some_str ?? "fallback".to_string();
+assert_eq!(str_result2, "original");
+
+// Edge case: Multiple None in chain
+let n1: Option<i32> = None;
+let n2: Option<i32> = None;
+let n3: Option<i32> = None;
+let result = n1 ?? n2 ?? n3 ?? 111;
+assert_eq!(result, 111);
+
+// Edge case: First Some in chain
+let first_some = Some(5) ?? Some(10) ?? 20;
+assert_eq!(first_some, 5);
+
+// Edge case: Second Some in chain
+let second_some = None ?? Some(15) ?? 30;
+assert_eq!(second_some, 15);
+
+// Edge case: Bool coalescing
+let opt_bool: Option<bool> = None;
+let bool_result = opt_bool ?? false;
+assert_eq!(bool_result, false);
+
+let some_bool: Option<bool> = Some(true);
+let bool_result2 = some_bool ?? false;
+assert_eq!(bool_result2, true);
+
+// Edge case: Char coalescing
+let opt_char: Option<char> = None;
+let char_result = opt_char ?? 'x';
+assert_eq!(char_result, 'x');
+
 println!("All null coalescing tests passed!");

@@ -18,3 +18,43 @@ if user and user.?name {
 }
 
 put!("First user over 18: ", result)
+
+// Edge case: empty users list
+let emptyUsers: Vec<User> = vec![]
+let emptyResult = emptyUsers.chose(|u| u.age > 18).first().cloned()
+if emptyResult and emptyResult.?name {
+    put!("FAIL: emptyResult should be None")
+    assert!(false)
+} else {
+    put!("PASS: emptyResult is None")
+}
+
+// Edge case: user with age exactly 18
+borderUsers := vec![User{name: "Border", age: 18}]
+let borderUser = borderUsers.chose(|u| u.age > 18).first().cloned()
+if borderUser {
+    put!("FAIL: user with age 18 should not match > 18")
+    assert!(false)
+} else {
+    put!("PASS: age 18 does not match > 18 filter")
+}
+
+// Edge case: all users under age
+youngUsers := vec![User{name: "Kid1", age: 10}, User{name: "Kid2", age: 15}]
+let youngResult = youngUsers.chose(|u| u.age > 18).first().cloned()
+if youngResult {
+    put!("FAIL: no users should match > 18")
+    assert!(false)
+} else {
+    put!("PASS: no users match age filter")
+}
+
+// Edge case: user with empty name
+usersEmptyName := vec![User{name: "", age: 25}]
+let userEmptyName = usersEmptyName.chose(|u| u.age > 18).first().cloned()
+if userEmptyName and userEmptyName.?name {
+    put!("PASS: user exists with empty name")
+} else {
+    put!("FAIL: user with empty name should still exist")
+    assert!(false)
+}

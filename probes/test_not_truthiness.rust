@@ -36,6 +36,62 @@ eq!( not zero_int8 , true);
 let nonzero_int64: i64 = 42
 eq!( not nonzero_int64 , false);
 
+// Edge case: not with Some(0) - Some is truthy even if it contains 0
+some_zero := Some(0)
+eq!( not some_zero , false);
+
+// Edge case: not with Some("")
+some_empty_str := Some("")
+eq!( not some_empty_str , false);
+
+// Edge case: not with negative numbers
+eq!( not -1 , false);
+eq!( not -100 , false);
+
+// Edge case: not with single element vec
+single_vec := vec![0]
+eq!( not single_vec , false);
+
+// Edge case: not with whitespace string
+ws := " "
+eq!( not ws , false);
+
+// Edge case: not with string "0"
+eq!( not "0" , false);
+
+// Edge case: double negation
+eq!( not not 1 , true);
+eq!( not not 0 , false);
+eq!( not not "" , false);
+eq!( not not "x" , true);
+
+// Edge case: not with float edge cases
+eq!( not -0.0 , true);
+eq!( not -1.5 , false);
+eq!( not 0.00001 , false);
+
+// Edge case: not with various integer types
+let zero_u32: u32 = 0
+eq!( not zero_u32 , true);
+
+let nonzero_i16: i16 = -5
+eq!( not nonzero_i16 , false);
+
+// Edge case: not with String::new() vs ""
+new_string := String::new()
+eq!( not new_string , true);
+
+// Edge case: not with String::from
+from_string := String::from("test")
+eq!( not from_string , false);
+
+// Edge case: not with i128
+let zero_i128: i128 = 0
+eq!( not zero_i128 , true);
+
+max_i128 := i128::MAX
+eq!( not max_i128 , false);
+
 put!("Most cases are passing. ")
 put!("TODO: Add support for maps, pointers, channels in 'not' operator")
 // These work fine with runtime truthiness in 'if' statements (see test_truthy.goo)

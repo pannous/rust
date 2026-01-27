@@ -87,4 +87,74 @@ if someOpt {
 	assert!(false)
 }
 
+// Edge case: Vec with capacity but no elements
+let vecWithCapacity: Vec<i32> = Vec::with_capacity(10)
+if vecWithCapacity {
+	put!("FAIL: Vec with capacity but empty should be falsy")
+	assert!(false)
+} else {
+	put!("PASS: Vec with capacity but empty is falsy")
+}
+
+// Edge case: slice from vec![0]
+zeroVec := vec![0]
+if zeroVec {
+	put!("PASS: vec![0] is truthy")
+} else {
+	put!("FAIL: vec![0] should be truthy")
+	assert!(false)
+}
+
+// Edge case: slice with false boolean
+boolVec := vec![false]
+if boolVec {
+	put!("PASS: vec![false] is truthy")
+} else {
+	put!("FAIL: vec![false] should be truthy")
+	assert!(false)
+}
+
+// Edge case: Some(0) vs 0
+if Some(0) {
+	put!("PASS: Some(0) is truthy")
+} else {
+	put!("FAIL: Some(0) should be truthy")
+	assert!(false)
+}
+
+// Edge case: Some with empty vec
+// TODO: type inference for empty vec in Some not working
+// if Some(vec![]) {
+// 	put!("PASS: Some(empty vec) is truthy")
+// } else {
+// 	put!("FAIL: Some(empty vec) should be truthy")
+// 	assert!(false)
+// }
+
+// Edge case: negative zero
+if -0 {
+	put!("FAIL: -0 should be falsy")
+	assert!(false)
+} else {
+	put!("PASS: -0 is falsy")
+}
+
+// Edge case: String::from("") vs ""
+emptyString := String::from("")
+if emptyString {
+	put!("FAIL: String::from(\"\") should be falsy")
+	assert!(false)
+} else {
+	put!("PASS: String::from(\"\") is falsy")
+}
+
+// Edge case: slice from array literal with single element
+singleElemSlice := @[0]
+if singleElemSlice {
+	put!("PASS: @[0] is truthy")
+} else {
+	put!("FAIL: @[0] should be truthy")
+	assert!(false)
+}
+
 put!("All truthy_and tests passed!")

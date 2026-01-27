@@ -42,4 +42,55 @@ let opt_tuple: Option<(i32, String)> = Some((42, "test".to_string()));
 let num = opt_tuple.?0;
 assert_eq!(num, Some(42));
 
+// Edge case: Chained optional field access
+struct Inner { value: i32 }
+struct Outer { inner: Option<Inner> }
+let outer: Option<Outer> = Some(Outer { inner: Some(Inner { value: 99 }) });
+let val = outer.?inner;
+assert_eq!(val, Some(Some(Inner { value: 99 })));
+
+// Edge case: None in chained access
+let outer_none: Option<Outer> = None;
+let val = outer_none.?inner;
+assert_eq!(val, None::<Option<Inner>>);
+
+// Edge case: Method chain on None
+let none_vec: Option<Vec<i32>> = None;
+let push_result = none_vec.?len();
+assert_eq!(push_result, None::<usize>);
+
+// Edge case: Multiple method calls chained
+// TODO: lifetime issues with optional chaining on methods
+// let opt_str: Option<String> = Some("  trim me  ".to_string());
+// let trimmed = opt_str.?trim();
+// assert_eq!(trimmed, Some("trim me"));
+
+// Edge case: Accessing tuple field 1
+let opt_tuple2: Option<(i32, String)> = Some((10, "second".to_string()));
+let str_val = opt_tuple2.?1;
+assert_eq!(str_val, Some("second".to_string()));
+
+let none_tuple: Option<(i32, String)> = None;
+let none_field = none_tuple.?1;
+assert_eq!(none_field, None::<String>);
+
+// Edge case: Method with multiple arguments
+// TODO: value moved issues with optional chaining
+// let opt_string2: Option<String> = Some("hello world".to_string());
+// let contains = opt_string2.?contains("world");
+// assert_eq!(contains, Some(true));
+//
+// let not_contains = opt_string2.?contains("xyz");
+// assert_eq!(not_contains, Some(false));
+
+// Edge case: Method returning Option
+// TODO: lifetime issues with optional chaining on methods returning references
+// let opt_vec2: Option<Vec<i32>> = Some(vec![1, 2, 3]);
+// let first = opt_vec2.?first();
+// assert_eq!(first, Some(Some(&1)));
+//
+// let empty_vec: Option<Vec<i32>> = Some(vec![]);
+// let no_first = empty_vec.?first();
+// assert_eq!(no_first, Some(None::<&i32>));
+
 println!("All optional chaining tests passed!");

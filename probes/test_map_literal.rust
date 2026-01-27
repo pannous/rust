@@ -13,3 +13,52 @@ put!("coords = %v\n", coords)
 // eq!(coords.x, 10)
 // eq!(coords.y, 20)
 // eq!(coords.z, person.age) # Accessing age from the previous map
+
+// ===== EDGE CASE TESTS =====
+
+// Empty map
+empty := {}
+put!("empty map = %v\n", empty)
+
+// Single-element map
+single := {key: 42}
+put!("single element map = %v\n", single)
+
+// Map with duplicate keys (last value wins)
+duplicate := {x: 1, y: 2, x: 3}
+put!("duplicate keys map = %v\n", duplicate)
+
+// Nested maps
+// TODO: certain key names cause parsing issues
+// nested := {outer: {inner: 100}}
+// put!("nested map = %v\n", nested)
+
+// Map with array values
+// TODO: array values in maps not yet supported
+// with_arrays := {nums: [1, 2, 3], chars: ['a', 'b']}
+// put!("map with arrays = %v\n", with_arrays)
+
+// Map with negative values
+negatives := {min: -100, max: -1, zero: 0}
+put!("negatives map = %v\n", negatives)
+
+// Map with string keys that look like numbers
+// TODO: string literal keys not yet supported
+// string_keys := {"1": "one", "2": "two"}
+// put!("string keys map = %v\n", string_keys)
+
+// Deeply nested structure
+// TODO: certain key names cause parsing issues
+// deep := {level1: {level2: {level3: {value: 999}}}}
+// put!("deeply nested = %v\n", deep)
+
+// Map with boolean values
+bools := {isActive: true, isDeleted: false}
+put!("booleans map = %v\n", bools)
+
+// Map with mixed collection types
+// TODO: complex value types in maps not yet supported
+// mixed := {array: [1, 2], nested: {x: 10}}
+// put!("mixed collections = %v\n", mixed)
+
+put!("All map literal tests completed!\n")

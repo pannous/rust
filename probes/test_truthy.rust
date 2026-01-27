@@ -154,4 +154,92 @@ if z {
     put!("PASS: z is falsy")
 }
 
+// Edge case: Some(0) should be truthy (it's Some, not None)
+if Some(0) {
+    put!("PASS: Some(0) is truthy")
+} else {
+    put!("FAIL: Some(0) should be truthy")
+    assert!(false)
+}
+
+// Edge case: Some with empty string
+if Some("") {
+    put!("PASS: Some(\"\") is truthy")
+} else {
+    put!("FAIL: Some(\"\") should be truthy")
+    assert!(false)
+}
+
+// Edge case: Vec with single zero element
+if vec![0] {
+    put!("PASS: vec![0] is truthy")
+} else {
+    put!("FAIL: vec![0] should be truthy")
+    assert!(false)
+}
+
+// Edge case: Vec with empty string element
+if vec![""] {
+    put!("PASS: vec![\"\"] is truthy")
+} else {
+    put!("FAIL: vec![\"\"] should be truthy")
+    assert!(false)
+}
+
+// Edge case: negative float
+if -3.14 {
+    put!("PASS: -3.14 is truthy")
+} else {
+    put!("FAIL: -3.14 should be truthy")
+    assert!(false)
+}
+
+// Edge case: very small positive float
+if 0.0001 {
+    put!("PASS: 0.0001 is truthy")
+} else {
+    put!("FAIL: 0.0001 should be truthy")
+    assert!(false)
+}
+
+// Edge case: i128 zero
+if 0i128 {
+    put!("FAIL: 0i128 should be falsy")
+    assert!(false)
+} else {
+    put!("PASS: 0i128 is falsy")
+}
+
+// Edge case: i128 non-zero
+if 1i128 {
+    put!("PASS: 1i128 is truthy")
+} else {
+    put!("FAIL: 1i128 should be truthy")
+    assert!(false)
+}
+
+// Edge case: String with just whitespace
+if String::from(" ") {
+    put!("PASS: String with whitespace is truthy")
+} else {
+    put!("FAIL: String with whitespace should be truthy")
+    assert!(false)
+}
+
+// Edge case: nested Some
+if Some(Some(42)) {
+    put!("PASS: Some(Some(42)) is truthy")
+} else {
+    put!("FAIL: Some(Some(42)) should be truthy")
+    assert!(false)
+}
+
+// Edge case: Some(None) - contains None but itself is Some
+if Some(None::<i32>) {
+    put!("PASS: Some(None) is truthy")
+} else {
+    put!("FAIL: Some(None) should be truthy")
+    assert!(false)
+}
+
 put!("All truthy tests passed!")

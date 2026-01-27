@@ -7,6 +7,49 @@ eq!( "hi".last() , "i");
 eq!( "hi".size() , 2);
 eq!( "hi".length() , 2);
 
+// Edge cases: Empty string
+eq!( "".first() , "");
+eq!( "".last() , "");
+eq!( "".size() , 0);
+eq!( "".length() , 0);
+
+// Edge cases: Single character
+eq!( "x".first() , "x");
+eq!( "x".last() , "x");
+eq!( "x".size() , 1);
+eq!( "x".length() , 1);
+
+// Edge cases: Unicode characters
+eq!( "café".size() , 5);  // byte length
+eq!( "café".length() , 5);  // byte length
+eq!( "café".first() , "c");
+eq!( "café".last() , "é");
+
+eq!( "世界".size() , 6);  // 2 Chinese chars * 3 bytes each
+eq!( "世界".first() , "世");
+eq!( "世界".last() , "界");
+
+// Edge cases: Emoji (multi-byte)
+eq!( "🎉".size() , 4);  // emoji is 4 bytes in UTF-8
+eq!( "🎉".length() , 4);
+eq!( "🎉".first() , "🎉");
+eq!( "🎉".last() , "🎉");
+
+eq!( "a🎉b".size() , 6);  // a(1) + emoji(4) + b(1)
+eq!( "a🎉b".first() , "a");
+eq!( "a🎉b".last() , "b");
+
+// Edge cases: Special characters
+eq!( "\n\t".size() , 2);
+eq!( "\"'".size() , 2);
+eq!( "\"'".first() , "\"");
+eq!( "\"'".last() , "'");
+
+// Edge cases: Whitespace only
+eq!( "   ".size() , 3);
+eq!( "   ".first() , " ");
+eq!( "   ".last() , " ");
+
 // #struct Person {
 // #		name string
 // #		age  int

@@ -10,3 +10,53 @@ eq!( "a"+"1" , "a1");
 eq!( "a"+1 , "a1" );
 eq!( "hi".first() , "h");
 eq!( "hi".last() , "i");
+
+// Edge cases: Empty string comparisons
+assert!("" == "");
+assert!("" != "a");
+assert!("a" != "");
+
+// Edge cases: Case sensitivity
+assert!("A" != "a");
+assert!("Hello" != "hello");
+assert!("WORLD" != "world");
+
+// Edge cases: Unicode comparisons
+assert!("café" == "café");
+assert!("café" != "cafe");
+assert!("世界" == "世界");
+assert!("世界" != "世");
+assert!('世' == "世");
+assert!('界' == "界");
+
+// Edge cases: Emoji comparisons
+assert!("🎉" == "🎉");
+assert!("🎉" != "🎊");
+assert!('🎉' == "🎉");
+assert!("a🎉b" == "a🎉b");
+assert!("a🎉b" != "a🎊b");
+
+// Edge cases: Special characters
+assert!("\n" == "\n");
+assert!("\t" != " ");
+assert!("\"" == "\"");
+assert!("\\" == "\\");
+assert!("'" != "\"");
+
+// Edge cases: Whitespace
+assert!(" " == " ");
+assert!("  " != " ");
+assert!(" a" != "a");
+assert!("a " != "a");
+assert!("a b" != "ab");
+
+// Edge cases: Char-to-string comparisons with special chars
+assert!('\n' == "\n");
+assert!('\t' == "\t");
+assert!('\"' == "\"");
+assert!(' ' == " ");
+
+// Edge cases: Numbers vs strings
+assert!("0" != "");
+assert!("1" == "1");
+assert!("10" != "1");

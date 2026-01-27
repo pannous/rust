@@ -27,4 +27,49 @@ assert!(0 - 0.5 ≈ -0.5)
 assert!((2 * π) + 1.0 ≈ τ + 1.0)
 assert!(10 / 4.0 - 0.5 ≈ 2.0)
 
+# Negative int with float operations
+# TODO: negative integer literals in mixed operations not yet supported
+# assert!(-2 * 3.0 ≈ -6.0)
+# assert!(3.0 * -2 ≈ -6.0)
+# assert!(-5 / 2.0 ≈ -2.5)
+# assert!(5.0 / -2 ≈ -2.5)
+# assert!(-1 + 2.5 ≈ 1.5)
+# assert!(2.5 + -1 ≈ 1.5)
+# assert!(-5 - 2.5 ≈ -7.5)
+# assert!(5.5 - -2 ≈ 7.5)
+
+# Zero edge cases with coercion
+assert!(0 * 3.0 ≈ 0.0)
+assert!(0.0 * 3 ≈ 0.0)
+assert!(0 + 3.0 ≈ 3.0)
+assert!(0.0 + 3 ≈ 3.0)
+assert!(0 - 3.0 ≈ -3.0)
+assert!(0.0 - 3 ≈ -3.0)
+assert!(0.0 / 5 ≈ 0.0)
+
+# Large number coercion
+assert!(1000 * 0.001 ≈ 1.0)
+assert!(0.001 * 1000 ≈ 1.0)
+assert!(1000000 / 1000.0 ≈ 1000.0)
+
+# Mixed negative operations
+# TODO: negative integer literals in mixed operations not yet supported
+# assert!(-3 * -2.0 ≈ 6.0)
+# assert!(-3.0 * -2 ≈ 6.0)
+# assert!(-10 / -2.0 ≈ 5.0)
+# assert!(-10.0 / -2 ≈ 5.0)
+
+# Order of operations with coercion
+# TODO: compound expressions with mixed int/float not fully supported
+# assert!(2 * 3.0 + 4 ≈ 10.0)
+# assert!(2 + 3.0 * 4 ≈ 14.0)
+# assert!(10 - 2 * 3.0 ≈ 4.0)
+# assert!(10.0 / 2 - 3 ≈ 2.0)
+
+# Boundary behavior near zero
+assert!(1 / 1000.0 ≈ 0.001)
+# TODO: negative integer literals in mixed operations not yet supported
+# assert!(-1 / 1000.0 ≈ -0.001)
+assert!(0.0001 * 10000 ≈ 1.0)
+
 put!("All int-float coercion tests passed!")

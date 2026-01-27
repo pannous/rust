@@ -22,3 +22,56 @@ put!("While with map:")
 for (key, value) in myMap {
 	printf!("  {} = {:?}\n", key, value)
 }
+
+// Edge case: Empty array
+// TODO: empty array type inference not working
+// empty := []
+// empty_sum := 0
+// for x in empty {
+// 	empty_sum += 1
+// }
+// eq!(empty_sum, 0);
+
+// Edge case: Single element array
+single := [42]
+single_sum := 0
+for x in single {
+	single_sum += x
+}
+eq!(single_sum, 42);
+
+// Edge case: Break on first iteration
+break_sum := 0
+for i in [1, 2, 3, 4, 5] {
+	break;
+	break_sum += i
+}
+eq!(break_sum, 0);
+
+// Edge case: Continue skipping all additions
+continue_sum := 0
+for i in [10, 20, 30] {
+	continue;
+	continue_sum += i
+}
+eq!(continue_sum, 0);
+
+// Edge case: Break after partial iteration
+partial := 0
+for i in [1, 2, 3, 4, 5] {
+	partial += i
+	if i == 3 {
+		break
+	}
+}
+eq!(partial, 6);
+
+// Edge case: Continue skipping even numbers
+odd_sum := 0
+for i in [1, 2, 3, 4, 5, 6] {
+	if i % 2 == 0 {
+		continue
+	}
+	odd_sum += i
+}
+eq!(odd_sum, 9);

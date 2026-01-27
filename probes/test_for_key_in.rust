@@ -20,3 +20,54 @@ for num in numbers {
 }
 
 put!("All key-value tests completed!")
+
+// Edge case: Empty map
+// TODO: empty map literal type inference not working
+// empty_map := {}
+// key_count := 0
+// for k in empty_map {
+// 	key_count += 1
+// }
+// eq!(key_count, 0);
+
+// Edge case: Single entry map
+single_map := { solo: 123 }
+found := 0
+for k in single_map {
+	found += 1
+}
+eq!(found, 1);
+
+// Edge case: Empty array iteration
+// TODO: empty array type inference not working
+// empty_arr := []
+// arr_count := 0
+// for v in empty_arr {
+// 	arr_count += 1
+// }
+// eq!(arr_count, 0);
+
+// Edge case: Break immediately in map iteration
+map_with_data := { a: 1, b: 2, c: 3 }
+break_count := 0
+for k in map_with_data {
+	break;
+	break_count += 1
+}
+eq!(break_count, 0);
+
+// Edge case: Accumulate values from array
+vals := [7, 14, 21]
+total := 0
+for v in vals {
+	total += v
+}
+eq!(total, 42);
+
+// Edge case: Single iteration array
+one_item := [555]
+result := 0
+for v in one_item {
+	result = v
+}
+eq!(result, 555);

@@ -24,3 +24,50 @@ for (i, num) in numbers.pairs() {
 
 put!("\nAll key-value tests completed!")
 
+// Edge case: Empty array with pairs
+// TODO: empty array type inference not working
+// empty := []
+// pair_count := 0
+// for (i, v) in empty.pairs() {
+// 	pair_count += 1
+// }
+// eq!(pair_count, 0);
+
+// Edge case: Single element with pairs
+single := [99]
+index_sum := 0
+value_sum := 0
+for (i, v) in single.pairs() {
+	index_sum += i
+	value_sum += v
+}
+eq!(index_sum, 0);
+eq!(value_sum, 99);
+
+// Edge case: Index accumulation
+idx_accum := 0
+for (i, v) in [100, 200, 300, 400].pairs() {
+	idx_accum += i
+}
+eq!(idx_accum, 6);
+
+// Edge case: Break in pairs loop
+first_idx := 999
+first_val := 999
+for (i, v) in [5, 10, 15].pairs() {
+	first_idx = i
+	first_val = v
+	break
+}
+eq!(first_idx, 0);
+eq!(first_val, 5);
+
+// Edge case: Continue in pairs skipping odd indices
+even_idx_sum := 0
+for (i, v) in [10, 20, 30, 40, 50].pairs() {
+	if i % 2 != 0 {
+		continue
+	}
+	even_idx_sum += v
+}
+eq!(even_idx_sum, 90);

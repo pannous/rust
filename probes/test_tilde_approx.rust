@@ -15,4 +15,50 @@ assert!(a ~ b)
 put!("τ ~ 2.0π:", τ ~ 2.0π)
 assert!(τ ~ 2.0π)
 
+// Edge case: negative values with ~
+assert!(-τ ~ -2π)
+assert!(-0.1 - 0.2 ~ -0.3)
+
+// Edge case: zero and near-zero with ~
+assert!(0.0 ~ 1e-15)
+assert!(π - π ~ 0.0)
+assert!(τ - 2.0π ~ 0.0)
+
+// Edge case: fractional π and τ with ~
+assert!(π/2.0 ~ τ/4.0)
+assert!(π/4.0 ~ 0.7853981633974483)
+assert!(τ/6.0 ~ π/3.0)
+
+// Edge case: large values with ~
+assert!(1000000.0 ~ 1000000.0000001)
+assert!(1e10 ~ 1e10 + 1.0)
+
+// Edge case: very small values near threshold
+e := 1.0 + 1e-11
+f := 1.0 + 1.5e-11
+assert!(e ~ f)
+
+// Edge case: complex expressions with ~
+assert!(π + π ~ τ)
+assert!(3π ~ τ + π)
+assert!(τ/π ~ 2.0)
+
+// Edge case: mixed operations with negative values
+assert!(-π/2.0 ~ -τ/4.0)
+assert!(π - τ ~ -π)
+assert!(-10π ~ -5τ)
+
+// Edge case: squared values with ~
+assert!(π*π ~ 9.869604401089358)
+assert!(τ*τ ~ 39.478417604357434)
+
+// Edge case: reciprocals with ~
+assert!(1.0/π ~ 0.3183098861837907)
+assert!(1.0/τ ~ 0.15915494309189535)
+
+// Edge case: extreme precision boundaries
+g := 0.123456789012345
+h := 0.123456789012346
+assert!(g ~ h)
+
 put!("~ works as ≈")

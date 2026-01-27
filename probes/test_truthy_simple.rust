@@ -47,4 +47,60 @@ if false {
     put!("PASS: false is falsy")
 }
 
+// Edge case: negative zero
+if -0 {
+    put!("FAIL: -0 should be falsy")
+    assert!(false)
+} else {
+    put!("PASS: -0 is falsy")
+}
+
+// Edge case: negative numbers
+if -5 {
+    put!("PASS: -5 is truthy")
+} else {
+    put!("FAIL: -5 should be truthy")
+    assert!(false)
+}
+
+// Edge case: single character string
+if "x" {
+    put!("PASS: single char string is truthy")
+} else {
+    put!("FAIL: single char string should be truthy")
+    assert!(false)
+}
+
+// Edge case: whitespace string
+if " " {
+    put!("PASS: whitespace string is truthy")
+} else {
+    put!("FAIL: whitespace string should be truthy")
+    assert!(false)
+}
+
+// Edge case: string with "0"
+if "0" {
+    put!("PASS: string '0' is truthy")
+} else {
+    put!("FAIL: string '0' should be truthy")
+    assert!(false)
+}
+
+// Edge case: maximum integer value
+if i32::MAX {
+    put!("PASS: i32::MAX is truthy")
+} else {
+    put!("FAIL: i32::MAX should be truthy")
+    assert!(false)
+}
+
+// Edge case: minimum integer value
+if i32::MIN {
+    put!("PASS: i32::MIN is truthy")
+} else {
+    put!("FAIL: i32::MIN should be truthy")
+    assert!(false)
+}
+
 put!("All tests passed!")

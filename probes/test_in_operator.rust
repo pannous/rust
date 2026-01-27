@@ -54,4 +54,47 @@ result3 := needle in text
 put!("'%s' in '%s': %t\n", needle, text, result3)
 assert!(needle in text)
 
+// Edge case: empty string in non-empty string (should be true)
+assert!("" in "hello");
+assert!("" in "");
+
+// Edge case: empty collection
+let empty_vec: Vec<i32> = vec![];
+assert!(!(&1 in &empty_vec));
+assert!(!(&0 in &empty_vec));
+
+// Edge case: single element collection
+let single = vec![42];
+assert!(&42 in &single);
+assert!(!(&41 in &single));
+
+// Edge case: string at boundaries
+assert!("hello" in "hello world");
+assert!("world" in "hello world");
+assert!("hello world" in "hello world");
+
+// Edge case: substring not found variations
+assert!(!("Hello" in "hello"));  // case sensitive
+assert!(!("helo" in "hello"));   // missing character
+assert!(!("hello world!" in "hello world"));  // extra character
+
+// Edge case: single character searches
+assert!("h" in "hello");
+assert!("o" in "hello");
+assert!(!("x" in "hello"));
+
+// Edge case: repeated elements
+let repeated = vec![1, 2, 2, 3, 2, 4];
+assert!(&2 in &repeated);
+assert!(&1 in &repeated);
+assert!(&4 in &repeated);
+assert!(!(&5 in &repeated));
+
+// Edge case: boundary values
+let range_vec = vec![0, 1, 2, 3, 4, 5];
+assert!(&0 in &range_vec);  // first element
+assert!(&5 in &range_vec);  // last element
+assert!(!(&-1 in &range_vec));
+assert!(!(&6 in &range_vec));
+
 println!("All tests passed!");

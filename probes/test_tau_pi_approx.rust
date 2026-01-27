@@ -21,3 +21,42 @@ d := 0.3
 put!("(0.1 + 0.2) ≈ 0.3:", c ≈ d)
 put!("(0.1 + 0.2) == 0.3:", c == d)
 assert!(c ≈ d)
+
+// Edge case: negative τ and π
+assert!(-τ ≈ -2π)
+assert!(-τ ≈ -2.0π)
+
+// Edge case: fractional multiples of π
+assert!(π/2.0 ≈ 1.5707963267948966)
+assert!(τ/4.0 ≈ π/2.0)
+assert!(3π ≈ τ + π)
+
+// Edge case: zero and near-zero with π
+assert!(π - π ≈ 0.0)
+assert!(τ - 2π ≈ 0.0)
+
+// Edge case: large multiples
+assert!(10π ≈ 5τ)
+assert!(100τ ≈ 200π)
+
+// Edge case: division by π
+assert!(τ/π ≈ 2.0)
+assert!(2π/τ ≈ 1.0)
+
+// Edge case: expressions with mixed operations
+assert!(π + π ≈ τ)
+assert!(τ - π ≈ π)
+assert!(τ/2.0 + π/2.0 ≈ 3.0*π/2.0)
+
+// Edge case: negative fractional multiples
+assert!(-π/4.0 ≈ -0.7853981633974483)
+assert!(-τ/8.0 ≈ -π/4.0)
+
+// Edge case: very small differences near threshold
+e := 1.0 + 1e-10
+f := 1.0 + 2e-10
+assert!(e ≈ f)
+
+// Edge case: π squared and τ squared relationships
+assert!(π*π ≈ 9.869604401089358)
+assert!(τ*τ ≈ 4.0*π*π)

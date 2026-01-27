@@ -45,3 +45,62 @@ assert!(not (str is i32))
 assert!(not (r is i32))
 put!("Negative tests passed")
 
+// Edge case: boundary integer types
+let tiny: i8 = 127
+let small: i16 = 32767
+let big: i64 = 9223372036854775807
+assert!(tiny is i8)
+assert!(small is i16)
+assert!(big is i64)
+assert!(not (tiny is i16))
+assert!(not (small is i32))
+
+// Edge case: unsigned vs signed
+let unsigned: u32 = 42
+let signed: i32 = 42
+assert!(unsigned is u32)
+assert!(signed is i32)
+assert!(not (unsigned is i32))
+assert!(not (signed is u32))
+
+// Edge case: float types
+let f32_val: f32 = 3.14
+let f64_val: f64 = 3.14159
+assert!(f32_val is f32)
+assert!(f64_val is f64)
+assert!(not (f32_val is f64))
+assert!(not (f64_val is f32))
+
+// Edge case: boolean type
+let flag = true
+assert!(flag is bool)
+assert!(not (flag is i32))
+
+// Edge case: empty string and empty collections
+empty_str := ""
+// TODO: empty @ array type inference not working
+// empty_vec := @[]
+assert!(empty_str is String)
+// assert!(empty_vec is Vec<i32>)
+
+// Edge case: nested types
+// TODO: nested @ arrays not yet supported
+// nested := @[@[1, 2], @[3, 4]]
+// assert!(nested is Vec<Vec<i32>>)
+// assert!(not (nested is Vec<i32>))
+
+// Edge case: array size variations
+arr3 := [1, 2, 3]
+arr4 := [1, 2, 3, 4]
+assert!(arr3 is [i32; 3])
+assert!(arr4 is [i32; 4])
+assert!(not (arr3 is [i32; 4]))
+assert!(not (arr4 is [i32; 3]))
+
+// Edge case: zero values of different types
+zero_int := 0
+let zero_float: f64 = 0.0
+assert!(zero_int is i32)
+assert!(zero_float is f64)
+assert!(not (zero_int is f64))
+

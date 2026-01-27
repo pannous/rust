@@ -18,6 +18,34 @@ fn main() {
     let x = 5;
     assert!(not (x < 0));
     assert!(¬(x > 10));
-    
+
+    // Edge case: double negation equivalence
+    assert!(not not true == true);
+    assert!(not not false == false);
+    assert!(¬¬true == true);
+
+    // Edge case: negation with equality/inequality
+    assert!(not (5 == 6));
+    assert!(not (5 != 5));
+    assert!(¬(10 < 5));
+    assert!(¬(3 > 10));
+
+    // Edge case: complex nested negations
+    assert!(not (not true and not false));
+    assert!(not (true and false) == (not true or not false));
+    assert!(not (true or false) == (not true and not false));
+
+    // Edge case: negation with zero and non-zero (truthiness)
+    let zero = 0;
+    let nonzero = 42;
+    assert!(not (zero == 1));
+    assert!(not (nonzero == 0));
+
+    // Edge case: triple and quadruple negation
+    assert!(not not not true == false);
+    assert!(not not not not true == true);
+    assert!(¬¬¬false == true);
+    assert!(¬¬¬¬false == false);
+
     println!("All not/¬ tests passed!");
 }

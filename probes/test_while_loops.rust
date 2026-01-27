@@ -22,3 +22,64 @@ while true {
 
 
 put!("All while loop tests completed!\n")
+
+// Edge case: While loop never executes
+never_count := 0
+while never_count > 10 {
+    never_count += 1
+}
+eq!(never_count, 0);
+
+// Edge case: While loop single iteration
+single := 0
+while single < 1 {
+    single += 1
+}
+eq!(single, 1);
+
+// Edge case: Break on first iteration
+immediate := 0
+while true {
+    break;
+    immediate += 1
+}
+eq!(immediate, 0);
+
+// Edge case: Continue with counter until break
+skip_count := 0
+iter_count := 0
+while iter_count < 10 {
+    iter_count += 1
+    if iter_count % 2 == 0 {
+        continue;
+    }
+    skip_count += iter_count
+}
+eq!(skip_count, 25);
+
+// Edge case: While with early break
+early := 0
+while early < 100 {
+    early += 1
+    if early == 5 {
+        break
+    }
+}
+eq!(early, 5);
+
+// Edge case: While false (never runs)
+should_be_zero := 0
+while false {
+    should_be_zero = 99
+}
+eq!(should_be_zero, 0);
+
+// Edge case: Nested break condition
+outer := 0
+while outer < 5 {
+    outer += 1
+    if outer >= 3 {
+        break
+    }
+}
+eq!(outer, 3);

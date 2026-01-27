@@ -13,7 +13,7 @@ for i in 0...5 {
 }
 eq!( sum, 0);
 
-// Exclusive 
+// Exclusive
 for i in 0..5 {
 	put!(i)
 	sum += i
@@ -21,3 +21,73 @@ for i in 0..5 {
 eq!( sum , 0+1+2+3+4  ); // 0..5 excludes 5
 
 put!("All checks passed!\n")
+
+// Edge case: Empty range (start == end exclusive)
+empty_count := 0
+for i in 5..5 {
+	empty_count += 1
+}
+eq!(empty_count, 0);
+
+// Edge case: Single iteration range
+single := 0
+for i in 10..11 {
+	single = i
+}
+eq!(single, 10);
+
+// Edge case: Single iteration inclusive
+single_inc := 0
+for i in 7...7 {
+	single_inc = i
+}
+eq!(single_inc, 7);
+
+// Edge case: Reverse range (should be empty)
+reverse := 0
+for i in 10..5 {
+	reverse += 1
+}
+eq!(reverse, 0);
+
+// Edge case: Break in range loop
+break_at := 0
+for i in 0..100 {
+	break_at = i
+	break
+}
+eq!(break_at, 0);
+
+// Edge case: Continue skipping evens in range
+odd_range_sum := 0
+for i in 1..10 {
+	if i % 2 == 0 {
+		continue
+	}
+	odd_range_sum += i
+}
+eq!(odd_range_sum, 25);
+
+// Edge case: Large single step range
+large := 0
+for i in 1000..1001 {
+	large = i
+}
+eq!(large, 1000);
+
+// Edge case: Zero start single iteration
+zero_start := 0
+for i in 0..1 {
+	zero_start = i
+}
+eq!(zero_start, 0);
+
+// Edge case: Break after partial range iteration
+partial_range := 0
+for i in 1..20 {
+	partial_range += i
+	if i == 5 {
+		break
+	}
+}
+eq!(partial_range, 15);
