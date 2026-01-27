@@ -1,11 +1,9 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_put_with_integer() {
     put!(42);
 }
 
-#[test]
 fn test_put_with_struct_literal() {
     let x = {a: 1, b: 2};
     put!(x);

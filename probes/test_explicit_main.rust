@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_explicit_main_function() {
     // Test that explicit main function definition is supported
     let output = "Explicit main still works!";

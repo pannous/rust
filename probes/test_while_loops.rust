@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_while_loop_with_condition() {
     i := 0;
     while i < 3 {
@@ -9,7 +8,6 @@ fn test_while_loop_with_condition() {
     eq!(i, 3);
 }
 
-#[test]
 fn test_while_loop_with_break() {
     j := 0;
     while true {
@@ -21,7 +19,6 @@ fn test_while_loop_with_break() {
     eq!(j, 3);
 }
 
-#[test]
 fn test_while_loop_never_executes() {
     never_count := 0;
     while never_count > 10 {
@@ -30,7 +27,6 @@ fn test_while_loop_never_executes() {
     eq!(never_count, 0);
 }
 
-#[test]
 fn test_while_loop_single_iteration() {
     single := 0;
     while single < 1 {
@@ -39,7 +35,6 @@ fn test_while_loop_single_iteration() {
     eq!(single, 1);
 }
 
-#[test]
 fn test_while_break_on_first_iteration() {
     immediate := 0;
     while true {
@@ -49,7 +44,6 @@ fn test_while_break_on_first_iteration() {
     eq!(immediate, 0);
 }
 
-#[test]
 fn test_while_continue_with_counter() {
     skip_count := 0;
     iter_count := 0;
@@ -63,7 +57,6 @@ fn test_while_continue_with_counter() {
     eq!(skip_count, 25);
 }
 
-#[test]
 fn test_while_early_break() {
     early := 0;
     while early < 100 {
@@ -75,7 +68,6 @@ fn test_while_early_break() {
     eq!(early, 5);
 }
 
-#[test]
 fn test_while_false_never_executes() {
     should_be_zero := 0;
     while false {
@@ -84,7 +76,6 @@ fn test_while_false_never_executes() {
     eq!(should_be_zero, 0);
 }
 
-#[test]
 fn test_while_nested_break_condition() {
     outer := 0;
     while outer < 5 {

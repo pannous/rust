@@ -1,52 +1,43 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_typeid_integer() {
     let x = 42;
     eq!(typeid!(x), "i32");
 }
 
-#[test]
 fn test_typeid_string_literal() {
     let s = "hello";
     eq!(typeid!(s), "alloc::string::String");
 }
 
-#[test]
 fn test_typeid_string_to_string() {
     let s2 = "hello".to_string();
     eq!(typeid!(s2), "alloc::string::String");
 }
 
-#[test]
 fn test_typeid_string_from_literal() {
     let st = "hello";
     eq!(typeid!(st), "alloc::string::String");
 }
 
-#[test]
 fn test_typeid_vec() {
     let v = vec![1, 2, 3];
     eq!(typeid!(v), "alloc::vec::Vec<i32>");
 }
 
-#[test]
 fn test_typeid_float() {
     let f = 3.14;
     eq!(typeid!(f), "f64");
 }
 
-#[test]
 fn test_typeid_u8_literal() {
     eq!(typeid!(100u8), "u8");
 }
 
-#[test]
 fn test_typeid_bool_literal() {
     eq!(typeid!(true), "bool");
 }
 
-#[test]
 fn test_typeid_slice() {
     eq!(typeid!(&[1, 2, 3]), "&[i32; 3]");
 }

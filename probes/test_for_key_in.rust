@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_single_entry_map_iteration() {
     let single_map = { solo: 123 };
     let mut found = 0;
@@ -10,7 +9,6 @@ fn test_single_entry_map_iteration() {
     eq!(found, 1);
 }
 
-#[test]
 fn test_break_immediately_in_map_iteration() {
     let map_with_data = { a: 1, b: 2, c: 3 };
     let mut break_count = 0;
@@ -21,7 +19,6 @@ fn test_break_immediately_in_map_iteration() {
     eq!(break_count, 0);
 }
 
-#[test]
 fn test_accumulate_values_from_array() {
     let vals = [7, 14, 21];
     let mut total = 0;
@@ -31,7 +28,6 @@ fn test_accumulate_values_from_array() {
     eq!(total, 42);
 }
 
-#[test]
 fn test_single_iteration_array() {
     let one_item = [555];
     let mut result = 0;

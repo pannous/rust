@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_not_with_numeric_literals() {
 	// not with zero
 	assert!(!(0 != 0)); // not 0 is true conceptually
@@ -8,13 +7,11 @@ fn test_not_with_numeric_literals() {
 	assert!((3.14 != 0.0)); // not 3.14 is false conceptually
 }
 
-#[test]
 fn test_not_with_boolean_literals() {
 	assert!(!true == false);
 	assert!(!false == true);
 }
 
-#[test]
 fn test_not_with_variables() {
 	let x: i32 = 0;
 	assert!(x == 0); // x is falsy
@@ -26,25 +23,21 @@ fn test_not_with_variables() {
 	assert!(empty == ""); // empty is falsy
 }
 
-#[test]
 fn test_not_with_slice() {
 	let slice = &[1, 2, 3];
 	assert!(!slice.is_empty()); // slice is truthy
 }
 
-#[test]
 fn test_not_with_empty_slice() {
 	let empty_slice: Vec<i32> = vec![];
 	assert!(empty_slice.is_empty()); // empty is falsy
 }
 
-#[test]
 fn test_not_with_floats() {
 	assert!((0.0 == 0.0)); // 0.0 is falsy
 	assert!((3.14 != 0.0)); // 3.14 is truthy
 }
 
-#[test]
 fn test_not_with_different_integer_types() {
 	let zero_int8: i8 = 0;
 	assert!(zero_int8 == 0);
@@ -53,7 +46,6 @@ fn test_not_with_different_integer_types() {
 	assert!(nonzero_int64 != 0);
 }
 
-#[test]
 fn test_not_with_option_values() {
 	let some_zero: Option<i32> = Some(0);
 	assert!(some_zero.is_some()); // Some is always truthy
@@ -62,30 +54,25 @@ fn test_not_with_option_values() {
 	assert!(some_empty_str.is_some()); // Some is always truthy
 }
 
-#[test]
 fn test_not_with_negative_numbers() {
 	assert!((-1 != 0)); // -1 is truthy
 	assert!((-100 != 0)); // -100 is truthy
 }
 
-#[test]
 fn test_not_with_single_element_vec() {
 	let single_vec = vec![0];
 	assert!(!single_vec.is_empty()); // vec with one element is truthy
 }
 
-#[test]
 fn test_not_with_whitespace_string() {
 	let ws = " ";
 	assert!(ws != ""); // whitespace string is truthy
 }
 
-#[test]
 fn test_not_with_string_zero() {
 	assert!(("0" != "")); // "0" string is truthy
 }
 
-#[test]
 fn test_double_negation() {
 	// Double negation returns to original boolean
 	let x = true;
@@ -95,14 +82,12 @@ fn test_double_negation() {
 	assert!(!(!y) == y);
 }
 
-#[test]
 fn test_not_with_float_edge_cases() {
 	assert!((-0.0 == 0.0)); // -0.0 is falsy
 	assert!((-1.5 != 0.0)); // -1.5 is truthy
 	assert!((0.00001 != 0.0)); // 0.00001 is truthy
 }
 
-#[test]
 fn test_not_with_unsigned_integers() {
 	let zero_u32: u32 = 0;
 	assert!(zero_u32 == 0);
@@ -111,7 +96,6 @@ fn test_not_with_unsigned_integers() {
 	assert!(nonzero_i16 != 0);
 }
 
-#[test]
 fn test_not_with_string_constructors() {
 	let new_string = String::new();
 	assert!(new_string.is_empty()); // new string is falsy
@@ -120,7 +104,6 @@ fn test_not_with_string_constructors() {
 	assert!(!from_string.is_empty()); // non-empty string is truthy
 }
 
-#[test]
 fn test_not_with_i128() {
 	let zero_i128: i128 = 0;
 	assert!(zero_i128 == 0);

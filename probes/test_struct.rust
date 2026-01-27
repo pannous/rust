@@ -18,7 +18,6 @@ fn tee(x: int, y: int) -> Tee {
     return Tee { x, y };
 }
 
-#[test]
 fn test_struct_creation_and_sum() {
     let t = tee(3, 4);
     display(t);

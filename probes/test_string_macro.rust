@@ -1,17 +1,14 @@
 #!/usr/bin/env rustx
 
-#[test]
 fn test_s_macro_basic() {
     let x = s!("hello");
     eq!(x, String::from("hello"));
 }
 
-#[test]
 fn test_s_macro_inline() {
     eq!(s!("world"), String::from("world"));
 }
 
-#[test]
 fn test_s_macro_with_string_slice() {
     let slice: &str = &"test";
     let y = s!(slice);

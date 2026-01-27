@@ -1,20 +1,17 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_increment_operator() {
     let mut i = 0;
     i++;
     assert_eq!(i, 1);
 }
 
-#[test]
 fn test_decrement_operator() {
     let mut j = 5;
     j--;
     assert_eq!(j, 4);
 }
 
-#[test]
 fn test_increment_field_access() {
     struct Counter { value: i32 }
     let mut c = Counter { value: 0 };
@@ -22,7 +19,6 @@ fn test_increment_field_access() {
     assert_eq!(c.value, 1);
 }
 
-#[test]
 fn test_increment_array_index() {
     let mut arr = [0, 1, 2];
     arr[0]++;

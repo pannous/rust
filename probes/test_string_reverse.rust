@@ -1,59 +1,49 @@
 #!/usr/bin/env rust
 // Test string reverse method
 
-#[test]
 fn test_reverse_basic() {
     eq!("hello".reverse(), "olleh");
 }
 
-#[test]
 fn test_reverse_unicode_accented() {
     eq!("café".reverse(), "éfac");
 }
 
-#[test]
 fn test_reverse_chinese_characters() {
     eq!("日本語".reverse(), "語本日");
 }
 
-#[test]
 fn test_reverse_emoji() {
     eq!("🎉🎊".reverse(), "🎊🎉");
 }
 
-#[test]
 fn test_reverse_empty_string() {
     eq!("".reverse(), "");
 }
 
-#[test]
 fn test_reverse_single_ascii_character() {
     eq!("a".reverse(), "a");
     eq!("X".reverse(), "X");
     eq!("5".reverse(), "5");
 }
 
-#[test]
 fn test_reverse_single_unicode_character() {
     eq!("世".reverse(), "世");
     eq!("é".reverse(), "é");
     eq!("🎉".reverse(), "🎉");
 }
 
-#[test]
 fn test_reverse_two_characters() {
     eq!("ab".reverse(), "ba");
     eq!("xy".reverse(), "yx");
 }
 
-#[test]
 fn test_reverse_palindromes() {
     eq!("aba".reverse(), "aba");
     eq!("racecar".reverse(), "racecar");
     eq!("noon".reverse(), "noon");
 }
 
-#[test]
 fn test_reverse_special_characters() {
     eq!("\n\t".reverse(), "\t\n");
     eq!("a\nb".reverse(), "b\na");
@@ -61,20 +51,17 @@ fn test_reverse_special_characters() {
     eq!("\\//".reverse(), "//\\");
 }
 
-#[test]
 fn test_reverse_mixed_unicode_and_ascii() {
     eq!("hello世界".reverse(), "界世olleh");
     eq!("café☕".reverse(), "☕éfac");
     eq!("a🎉b🎊c".reverse(), "c🎊b🎉a");
 }
 
-#[test]
 fn test_reverse_numbers_in_strings() {
     eq!("12345".reverse(), "54321");
     eq!("abc123".reverse(), "321cba");
 }
 
-#[test]
 fn test_reverse_whitespace() {
     eq!("   ".reverse(), "   ");
     eq!("a b c".reverse(), "c b a");

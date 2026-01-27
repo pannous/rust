@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_in_operator_char_in_string() {
 	assert!('b' in "abc");
 	assert!(not ('d' in "abc"));

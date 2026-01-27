@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_exit_macro_default() {
     // Test exit!() - default exit code 0
     // Note: In actual test context, exit!() would terminate the test

@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_transform_synonyms() {
     let nums = [1, 2, 3];
 

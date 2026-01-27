@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_pairs_single_element() {
     let single = [99];
     let mut index_sum = 0;
@@ -13,7 +12,6 @@ fn test_pairs_single_element() {
     eq!(value_sum, 99);
 }
 
-#[test]
 fn test_pairs_index_accumulation() {
     let mut idx_accum = 0;
     for (i, _v) in [100, 200, 300, 400].pairs() {
@@ -22,7 +20,6 @@ fn test_pairs_index_accumulation() {
     eq!(idx_accum, 6);
 }
 
-#[test]
 fn test_pairs_break_on_first() {
     let mut first_idx = 999;
     let mut first_val = 999;
@@ -35,7 +32,6 @@ fn test_pairs_break_on_first() {
     eq!(first_val, 5);
 }
 
-#[test]
 fn test_pairs_continue_skip_odd_indices() {
     let mut even_idx_sum = 0;
     for (i, v) in [10, 20, 30, 40, 50].pairs() {

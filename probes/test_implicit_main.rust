@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_implicit_main_output() {
 	put!("Hello, ");
 	println!("world!");
@@ -12,7 +11,6 @@ fn test_implicit_main_output() {
 	put!("The answer is: ", helper());
 }
 
-#[test]
 fn test_implicit_main_with_variable() {
 	let x = 421;
 	put!("The answer is: ", x, "\n");

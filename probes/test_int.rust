@@ -1,18 +1,15 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_int_alias_basic() {
     var x: int = 42;
     assert_eq!(x, 42);
 }
 
-#[test]
 fn test_int_alias_negative() {
     var y: int = -100;
     assert_eq!(y, -100);
 }
 
-#[test]
 fn test_int_alias_addition() {
     var x: int = 42;
     var y: int = -100;
@@ -20,25 +17,21 @@ fn test_int_alias_addition() {
     assert_eq!(z, -58);
 }
 
-#[test]
 fn test_int_alias_max_value() {
     var big: int = 9_223_372_036_854_775_807;
     assert_eq!(big, 9_223_372_036_854_775_807);
 }
 
-#[test]
 fn test_float_alias_basic() {
     var my_pi: float = 3.14159265358979;
     assert!((my_pi - 3.14159265358979).abs() < 1e-10);
 }
 
-#[test]
 fn test_float_alias_eulers_number() {
     var e: float = 2.71828;
     assert!((e - 2.71828).abs() < 1e-10);
 }
 
-#[test]
 fn test_float_alias_addition() {
     var my_pi: float = 3.14159265358979;
     var e: float = 2.71828;

@@ -1,139 +1,116 @@
 #!/usr/bin/env rust
 //   string concatenation requires an owned `String` on the left
 
-#[test]
 fn test_string_plus_string() {
     let result0 = "a" + "0";
     eq!(result0, "a0");
 }
 
-#[test]
 fn test_string_plus_integer() {
     let result1 = "a" + 1;
     eq!(result1, "a1");
 }
 
-#[test]
 fn test_string_plus_larger_integer() {
     let result2 = "value: " + 42;
     eq!(result2, "value: 42");
 }
 
-#[test]
 fn test_integer_to_string_plus_string() {
     let result3 = 1.to_string() + "b";
     eq!(result3, "1b");
 }
 
-#[test]
 fn test_string_plus_negative_integer() {
     let result4 = "count: " + (-5);
     eq!(result4, "count: -5");
 }
 
-#[test]
 fn test_integer_to_string_plus_string_with_spaces() {
     let result5 = 123.to_string() + " items";
     eq!(result5, "123 items");
 }
 
-#[test]
 fn test_string_plus_float() {
     let result6 = "pi is " + 3.14159;
     eq!(result6, "pi is 3.14159");
 }
 
-#[test]
 fn test_chained_concatenation() {
     let result7 = "prefix" + 1 + 2 + "suffix";
     eq!(result7, "prefix12suffix");
 }
 
-#[test]
 fn test_string_plus_boolean_true() {
     let result8 = "a " + true;
     eq!(result8, "a ✔️");
 }
 
-#[test]
 fn test_string_plus_boolean_false() {
     let result9 = "a " + false;
     eq!(result9, "a ✖️");
 }
 
-#[test]
 fn test_empty_string_plus_string() {
     let result10 = "" + "hello";
     eq!(result10, "hello");
 }
 
-#[test]
 fn test_string_plus_empty_string() {
     let result11 = "hello" + "";
     eq!(result11, "hello");
 }
 
-#[test]
 fn test_empty_string_plus_empty_string() {
     let result12 = "" + "";
     eq!(result12, "");
 }
 
-#[test]
 fn test_empty_string_plus_integer() {
     let result13 = "" + 42;
     eq!(result13, "42");
 }
 
-#[test]
 fn test_string_plus_zero() {
     let result14 = "value: " + 0;
     eq!(result14, "value: 0");
 }
 
-#[test]
 fn test_string_plus_zero_float() {
     let result15 = "float: " + 0.0;
     eq!(result15, "float: 0");
 }
 
-#[test]
 fn test_string_plus_unicode_chinese() {
     let result16 = "Hello " + "世界";
     eq!(result16, "Hello 世界");
 }
 
-#[test]
 fn test_string_plus_emoji() {
     let result17 = "emoji: " + "🎉";
     eq!(result17, "emoji: 🎉");
 }
 
-#[test]
 fn test_string_plus_quote() {
     let result18 = "quote: " + "\"";
     eq!(result18, "quote: \"");
 }
 
-#[test]
 fn test_string_plus_newline() {
     let result19 = "newline" + "\n" + "next";
     eq!(result19, "newline\nnext");
 }
 
-#[test]
 fn test_string_plus_tab() {
     let result20 = "tab" + "\t" + "separated";
     eq!(result20, "tab\tseparated");
 }
 
-#[test]
 fn test_string_plus_very_large_number() {
     let result21 = "big: " + 999999999;
     eq!(result21, "big: 999999999");
 }
 
-#[test]
 fn test_mixed_types_chained() {
     let result22 = "mixed: " + 1 + " and " + 2.5 + " and " + true;
     eq!(result22, "mixed: 1 and 2.5 and ✔️");

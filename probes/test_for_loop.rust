@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_for_loop_basic_sum() {
 	let xs = [1, 2, 3];
 	let mut sum = 0;
@@ -11,7 +10,6 @@ fn test_for_loop_basic_sum() {
 	eq!(sum, 6);
 }
 
-#[test]
 fn test_for_loop_slice_iteration() {
 	let numbers = [1, 2, 3];
 	put!("While with slice:");
@@ -20,7 +18,6 @@ fn test_for_loop_slice_iteration() {
 	}
 }
 
-#[test]
 fn test_for_loop_map_iteration() {
 	let myMap = @{"a": 1, "b": 2, "c": 3};
 	put!("While with map:");
@@ -29,7 +26,6 @@ fn test_for_loop_map_iteration() {
 	}
 }
 
-#[test]
 fn test_for_loop_single_element() {
 	let single = [42];
 	let mut single_sum = 0;
@@ -39,7 +35,6 @@ fn test_for_loop_single_element() {
 	eq!(single_sum, 42);
 }
 
-#[test]
 fn test_for_loop_break_immediate() {
 	let mut break_sum = 0;
 	for i in [1, 2, 3, 4, 5] {
@@ -49,7 +44,6 @@ fn test_for_loop_break_immediate() {
 	eq!(break_sum, 0);
 }
 
-#[test]
 fn test_for_loop_continue_skip_all() {
 	let mut continue_sum = 0;
 	for i in [10, 20, 30] {
@@ -59,7 +53,6 @@ fn test_for_loop_continue_skip_all() {
 	eq!(continue_sum, 0);
 }
 
-#[test]
 fn test_for_loop_break_partial() {
 	let mut partial = 0;
 	for i in [1, 2, 3, 4, 5] {
@@ -71,7 +64,6 @@ fn test_for_loop_break_partial() {
 	eq!(partial, 6);
 }
 
-#[test]
 fn test_for_loop_continue_skip_even() {
 	let mut odd_sum = 0;
 	for i in [1, 2, 3, 4, 5, 6] {

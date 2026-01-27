@@ -1,30 +1,25 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_int_to_string_cast() {
     val1 := 1 as string
     eq!( val1 , "1" )
 }
 
-#[test]
 fn test_int_to_rune_cast() {
     val2 := 1 as rune
     if val2 != '1' { panic!("1 as rune failed") }
 }
 
-#[test]
 fn test_rune_to_int_cast() {
     val3 := '1' as int
     if val3 != 49 { panic!("'1' as int failed") }
 }
 
-#[test]
 fn test_rune_to_unicode_cast() {
     val4 := '1' as unicode
     eq!( val4 , 49 )
 }
 
-#[test]
 fn test_int_to_float_cast() {
     val4 := 3 as float
     if val4 != 3.0 { panic!("3 as float failed") }

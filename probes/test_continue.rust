@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_continue_statement() {
 	// No one needs these old loops.
 	// for i := 0; i < 5; i++ {

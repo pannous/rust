@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_basic_and_or_operations() {
     let a = true;
     let b = false;
@@ -8,28 +7,24 @@ fn test_basic_and_or_operations() {
     eq!(a or b, true)
 }
 
-#[test]
 fn test_chained_and_operations() {
     eq!(true and true and true, true);
     eq!(true and true and false, false);
     eq!(false and true and true, false);
 }
 
-#[test]
 fn test_chained_or_operations() {
     eq!(false or false or false, false);
     eq!(false or false or true, true);
     eq!(true or false or false, true);
 }
 
-#[test]
 fn test_mixed_and_or_precedence() {
     eq!(true or false and false, true);
     eq!(false and true or true, true);
     eq!(true and false or false and true, false);
 }
 
-#[test]
 fn test_negation_with_and_or() {
     eq!(not true and false, false);
     eq!(not false or false, true);
@@ -37,7 +32,6 @@ fn test_negation_with_and_or() {
     eq!(not (false or false), true);
 }
 
-#[test]
 fn test_comparison_results_in_boolean_expressions() {
     eq!((5 > 3) and (10 < 20), true);
     eq!((5 < 3) or (10 > 5), true);
@@ -45,7 +39,6 @@ fn test_comparison_results_in_boolean_expressions() {
     eq!((1 != 2) or (3 != 3), true);
 }
 
-#[test]
 fn test_short_circuit_behavior() {
     let x = 5;
     eq!(false and (x > 0), false);

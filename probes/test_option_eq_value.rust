@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_option_equals_primitive() {
 	assert_eq!(Some(5), Some(5));
 	assert_ne!(Some(3), Some(5));
@@ -8,7 +7,6 @@ fn test_option_equals_primitive() {
 	assert_ne!(nono, Some(5));
 }
 
-#[test]
 fn test_array_first_comparison() {
 	let nums = [1, 2, 3];
 	assert_eq!(nums.first(), Some(&1));
@@ -18,7 +16,6 @@ fn test_array_first_comparison() {
 	assert_ne!(empty.first(), Some(&1));
 }
 
-#[test]
 fn test_option_with_different_numeric_types() {
 	assert_eq!(Some(42u8), Some(42u8));
 	assert_eq!(Some(3.14f64), Some(3.14f64));
@@ -26,81 +23,69 @@ fn test_option_with_different_numeric_types() {
 	assert_eq!(Some('x'), Some('x'));
 }
 
-#[test]
 fn test_option_with_str_references() {
 	let words = ["hello", "world"];
 	assert_eq!(words.first(), Some(&"hello"));
 	assert_eq!(Some("test"), Some("test"));
 }
 
-#[test]
 fn test_option_comparing_with_zero() {
 	assert_eq!(Some(0), Some(0));
 	assert_ne!(Some(0), Some(1));
 }
 
-#[test]
 fn test_option_comparing_with_negative() {
 	assert_eq!(Some(-5), Some(-5));
 	assert_ne!(Some(-5), Some(5));
 }
 
-#[test]
 fn test_empty_array_first() {
 	let empty_nums: [i32; 0] = [];
 	assert_ne!(empty_nums.first(), Some(&0));
 	assert_ne!(empty_nums.first(), Some(&-1));
 }
 
-#[test]
 fn test_none_explicit_comparison() {
 	let none_opt: Option<i32> = None;
 	assert_ne!(none_opt, Some(0));
 	assert_ne!(none_opt, Some(42));
 }
 
-#[test]
 fn test_array_last_comparison() {
 	let arr = [10, 20, 30];
 	assert_eq!(arr.last(), Some(&30));
 	assert_ne!(arr.last(), Some(&10));
 }
 
-#[test]
 fn test_floating_point_edge_values() {
 	assert_eq!(Some(0.0), Some(0.0));
 	assert_eq!(Some(-0.0), Some(-0.0));
 }
 
-#[test]
 fn test_multiple_comparisons_in_expression() {
 	let opt_val = Some(7);
 	assert_eq!(opt_val, Some(7));
 	assert_ne!(opt_val, Some(8));
 }
 
-#[test]
 fn test_option_string_comparison() {
 	let opt_string = Some("hello".to_string());
 	assert_eq!(opt_string, Some("hello".to_string()));
 	assert_ne!(opt_string, Some("world".to_string()));
 }
 
-#[test]
 fn test_char_array_first() {
 	let chars = ['a', 'b', 'c'];
 	assert_eq!(chars.first(), Some(&'a'));
 	assert_ne!(chars.first(), Some(&'z'));
 }
 
-#[test]
 fn test_single_element_array() {
 	let single = [999];
 	assert_eq!(single.first(), Some(&999));
 	assert_eq!(single.last(), Some(&999));
 }
 
-#[test]
 fn test_mixed_sign_comparison() {
 	let mixed = [-1, 0, 1];
 	assert_eq!(mixed.first(), Some(&-1));

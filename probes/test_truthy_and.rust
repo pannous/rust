@@ -1,13 +1,11 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_numeric_zero_is_falsy() {
     if 0 {
         assert!(false, "0 should be falsy")
     }
 }
 
-#[test]
 fn test_numeric_nonzero_is_truthy() {
     if 42 {
         // pass
@@ -16,14 +14,12 @@ fn test_numeric_nonzero_is_truthy() {
     }
 }
 
-#[test]
 fn test_empty_string_is_falsy() {
     if "" {
         assert!(false, "empty string should be falsy")
     }
 }
 
-#[test]
 fn test_nonempty_string_is_truthy() {
     if "hello" {
         // pass
@@ -32,7 +28,6 @@ fn test_nonempty_string_is_truthy() {
     }
 }
 
-#[test]
 fn test_empty_vec_is_falsy() {
     let nilSlice: Vec<i32> = vec![];
     if nilSlice {
@@ -40,7 +35,6 @@ fn test_empty_vec_is_falsy() {
     }
 }
 
-#[test]
 fn test_empty_slice_is_falsy() {
     let emptySlice: Vec<i32> = vec![];
     if emptySlice {
@@ -48,7 +42,6 @@ fn test_empty_slice_is_falsy() {
     }
 }
 
-#[test]
 fn test_nonempty_slice_is_truthy() {
     nonEmptySlice := @[1, 2, 3];
     if nonEmptySlice {
@@ -58,7 +51,6 @@ fn test_nonempty_slice_is_truthy() {
     }
 }
 
-#[test]
 fn test_true_is_truthy() {
     if true {
         // pass
@@ -67,14 +59,12 @@ fn test_true_is_truthy() {
     }
 }
 
-#[test]
 fn test_false_is_falsy() {
     if false {
         assert!(false, "false should be falsy")
     }
 }
 
-#[test]
 fn test_none_option_is_falsy() {
     let nilOpt: Option<i32> = None;
     if nilOpt {
@@ -82,7 +72,6 @@ fn test_none_option_is_falsy() {
     }
 }
 
-#[test]
 fn test_some_option_is_truthy() {
     someOpt := Some(42);
     if someOpt {
@@ -92,7 +81,6 @@ fn test_some_option_is_truthy() {
     }
 }
 
-#[test]
 fn test_vec_with_capacity_but_empty_is_falsy() {
     let vecWithCapacity: Vec<i32> = Vec::with_capacity(10);
     if vecWithCapacity {
@@ -100,7 +88,6 @@ fn test_vec_with_capacity_but_empty_is_falsy() {
     }
 }
 
-#[test]
 fn test_vec_with_zero_element_is_truthy() {
     zeroVec := vec![0];
     if zeroVec {
@@ -110,7 +97,6 @@ fn test_vec_with_zero_element_is_truthy() {
     }
 }
 
-#[test]
 fn test_vec_with_false_element_is_truthy() {
     boolVec := vec![false];
     if boolVec {
@@ -120,7 +106,6 @@ fn test_vec_with_false_element_is_truthy() {
     }
 }
 
-#[test]
 fn test_some_zero_is_truthy() {
     if Some(0) {
         // pass
@@ -129,14 +114,12 @@ fn test_some_zero_is_truthy() {
     }
 }
 
-#[test]
 fn test_negative_zero_is_falsy() {
     if -0 {
         assert!(false, "-0 should be falsy")
     }
 }
 
-#[test]
 fn test_empty_string_from_is_falsy() {
     emptyString := String::from("");
     if emptyString {
@@ -144,7 +127,6 @@ fn test_empty_string_from_is_falsy() {
     }
 }
 
-#[test]
 fn test_single_element_slice_is_truthy() {
     singleElemSlice := @[0];
     if singleElemSlice {

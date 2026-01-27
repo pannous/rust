@@ -1,7 +1,6 @@
 #!/usr/bin/env rust
 // import "slices"
 
-#[test]
 fn test_list_apply_double() {
     xs := @[1, 2, 3]
     ys := xs.apply(x=>x*2)

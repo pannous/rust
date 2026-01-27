@@ -9,13 +9,11 @@
  in the IDE
 */
 
-#[test]
 fn test_hash_comments_inline() {
     println!("OK"); // trailing comments now work with space before and after #
     println!("OK");
 }
 
-#[test]
 fn test_hash_comments_with_variables() {
     let x = 1; // another trailing comment
     let y = 2; // works with semicolon too

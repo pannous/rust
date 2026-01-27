@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_unused_mut_suppressed() {
     let mut x = 5;
     let mut y = "hello";

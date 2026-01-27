@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_hash_index_with_if_statements() {
 	let z = @['a', 'b', 'c'];
 	if z#1 != 'a' { panic!("First element failed"); }

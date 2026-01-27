@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_exclamation_syntax_not_available() {
     // Testing exclamation syntax for modifying methods can't work in Rust because it's reserved for macros.
     // This test documents that ! syntax cannot be used for mutating methods in script context

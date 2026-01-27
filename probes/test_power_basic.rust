@@ -1,12 +1,10 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_power_operator_basic() {
     let result = 3 ** 2;
     eq!(result, 9);
 }
 
-#[test]
 fn test_power_operator_const_eval() {
     const A: i32 = 2 ** 3;
     eq!(A, 8);

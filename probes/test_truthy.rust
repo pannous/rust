@@ -1,13 +1,11 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_zero_integer_is_falsy() {
     if 0 {
         assert!(false, "0 should be falsy")
     }
 }
 
-#[test]
 fn test_positive_integer_is_truthy() {
     if 42 {
         // pass
@@ -16,7 +14,6 @@ fn test_positive_integer_is_truthy() {
     }
 }
 
-#[test]
 fn test_negative_integer_is_truthy() {
     if -1 {
         // pass
@@ -25,14 +22,12 @@ fn test_negative_integer_is_truthy() {
     }
 }
 
-#[test]
 fn test_zero_float_is_falsy() {
     if 0.0 {
         assert!(false, "0.0 should be falsy")
     }
 }
 
-#[test]
 fn test_positive_float_is_truthy() {
     if 3.14 {
         // pass
@@ -41,14 +36,12 @@ fn test_positive_float_is_truthy() {
     }
 }
 
-#[test]
 fn test_empty_str_is_falsy() {
     if "" {
         assert!(false, "empty string should be falsy")
     }
 }
 
-#[test]
 fn test_nonempty_str_is_truthy() {
     if "hello" {
         // pass
@@ -57,14 +50,12 @@ fn test_nonempty_str_is_truthy() {
     }
 }
 
-#[test]
 fn test_empty_string_type_is_falsy() {
     if String::new() {
         assert!(false, "empty String should be falsy")
     }
 }
 
-#[test]
 fn test_nonempty_string_type_is_truthy() {
     if String::from("hello") {
         // pass
@@ -73,7 +64,6 @@ fn test_nonempty_string_type_is_truthy() {
     }
 }
 
-#[test]
 fn test_true_is_truthy() {
     if true {
         // pass
@@ -82,21 +72,18 @@ fn test_true_is_truthy() {
     }
 }
 
-#[test]
 fn test_false_is_falsy() {
     if false {
         assert!(false, "false should be falsy")
     }
 }
 
-#[test]
 fn test_zero_u8_is_falsy() {
     if 0u8 {
         assert!(false, "0u8 should be falsy")
     }
 }
 
-#[test]
 fn test_positive_u64_is_truthy() {
     if 1u64 {
         // pass
@@ -105,14 +92,12 @@ fn test_positive_u64_is_truthy() {
     }
 }
 
-#[test]
 fn test_empty_vec_is_falsy() {
     if Vec::<i32>::new() {
         assert!(false, "empty Vec should be falsy")
     }
 }
 
-#[test]
 fn test_nonempty_vec_is_truthy() {
     if vec![1, 2, 3] {
         // pass
@@ -121,14 +106,12 @@ fn test_nonempty_vec_is_truthy() {
     }
 }
 
-#[test]
 fn test_none_option_is_falsy() {
     if None::<i32> {
         assert!(false, "None should be falsy")
     }
 }
 
-#[test]
 fn test_some_option_is_truthy() {
     if Some(42) {
         // pass
@@ -137,7 +120,6 @@ fn test_some_option_is_truthy() {
     }
 }
 
-#[test]
 fn test_nonzero_value_in_if_condition() {
     x := 5;
     if x {
@@ -147,7 +129,6 @@ fn test_nonzero_value_in_if_condition() {
     }
 }
 
-#[test]
 fn test_option_with_value_is_truthy() {
     let y : i32? = 1;
     if y {
@@ -157,7 +138,6 @@ fn test_option_with_value_is_truthy() {
     }
 }
 
-#[test]
 fn test_option_none_is_falsy() {
     let z : i32? = None;
     if z {
@@ -165,7 +145,6 @@ fn test_option_none_is_falsy() {
     }
 }
 
-#[test]
 fn test_some_zero_is_truthy() {
     if Some(0) {
         // pass
@@ -174,7 +153,6 @@ fn test_some_zero_is_truthy() {
     }
 }
 
-#[test]
 fn test_some_empty_string_is_truthy() {
     if Some("") {
         // pass
@@ -183,7 +161,6 @@ fn test_some_empty_string_is_truthy() {
     }
 }
 
-#[test]
 fn test_vec_single_zero_element_is_truthy() {
     if vec![0] {
         // pass
@@ -192,7 +169,6 @@ fn test_vec_single_zero_element_is_truthy() {
     }
 }
 
-#[test]
 fn test_vec_single_empty_string_is_truthy() {
     if vec![""] {
         // pass
@@ -201,7 +177,6 @@ fn test_vec_single_empty_string_is_truthy() {
     }
 }
 
-#[test]
 fn test_negative_float_is_truthy() {
     if -3.14 {
         // pass
@@ -210,7 +185,6 @@ fn test_negative_float_is_truthy() {
     }
 }
 
-#[test]
 fn test_small_positive_float_is_truthy() {
     if 0.0001 {
         // pass
@@ -219,14 +193,12 @@ fn test_small_positive_float_is_truthy() {
     }
 }
 
-#[test]
 fn test_zero_i128_is_falsy() {
     if 0i128 {
         assert!(false, "0i128 should be falsy")
     }
 }
 
-#[test]
 fn test_nonzero_i128_is_truthy() {
     if 1i128 {
         // pass
@@ -235,7 +207,6 @@ fn test_nonzero_i128_is_truthy() {
     }
 }
 
-#[test]
 fn test_string_whitespace_is_truthy() {
     if String::from(" ") {
         // pass
@@ -244,7 +215,6 @@ fn test_string_whitespace_is_truthy() {
     }
 }
 
-#[test]
 fn test_nested_some_is_truthy() {
     if Some(Some(42)) {
         // pass
@@ -253,7 +223,6 @@ fn test_nested_some_is_truthy() {
     }
 }
 
-#[test]
 fn test_some_none_is_truthy() {
     if Some(None::<i32>) {
         // pass

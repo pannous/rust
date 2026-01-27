@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_map_synonyms_output() {
     let nums = [1, 2, 3, 4, 5];
     put!("mapped:", nums.mapped(|x| x * 2));
@@ -9,7 +8,6 @@ fn test_map_synonyms_output() {
     put!("convert:", nums.convert(|x| x * 2));
 }
 
-#[test]
 fn test_filter_synonyms_output() {
     let nums = [1, 2, 3, 4, 5];
     put!("filtered:", nums.filtered(|x| *x > 2));
@@ -19,7 +17,6 @@ fn test_filter_synonyms_output() {
     put!("which:", nums.which(|x| *x > 2));
 }
 
-#[test]
 fn test_string_element_access_synonyms() {
     let text = "Hello World";
     put!("first:", text.first());
@@ -32,7 +29,6 @@ fn test_string_element_access_synonyms() {
     put!("end:", text.end());
 }
 
-#[test]
 fn test_string_size_and_reverse() {
     let text = "Hello World";
     put!("size:", text.size());
@@ -40,7 +36,6 @@ fn test_string_size_and_reverse() {
     put!("reverse:", text.reverse());
 }
 
-#[test]
 fn test_string_search_synonyms() {
     let text = "Hello World";
     put!("includes:", text.includes("World"));
@@ -51,7 +46,6 @@ fn test_string_search_synonyms() {
     put!("locate:", text.locate("World"));
 }
 
-#[test]
 fn test_string_replace_synonyms() {
     let text = "Hello World";
     put!("substitute:", text.substitute("World", "Rust"));

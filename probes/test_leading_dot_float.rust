@@ -1,44 +1,37 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_leading_dot_half() {
     x := .5;
     assert!(x == 0.5);
 }
 
-#[test]
 fn test_leading_dot_decimal() {
     y := .123;
     assert!(y == 0.123);
 }
 
-#[test]
 fn test_leading_dot_addition() {
     z := .25 + .75;
     assert!(z == 1.0);
 }
 
-#[test]
 fn test_leading_dot_with_type_suffix() {
     w := .5f32;
     assert!(w == 0.5f32);
 }
 
-#[test]
 fn test_negative_leading_dot_floats() {
     assert!(-.5 == -0.5);
     assert!(-.25 + .75 == 0.5);
     assert!(-(.5) == -0.5);
 }
 
-#[test]
 fn test_zero_leading_edge_cases() {
     assert!(.0 == 0.0);
     assert!(.00 == 0.0);
     assert!(.0 + .0 == 0.0);
 }
 
-#[test]
 fn test_leading_dots_multiplication_division() {
     assert!(.5 * 2.0 == 1.0);
     assert!(.25 * .5 == 0.125);
@@ -46,20 +39,17 @@ fn test_leading_dots_multiplication_division() {
     assert!(1.0 / .5 == 2.0);
 }
 
-#[test]
 fn test_leading_dots_subtraction() {
     assert!(1.0 - .5 == 0.5);
     assert!(.75 - .25 == 0.5);
     assert!(.5 - 1.0 == -0.5);
 }
 
-#[test]
 fn test_very_small_leading_dot_values() {
     assert!(.001 * 1000.0 == 1.0);
     assert!(.0001 + .0001 == 0.0002);
 }
 
-#[test]
 fn test_leading_dots_comparisons() {
     assert!(.5 < .6);
     assert!(.5 > .4);

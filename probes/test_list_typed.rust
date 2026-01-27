@@ -1,13 +1,11 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_vec_array_equality() {
     let xs := [1, 2, 3]
     let ys := @[1, 2, 3]
     eq!( ys , xs )
 }
 
-#[test]
 fn test_array_vec_seq_equality() {
     let xs := [1, 2, 3]
     let ys := @[1, 2, 3]

@@ -1,13 +1,11 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_zero_is_falsy() {
     if 0 {
         assert!(false, "0 should be falsy")
     }
 }
 
-#[test]
 fn test_positive_is_truthy() {
     if 42 {
         // pass
@@ -16,14 +14,12 @@ fn test_positive_is_truthy() {
     }
 }
 
-#[test]
 fn test_empty_string_is_falsy() {
     if "" {
         assert!(false, "empty string should be falsy")
     }
 }
 
-#[test]
 fn test_nonempty_string_is_truthy() {
     if "hello" {
         // pass
@@ -32,7 +28,6 @@ fn test_nonempty_string_is_truthy() {
     }
 }
 
-#[test]
 fn test_true_is_truthy() {
     if true {
         // pass
@@ -41,21 +36,18 @@ fn test_true_is_truthy() {
     }
 }
 
-#[test]
 fn test_false_is_falsy() {
     if false {
         assert!(false, "false should be falsy")
     }
 }
 
-#[test]
 fn test_negative_zero_is_falsy() {
     if -0 {
         assert!(false, "-0 should be falsy")
     }
 }
 
-#[test]
 fn test_negative_number_is_truthy() {
     if -5 {
         // pass
@@ -64,7 +56,6 @@ fn test_negative_number_is_truthy() {
     }
 }
 
-#[test]
 fn test_single_char_string_is_truthy() {
     if "x" {
         // pass
@@ -73,7 +64,6 @@ fn test_single_char_string_is_truthy() {
     }
 }
 
-#[test]
 fn test_whitespace_string_is_truthy() {
     if " " {
         // pass
@@ -82,7 +72,6 @@ fn test_whitespace_string_is_truthy() {
     }
 }
 
-#[test]
 fn test_string_zero_is_truthy() {
     if "0" {
         // pass
@@ -91,7 +80,6 @@ fn test_string_zero_is_truthy() {
     }
 }
 
-#[test]
 fn test_i32_max_is_truthy() {
     if i32::MAX {
         // pass
@@ -100,7 +88,6 @@ fn test_i32_max_is_truthy() {
     }
 }
 
-#[test]
 fn test_i32_min_is_truthy() {
     if i32::MIN {
         // pass

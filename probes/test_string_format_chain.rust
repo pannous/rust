@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_string_format_chain() {
     let name = "Alice";
     let age = 25;

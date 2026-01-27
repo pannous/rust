@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_def_with_return_type() {
 	def meaning() -> i32 {return 42}
 	# def meaning() -> i32 {42} // alternative with implicit return

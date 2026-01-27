@@ -1,53 +1,45 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_is_i32_type() {
     x := 1;
     ok := x is i32;
     assert!(ok);
 }
 
-#[test]
 fn test_is_char_type() {
     r := 'a';
     assert!(r is char);
 }
 
-#[test]
 fn test_is_rune_type_alias() {
     r := 'a';
     assert!(r is rune);
 }
 
-#[test]
 fn test_is_string_type() {
     str := "hello";
     ok2 := str is String;
     assert!(ok2);
 }
 
-#[test]
 fn test_is_i64_and_int_alias() {
     let y: i64 = 42;
     ok3 := y is int;
     assert!(ok3);
 }
 
-#[test]
 fn test_is_array_fixed_size() {
     arr := [1, 2, 3];
     ok4 := arr is [i32; 3];
     assert!(ok4);
 }
 
-#[test]
 fn test_is_vec_type() {
     vec := @[1, 2, 3];
     ok5 := vec is Vec<i32>;
     assert!(ok5);
 }
 
-#[test]
 fn test_is_negative_cases() {
     x := 1;
     assert!(not (x is i64));
@@ -58,7 +50,6 @@ fn test_is_negative_cases() {
     assert!(not (r is i32));
 }
 
-#[test]
 fn test_is_boundary_integer_types() {
     let tiny: i8 = 127;
     let small: i16 = 32767;
@@ -70,7 +61,6 @@ fn test_is_boundary_integer_types() {
     assert!(not (small is i32));
 }
 
-#[test]
 fn test_is_unsigned_vs_signed() {
     let unsigned: u32 = 42;
     let signed: i32 = 42;
@@ -80,7 +70,6 @@ fn test_is_unsigned_vs_signed() {
     assert!(not (signed is u32));
 }
 
-#[test]
 fn test_is_float_types() {
     let f32_val: f32 = 3.14;
     let f64_val: f64 = 3.14159;
@@ -90,20 +79,17 @@ fn test_is_float_types() {
     assert!(not (f64_val is f32));
 }
 
-#[test]
 fn test_is_boolean_type() {
     let flag = true;
     assert!(flag is bool);
     assert!(not (flag is i32));
 }
 
-#[test]
 fn test_is_empty_string() {
     empty_str := "";
     assert!(empty_str is String);
 }
 
-#[test]
 fn test_is_array_size_variations() {
     arr3 := [1, 2, 3];
     arr4 := [1, 2, 3, 4];
@@ -113,7 +99,6 @@ fn test_is_array_size_variations() {
     assert!(not (arr4 is [i32; 3]));
 }
 
-#[test]
 fn test_is_zero_values_different_types() {
     zero_int := 0;
     let zero_float: f64 = 0.0;

@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_basic_assert() {
     assert!(1>0)
 }

@@ -1,6 +1,5 @@
 #!/usr/bin/env rust
 
-#[test]
 fn test_hello_script() {
     println!("Hello from script!");
     assert!(true);
