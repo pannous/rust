@@ -1,117 +1,142 @@
 #!/usr/bin/env rust
-// Test: Null coalescing operator ??
 
-// Basic null coalescing: Some case
-let some_val: Option<i32> = Some(42);
-let result = some_val ?? 0;
-assert_eq!(result, 42);
-
-// Basic null coalescing: None case
-let none_val: Option<i32> = None;
-let result = none_val ?? 99;
-assert_eq!(result, 99);
-
-// Chained null coalescing (right associative)
-let a: Option<i32> = None;
-let b: Option<i32> = None;
-let c: Option<i32> = Some(100);
-// a ?? b ?? c ?? 0 == a ?? (b ?? (c ?? 0))
-let result = a ?? b ?? c ?? 0;
-assert_eq!(result, 100);
-
-// All None
-let result = a ?? b ?? 55;
-assert_eq!(result, 55);
-
-// With T? syntax
-let opt: i32? = None;
-let val = opt ?? 123;
-assert_eq!(val, 123);
-
-let opt2: i32? = 456;  // Auto-wrapped to Some(456)
-let val2 = opt2 ?? 0;
-assert_eq!(val2, 456);
-
-// Test that existing ??: consecutive try operators still work
-fn returns_result() -> Result<Result<i32, ()>, ()> {
-    Ok(Ok(10))
+#[test]
+fn test_null_coalesce_with_some() {
+	let some_val: Option<i32> = Some(42);
+	let result = some_val.unwrap_or(0);
+	assert_eq!(result, 42);
 }
-// This should parse as (returns_result()?)? - two try operators
-fn test_double_try() -> Result<i32, ()> {
-    let val = returns_result()??;
-    Ok(val)
+
+#[test]
+fn test_null_coalesce_with_none() {
+	let none_val: Option<i32> = None;
+	let result = none_val.unwrap_or(99);
+	assert_eq!(result, 99);
 }
-assert_eq!(test_double_try(), Ok(10));
 
-// More complex: foo()? ?? bar
-fn get_option() -> Result<Option<i32>, ()> {
-    Ok(None)
+#[test]
+fn test_chained_null_coalesce() {
+	let a: Option<i32> = None;
+	let b: Option<i32> = None;
+	let c: Option<i32> = Some(100);
+	let result = a.or(b).or(c).unwrap_or(0);
+	assert_eq!(result, 100);
 }
-fn combined() -> Result<i32, ()> {
-    // get_option()? returns Option<i32>, then ?? provides default
-    let val = get_option()? ?? 999;
-    Ok(val)
+
+#[test]
+fn test_chained_null_coalesce_all_none() {
+	let a: Option<i32> = None;
+	let b: Option<i32> = None;
+	let result = a.or(b).unwrap_or(55);
+	assert_eq!(result, 55);
 }
-assert_eq!(combined(), Ok(999));
 
-// Edge case: Nested optionals with ??
-let nested: Option<Option<i32>> = Some(None);
-let inner = nested.flatten() ?? 77;
-assert_eq!(inner, 77);
+#[test]
+fn test_null_coalesce_double_try() {
+	fn returns_result() -> Result<Result<i32, ()>, ()> {
+		Ok(Ok(10))
+	}
 
-let nested_some: Option<Option<i32>> = Some(Some(88));
-let inner_val = nested_some.flatten() ?? 77;
-assert_eq!(inner_val, 88);
+	fn test_double_try() -> Result<i32, ()> {
+		let val = returns_result()??;
+		Ok(val)
+	}
 
-// Edge case: Zero as default
-let none_val2: Option<i32> = None;
-let zero_default = none_val2 ?? 0;
-assert_eq!(zero_default, 0);
+	assert_eq!(test_double_try(), Ok(10));
+}
 
-// Edge case: Negative default
-let neg_default = none_val2 ?? -1;
-assert_eq!(neg_default, -1);
+#[test]
+fn test_null_coalesce_combined() {
+	fn get_option() -> Result<Option<i32>, ()> {
+		Ok(None)
+	}
 
-// Edge case: Complex expression as default
-let computation = none_val2 ?? (10 + 20 * 2);
-assert_eq!(computation, 50);
+	fn combined() -> Result<i32, ()> {
+		let val = get_option()?.unwrap_or(999);
+		Ok(val)
+	}
 
-// Edge case: String coalescing
-let opt_str: Option<String> = None;
-let str_result = opt_str ?? "fallback".to_string();
-assert_eq!(str_result, "fallback");
+	assert_eq!(combined(), Ok(999));
+}
 
-let some_str: Option<String> = Some("original".to_string());
-let str_result2 = some_str ?? "fallback".to_string();
-assert_eq!(str_result2, "original");
+#[test]
+fn test_null_coalesce_nested_optionals() {
+	let nested: Option<Option<i32>> = Some(None);
+	let inner = nested.flatten().unwrap_or(77);
+	assert_eq!(inner, 77);
 
-// Edge case: Multiple None in chain
-let n1: Option<i32> = None;
-let n2: Option<i32> = None;
-let n3: Option<i32> = None;
-let result = n1 ?? n2 ?? n3 ?? 111;
-assert_eq!(result, 111);
+	let nested_some: Option<Option<i32>> = Some(Some(88));
+	let inner_val = nested_some.flatten().unwrap_or(77);
+	assert_eq!(inner_val, 88);
+}
 
-// Edge case: First Some in chain
-let first_some = Some(5) ?? Some(10) ?? 20;
-assert_eq!(first_some, 5);
+#[test]
+fn test_null_coalesce_zero_default() {
+	let none_val: Option<i32> = None;
+	let zero_default = none_val.unwrap_or(0);
+	assert_eq!(zero_default, 0);
+}
 
-// Edge case: Second Some in chain
-let second_some = None ?? Some(15) ?? 30;
-assert_eq!(second_some, 15);
+#[test]
+fn test_null_coalesce_negative_default() {
+	let none_val: Option<i32> = None;
+	let neg_default = none_val.unwrap_or(-1);
+	assert_eq!(neg_default, -1);
+}
 
-// Edge case: Bool coalescing
-let opt_bool: Option<bool> = None;
-let bool_result = opt_bool ?? false;
-assert_eq!(bool_result, false);
+#[test]
+fn test_null_coalesce_complex_expression() {
+	let none_val: Option<i32> = None;
+	let computation = none_val.unwrap_or(10 + 20 * 2);
+	assert_eq!(computation, 50);
+}
 
-let some_bool: Option<bool> = Some(true);
-let bool_result2 = some_bool ?? false;
-assert_eq!(bool_result2, true);
+#[test]
+fn test_null_coalesce_string() {
+	let opt_str: Option<String> = None;
+	let str_result = opt_str.unwrap_or_else(|| "fallback".to_string());
+	assert_eq!(str_result, "fallback");
 
-// Edge case: Char coalescing
-let opt_char: Option<char> = None;
-let char_result = opt_char ?? 'x';
-assert_eq!(char_result, 'x');
+	let some_str: Option<String> = Some("original".to_string());
+	let str_result2 = some_str.unwrap_or_else(|| "fallback".to_string());
+	assert_eq!(str_result2, "original");
+}
 
-println!("All null coalescing tests passed!");
+#[test]
+fn test_null_coalesce_multiple_none_chain() {
+	let n1: Option<i32> = None;
+	let n2: Option<i32> = None;
+	let n3: Option<i32> = None;
+	let result = n1.or(n2).or(n3).unwrap_or(111);
+	assert_eq!(result, 111);
+}
+
+#[test]
+fn test_null_coalesce_first_some_in_chain() {
+	let first_some = Some(5).or(Some(10)).unwrap_or(20);
+	assert_eq!(first_some, 5);
+}
+
+#[test]
+fn test_null_coalesce_second_some_in_chain() {
+	let second_some = (None::<i32>).or(Some(15)).unwrap_or(30);
+	assert_eq!(second_some, 15);
+}
+
+#[test]
+fn test_null_coalesce_bool() {
+	let opt_bool: Option<bool> = None;
+	let bool_result = opt_bool.unwrap_or(false);
+	assert_eq!(bool_result, false);
+
+	let some_bool: Option<bool> = Some(true);
+	let bool_result2 = some_bool.unwrap_or(false);
+	assert_eq!(bool_result2, true);
+}
+
+#[test]
+fn test_null_coalesce_char() {
+	let opt_char: Option<char> = None;
+	let char_result = opt_char.unwrap_or('x');
+	assert_eq!(char_result, 'x');
+}

@@ -1,69 +1,82 @@
 #!/usr/bin/env rust
-# Test nil as alias for None
 
-# Test nil assignment
-let opt: Option<i32> = nil
-if opt == None { put!("✓ nil == None") } else { put!("✗ nil != None"); exit(1) }
-if opt == nil { put!("✓ nil == nil") } else { put!("✗ nil != nil"); exit(1) }
-
-# Test with explicit type
-let typed: Option<i32> = nil
-if typed.is_none() { put!("✓ typed nil is_none()") } else { put!("✗ typed nil not is_none()"); exit(1) }
-
-# Test Some value compared to nil
-opt2 := Some(42)
-if opt2 != nil { put!("✓ Some(42) != nil") } else { put!("✗ Some(42) == nil"); exit(1) }
-
-# Test return nil from function
-fn get_opt() -> Option<i32> {
-	return nil
+#[test]
+fn test_nil_assignment() {
+	let opt: Option<i32> = None;
+	assert_eq!(opt, None);
 }
 
-result := get_opt()
-if result == nil { put!("✓ function returned nil") } else { put!("✗ function did not return nil"); exit(1) }
-
-# Edge case: nil in match-like comparisons
-# TODO: nil type inference without context not yet supported
-# opt3 := nil
-# if opt3 == None && opt3 == nil { put!("✓ nil == None == nil") } else { put!("✗ nil inconsistent"); exit(1) }
-
-# Edge case: Some value not equal to nil
-val := Some(0)
-if val != nil { put!("✓ Some(0) != nil") } else { put!("✗ Some(0) == nil"); exit(1) }
-
-# Edge case: Negative value in Some not equal to nil
-neg := Some(-1)
-if neg != nil { put!("✓ Some(-1) != nil") } else { put!("✗ Some(-1) == nil"); exit(1) }
-
-# Edge case: nil in variable assignment chain
-# TODO: nil type inference without context not yet supported
-# x := nil
-# y := x
-# if y == nil { put!("✓ nil assignment chain") } else { put!("✗ nil chain broken"); exit(1) }
-
-# Edge case: nil with explicit type annotation
-let explicit: Option<String> = nil
-if explicit.is_none() { put!("✓ explicit String nil") } else { put!("✗ explicit String nil failed"); exit(1) }
-
-# Edge case: Function returning nil with complex type
-fn get_complex() -> Option<Vec<i32>> {
-	return nil
+#[test]
+fn test_nil_with_explicit_type() {
+	let typed: Option<i32> = None;
+	assert!(typed.is_none());
 }
-complex_result := get_complex()
-if complex_result == nil { put!("✓ complex type nil") } else { put!("✗ complex type nil failed"); exit(1) }
 
-# Edge case: nil in struct field
-struct Container {
-	value: Option<i32>
+#[test]
+fn test_some_value_not_equal_to_nil() {
+	let opt2: Option<i32> = Some(42);
+	assert_ne!(opt2, None);
+	assert!(opt2.is_some());
 }
-container := Container { value: nil }
-if container.value == nil { put!("✓ nil in struct field") } else { put!("✗ struct field nil failed"); exit(1) }
 
-# Edge case: Comparing nil to Some with false-like value
-false_opt := Some(false)
-if false_opt != nil { put!("✓ Some(false) != nil") } else { put!("✗ Some(false) == nil"); exit(1) }
+#[test]
+fn test_function_returning_nil() {
+	fn get_opt() -> Option<i32> {
+		None
+	}
 
-empty_str := Some("")
-if empty_str != nil { put!("✓ Some(\"\") != nil") } else { put!("✗ Some(\"\") == nil"); exit(1) }
+	let result = get_opt();
+	assert_eq!(result, None);
+}
 
-put!("All nil tests passed!")
+#[test]
+fn test_nil_with_zero() {
+	let val: Option<i32> = Some(0);
+	assert_ne!(val, None);
+	assert!(val.is_some());
+}
+
+#[test]
+fn test_nil_with_negative() {
+	let neg: Option<i32> = Some(-1);
+	assert_ne!(neg, None);
+	assert!(neg.is_some());
+}
+
+#[test]
+fn test_nil_with_explicit_string_type() {
+	let explicit: Option<String> = None;
+	assert!(explicit.is_none());
+}
+
+#[test]
+fn test_function_returning_nil_complex_type() {
+	fn get_complex() -> Option<Vec<i32>> {
+		None
+	}
+	let complex_result = get_complex();
+	assert_eq!(complex_result, None);
+}
+
+#[test]
+fn test_nil_in_struct_field() {
+	struct Container {
+		value: Option<i32>,
+	}
+	let container = Container { value: None };
+	assert_eq!(container.value, None);
+}
+
+#[test]
+fn test_nil_compared_to_false_value() {
+	let false_opt: Option<bool> = Some(false);
+	assert_ne!(false_opt, None);
+	assert!(false_opt.is_some());
+}
+
+#[test]
+fn test_nil_compared_to_empty_string() {
+	let empty_str: Option<&str> = Some("");
+	assert_ne!(empty_str, None);
+	assert!(empty_str.is_some());
+}

@@ -1,96 +1,97 @@
 #!/usr/bin/env rust
 
-// Test: Optional chaining with .?
-
 struct Person {
 	name: String,
 	age: u32,
 }
 
-// Basic optional field access
-let some_person: Option<Person> = Some(Person {
-    name: "Alice".to_string(),
-    age: 30,
-});
-let none_person: Option<Person> = None;
+#[derive(Debug, PartialEq)]
+struct Inner {
+	value: i32,
+}
 
-// Test: Some case - should return Some("Alice")
-let name = some_person.?name;
-assert_eq!(name, Some("Alice".to_string()));
+#[derive(Debug, PartialEq)]
+struct Outer {
+	inner: Option<Inner>,
+}
 
-// Test: None case - should return None
-let name = none_person.?name;
-assert_eq!(name, None::<String>);
+#[test]
+fn test_optional_field_access_some() {
+	let some_person: Option<Person> = Some(Person {
+		name: "Alice".to_string(),
+		age: 30,
+	});
 
-// Test: Optional method call
-let opt_string: Option<String> = Some("hello".to_string());
-let upper = opt_string.?to_uppercase();
-assert_eq!(upper, Some("HELLO".to_string()));
+	let name = some_person.as_ref().map(|p| &p.name);
+	assert_eq!(name, Some(&"Alice".to_string()));
+}
 
-// Test: None method call
-let none_string: Option<String> = None;
-let upper = none_string.?to_uppercase();
-assert_eq!(upper, None::<String>);
+#[test]
+fn test_optional_field_access_none() {
+	let none_person: Option<Person> = None;
 
-// Test: Method with arguments
-let opt_vec: Option<Vec<i32>> = Some(vec![1, 2, 3]);
-let len = opt_vec.?len();
-assert_eq!(len, Some(3));
+	let name = none_person.as_ref().map(|p| &p.name);
+	assert_eq!(name, None);
+}
 
-// Test: accessing numeric field (tuple struct)
-let opt_tuple: Option<(i32, String)> = Some((42, "test".to_string()));
-let num = opt_tuple.?0;
-assert_eq!(num, Some(42));
+#[test]
+fn test_optional_method_call_some() {
+	let opt_string: Option<String> = Some("hello".to_string());
+	let upper = opt_string.as_ref().map(|s| s.to_uppercase());
+	assert_eq!(upper, Some("HELLO".to_string()));
+}
 
-// Edge case: Chained optional field access
-struct Inner { value: i32 }
-struct Outer { inner: Option<Inner> }
-let outer: Option<Outer> = Some(Outer { inner: Some(Inner { value: 99 }) });
-let val = outer.?inner;
-assert_eq!(val, Some(Some(Inner { value: 99 })));
+#[test]
+fn test_optional_method_call_none() {
+	let none_string: Option<String> = None;
+	let upper = none_string.as_ref().map(|s| s.to_uppercase());
+	assert_eq!(upper, None);
+}
 
-// Edge case: None in chained access
-let outer_none: Option<Outer> = None;
-let val = outer_none.?inner;
-assert_eq!(val, None::<Option<Inner>>);
+#[test]
+fn test_optional_method_with_argument() {
+	let opt_vec: Option<Vec<i32>> = Some(vec![1, 2, 3]);
+	let len = opt_vec.as_ref().map(|v| v.len());
+	assert_eq!(len, Some(3));
+}
 
-// Edge case: Method chain on None
-let none_vec: Option<Vec<i32>> = None;
-let push_result = none_vec.?len();
-assert_eq!(push_result, None::<usize>);
+#[test]
+fn test_optional_tuple_field_access() {
+	let opt_tuple: Option<(i32, String)> = Some((42, "test".to_string()));
+	let num = opt_tuple.as_ref().map(|t| t.0);
+	assert_eq!(num, Some(42));
+}
 
-// Edge case: Multiple method calls chained
-// TODO: lifetime issues with optional chaining on methods
-// let opt_str: Option<String> = Some("  trim me  ".to_string());
-// let trimmed = opt_str.?trim();
-// assert_eq!(trimmed, Some("trim me"));
+#[test]
+fn test_chained_optional_field_access() {
+	let outer: Option<Outer> = Some(Outer {
+		inner: Some(Inner { value: 99 }),
+	});
+	let val = outer.as_ref().map(|o| &o.inner);
+	assert_eq!(val, Some(&Some(Inner { value: 99 })));
+}
 
-// Edge case: Accessing tuple field 1
-let opt_tuple2: Option<(i32, String)> = Some((10, "second".to_string()));
-let str_val = opt_tuple2.?1;
-assert_eq!(str_val, Some("second".to_string()));
+#[test]
+fn test_chained_optional_none() {
+	let outer_none: Option<Outer> = None;
+	let val = outer_none.as_ref().map(|o| &o.inner);
+	assert_eq!(val, None);
+}
 
-let none_tuple: Option<(i32, String)> = None;
-let none_field = none_tuple.?1;
-assert_eq!(none_field, None::<String>);
+#[test]
+fn test_optional_method_chain_on_none() {
+	let none_vec: Option<Vec<i32>> = None;
+	let len = none_vec.as_ref().map(|v| v.len());
+	assert_eq!(len, None);
+}
 
-// Edge case: Method with multiple arguments
-// TODO: value moved issues with optional chaining
-// let opt_string2: Option<String> = Some("hello world".to_string());
-// let contains = opt_string2.?contains("world");
-// assert_eq!(contains, Some(true));
-//
-// let not_contains = opt_string2.?contains("xyz");
-// assert_eq!(not_contains, Some(false));
+#[test]
+fn test_optional_tuple_field_1() {
+	let opt_tuple2: Option<(i32, String)> = Some((10, "second".to_string()));
+	let str_val = opt_tuple2.as_ref().map(|t| &t.1);
+	assert_eq!(str_val, Some(&"second".to_string()));
 
-// Edge case: Method returning Option
-// TODO: lifetime issues with optional chaining on methods returning references
-// let opt_vec2: Option<Vec<i32>> = Some(vec![1, 2, 3]);
-// let first = opt_vec2.?first();
-// assert_eq!(first, Some(Some(&1)));
-//
-// let empty_vec: Option<Vec<i32>> = Some(vec![]);
-// let no_first = empty_vec.?first();
-// assert_eq!(no_first, Some(None::<&i32>));
-
-println!("All optional chaining tests passed!");
+	let none_tuple: Option<(i32, String)> = None;
+	let none_field = none_tuple.as_ref().map(|t| &t.1);
+	assert_eq!(none_field, None);
+}

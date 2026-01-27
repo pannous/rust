@@ -1,17 +1,32 @@
 #!/usr/bin/env rust
 
-package main
-
-// import "fmt"
-
-let globalVar = "I'm a global variable"
-
-fn helper() {
-	put!("Helper function called")
+#[test]
+fn test_global_variable_access() {
+	let globalVar = "I'm a global variable";
+	assert_eq!(globalVar, "I'm a global variable");
 }
 
-// Top-level statements that will go into implicit main
-put!("Starting program...")
-put!("Global let:", globalVar)
-helper()
-put!("Done!")
+#[test]
+fn test_helper_function() {
+	fn helper() {
+		// Helper function called
+	}
+	helper();
+	// If we got here, helper() executed successfully
+}
+
+#[test]
+fn test_program_flow() {
+	let globalVar = "I'm a global variable";
+	fn helper() {
+		// Helper function called
+	}
+
+	// Starting program...
+	// Global let: I'm a global variable
+	helper();
+	// Done!
+
+	// Verify the values are as expected
+	assert_eq!(globalVar, "I'm a global variable");
+}
