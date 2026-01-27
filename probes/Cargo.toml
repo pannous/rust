@@ -9,6 +9,7 @@ edition = "2021"
 
 # This is a test-only crate for custom Rust syntax extensions
 # Tests should be run with ./run_all_tests.sh using the custom rustc
+# Tests are .rust files compiled with custom rustc
 
 #[lib]
 #path = "lib.rs"
