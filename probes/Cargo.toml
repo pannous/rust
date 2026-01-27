@@ -14,12 +14,8 @@ edition = "2021"
 #path = "lib.rs"
 #test = false
 
-# Individual test files using custom syntax
-# These will show in IDE but must be run with custom rustc via run_all_tests.sh
-
-#[[test]]
-#name = "test_assign"
-#path = "test_assign.rs"
-#harness = true
+# Auto-discover test files with .rust extension in tests/ directory
+# Cargo normally only looks for .rs files, so we need to explicitly list them
+# or use a build script to generate test entries
 
 [dependencies]

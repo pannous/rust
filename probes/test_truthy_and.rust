@@ -34,24 +34,24 @@ fn test_nonempty_string_is_truthy() {
 
 #[test]
 fn test_empty_vec_is_falsy() {
-    let nilSlice: Vec<i32> = vec![];
-    if nilSlice {
+    let nil_slice: Vec<i32> = vec![];
+    if nil_slice {
         assert!(false, "empty slice should be falsy")
     }
 }
 
 #[test]
 fn test_empty_slice_is_falsy() {
-    let emptySlice: Vec<i32> = vec![];
-    if emptySlice {
+    let empty_slice: Vec<i32> = vec![];
+    if empty_slice {
         assert!(false, "empty slice should be falsy")
     }
 }
 
 #[test]
 fn test_nonempty_slice_is_truthy() {
-    let mut nonEmptySlice = @[1, 2, 3];
-    if nonEmptySlice {
+    let mut non_empty_slice = @[1, 2, 3];
+    if non_empty_slice {
         // pass
     } else {
         assert!(false, "non-empty slice should be truthy")
@@ -76,16 +76,16 @@ fn test_false_is_falsy() {
 
 #[test]
 fn test_none_option_is_falsy() {
-    let nilOpt: Option<i32> = None;
-    if nilOpt {
+    let nil_opt: Option<i32> = None;
+    if nil_opt {
         assert!(false, "None should be falsy")
     }
 }
 
 #[test]
 fn test_some_option_is_truthy() {
-    let mut someOpt = Some(42);
-    if someOpt {
+    let mut some_opt = Some(42);
+    if some_opt {
         // pass
     } else {
         assert!(false, "Some should be truthy")
@@ -94,16 +94,16 @@ fn test_some_option_is_truthy() {
 
 #[test]
 fn test_vec_with_capacity_but_empty_is_falsy() {
-    let vecWithCapacity: Vec<i32> = Vec::with_capacity(10);
-    if vecWithCapacity {
-        assert!(false, "Vec with capacity but empty should be falsy")
+    let vec_with_capacity: Vec<i32> = Vec::with_capacity(10);
+    if vec_with_capacity {
+        assert!(false, "_vec with capacity but empty should be falsy")
     }
 }
 
 #[test]
 fn test_vec_with_zero_element_is_truthy() {
-    let mut zeroVec = vec![0];
-    if zeroVec {
+    let mut zero_vec = vec![0];
+    if zero_vec {
         // pass
     } else {
         assert!(false, "vec![0] should be truthy")
@@ -112,8 +112,8 @@ fn test_vec_with_zero_element_is_truthy() {
 
 #[test]
 fn test_vec_with_false_element_is_truthy() {
-    let mut boolVec = vec![false];
-    if boolVec {
+    let mut bool_vec = vec![false];
+    if bool_vec {
         // pass
     } else {
         assert!(false, "vec![false] should be truthy")
@@ -138,16 +138,16 @@ fn test_negative_zero_is_falsy() {
 
 #[test]
 fn test_empty_string_from_is_falsy() {
-    let mut emptyString = String::from("");
-    if emptyString {
+    let mut empty_string = String::from("");
+    if empty_string {
         assert!(false, "String::from(\"\") should be falsy")
     }
 }
 
 #[test]
 fn test_single_element_slice_is_truthy() {
-    let mut singleElemSlice = @[0];
-    if singleElemSlice {
+    let mut single_elem_slice = @[0];
+    if single_elem_slice {
         // pass
     } else {
         assert!(false, "@[0] should be truthy")

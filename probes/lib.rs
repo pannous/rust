@@ -1,4 +1,6 @@
 // Probes test library for custom Rust extensions
+
+#![allow(non_camel_case_types)]
 // This module provides common utilities for testing custom syntax features
 //
 // NOTE: Tests in this crate use custom syntax extensions and must be run

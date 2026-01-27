@@ -2,6 +2,10 @@
 # Use custom rustc from parent directory
 rustc = "/opt/other/rust/rustc"
 
+[env]
+# Disable sccache for custom rustc (it doesn't work correctly with custom builds)
+RUSTC_WRAPPER = ""
+
 [target.aarch64-apple-darwin]
 # Can add target-specific settings here if needed
 
