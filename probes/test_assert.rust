@@ -1,3 +1,6 @@
 #!/usr/bin/env rust
-assert!(1>0)
-put!("Test passed: 1 is greater than 0")
+
+#[test]
+fn test_basic_assert() {
+    assert!(1>0)
+}

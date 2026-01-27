@@ -1,21 +1,31 @@
 #!/usr/bin/env rust
-// Comprehensive as cast test
-val1 := 1 as string
-eq!( val1 , "1" )
-put!("1 as string: %q\n", val1) 
 
-val2 := 1 as rune
-put!("1 as rune: %c (%d)\n", val2, val2)
+#[test]
+fn test_int_to_string_cast() {
+    val1 := 1 as string
+    eq!( val1 , "1" )
+}
 
-val3 := '1' as int
-put!("'1' as int: %d\n", val3)
+#[test]
+fn test_int_to_rune_cast() {
+    val2 := 1 as rune
+    if val2 != '1' { panic!("1 as rune failed") }
+}
 
-val4 := '1' as unicode
-put!("'1' as int: %d\n", val4)
-eq!( val4 , 49 )
+#[test]
+fn test_rune_to_int_cast() {
+    val3 := '1' as int
+    if val3 != 49 { panic!("'1' as int failed") }
+}
 
+#[test]
+fn test_rune_to_unicode_cast() {
+    val4 := '1' as unicode
+    eq!( val4 , 49 )
+}
 
-val4 := 3 as float
-put!("3 as float: %f\n", val4)
-
-put!("All as cast tests completed\n")
+#[test]
+fn test_int_to_float_cast() {
+    val4 := 3 as float
+    if val4 != 3.0 { panic!("3 as float failed") }
+}

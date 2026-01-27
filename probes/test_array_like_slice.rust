@@ -1,19 +1,21 @@
 #!/usr/bin/env rust
-// import os
 
-// Test 1-indexed array access
-z := @['a', 'b', 'c']
-if z#1 ≠ 'a' { put!("First element via #1 fails"); exit(0) }
-// eq!( z#2 , 'b' ); // Second element
-// eq!( z#3 , 'c' );
+#[test]
+fn test_slice_1indexed_char_access() {
+    z := @['a', 'b', 'c']
+    if z#1 ≠ 'a' { panic!("First element via #1 fails") }
+}
 
-// Test with numbers
-nums := @[10, 20, 30, 40]
-// eq!( nums#1 , 10);
-// eq!( nums#4 , 40);
+#[test]
+fn test_slice_1indexed_numeric_array() {
+    nums := @[10, 20, 30, 40]
+    if nums#1 != 10 { panic!("nums#1 failed") }
+    if nums#4 != 40 { panic!("nums#4 failed") }
+}
 
-// Test with expressions
-idx := 2
-if z#idx ≠ 'b' { put!("First element via #idx fails"); exit(0) }
-// if not (z#idx == 'b') { put!("First element via #idx fails"); exit(0) }
-put!("All tests passed successfully!")
+#[test]
+fn test_slice_1indexed_variable_index() {
+    z := @['a', 'b', 'c']
+    idx := 2
+    if z#idx ≠ 'b' { panic!("First element via #idx fails") }
+}
