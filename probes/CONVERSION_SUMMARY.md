@@ -1,7 +1,7 @@
 # Test File Conversion Summary
 
 ## Overview
-Successfully converted all 106 test files in `/opt/other/rust/probes` from script-style assertions to proper Rust test functions with a main() wrapper.
+Successfully converted all 106 test files in `/opt/other/rust/probes` from script-style assertions to proper Rust test functions with `#[test]` attributes.
 
 ## Conversion Details
 
@@ -14,25 +14,24 @@ eq!(a or false, true);
 eq!(a and false, false);
 ```
 
-**After (test functions):**
+**After (proper #[test] functions):**
 ```rust
 #!/usr/bin/env rust
 
+#[test]
 fn test_basic_and_or_operations() {
     let a = true;
     eq!(a or false, true);
 }
 
+#[test]
 fn test_and_operation() {
     let a = true;
     eq!(a and false, false);
 }
-
-fn main() {
-    test_basic_and_or_operations();
-    test_and_operation();
-}
 ```
+
+**Note:** Tests are compiled with `rustc --test` flag to generate test harness.
 
 ## Test Results
 
@@ -68,10 +67,13 @@ The conversion revealed that some custom Rust features (def, truthy coercion, et
 
 ## Commits
 
-1. Multiple batches converting test files to #[test] format
-2. Added main() functions to 96 test files
-3. Removed #[test] attributes for direct execution
+1. Multiple batches converting test files to individual test functions
+2. Added main() functions to 96 test files (temporary)
+3. Removed #[test] attributes for script harness (temporary)
 4. Fixed := to let mut inside function bodies
+5. Replaced all fn test_ with #[test] fn and removed main() functions
+6. Updated run_all_tests.sh to use --test flag
+7. Fixed nested #[test] in test_null_coalesce
 
 ## Next Steps
 
