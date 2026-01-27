@@ -1,7 +1,8 @@
 #!/usr/bin/env rust
 
+#[derive(Clone, Debug)]
 struct User {
-    name: string,
+    name: String,
     age: int,
 }
 
@@ -15,15 +16,15 @@ fn test_user_filter_and_first() {
 
     let user = users.chose(|u| u.age > 18).first().cloned();
 
-    let result: string;
-    if user && user.?.name {
-        result = user.?.name ?? "Anonymous".to_string();
+    let result: String;
+    if user {
+        result = user.unwrap().name;
     } else {
         result = "Anonymous".to_string();
     }
 
     put!("First user over 18: ", result);
-    eq!(result, "Charlie");
+    assert_eq!(result, "Charlie");
 }
 
 #[test]
@@ -31,7 +32,7 @@ fn test_empty_users_list() {
     let empty_users: Vec<User> = vec![];
     let empty_result = empty_users.chose(|u| u.age > 18).first().cloned();
 
-    if empty_result && empty_result.?.name {
+    if empty_result {
         panic!("FAIL: emptyResult should be None");
     } else {
         put!("PASS: emptyResult is None");
@@ -82,7 +83,7 @@ fn test_user_with_empty_name() {
 
     let user_empty_name = users_empty_name.chose(|u| u.age > 18).first().cloned();
 
-    if user_empty_name && user_empty_name.?.name {
+    if user_empty_name {
         put!("PASS: user exists with empty name");
     } else {
         panic!("FAIL: user with empty name should still exist");
