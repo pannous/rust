@@ -1,112 +1,140 @@
 #!/usr/bin/env rust
 //   string concatenation requires an owned `String` on the left
 
-// Test string + number concatenation feature
+#[test]
+fn test_string_plus_string() {
+    let result0 = "a" + "0";
+    eq!(result0, "a0");
+}
 
-result0 := "a" + "0"
-eq!( result0 , "a0");
-put!("Test 0: " + result0)
+#[test]
+fn test_string_plus_integer() {
+    let result1 = "a" + 1;
+    eq!(result1, "a1");
+}
 
-// Basic string + integer
-result1 := "a" + 1
-eq!( result1 , "a1");
-put!("Test 1: " + result1)
+#[test]
+fn test_string_plus_larger_integer() {
+    let result2 = "value: " + 42;
+    eq!(result2, "value: 42");
+}
 
-// String + larger integer
-result2 := "value: " + 42
-eq!( result2 , "value: 42");
-put!("Test 2: " + result2)
+#[test]
+fn test_integer_to_string_plus_string() {
+    let result3 = 1.to_string() + "b";
+    eq!(result3, "1b");
+}
 
-// Integer + string (requires explicit conversion)
-result3 := 1.to_string() + "b"
-eq!( result3 , "1b");
-put!("Test 3: " + result3)
+#[test]
+fn test_string_plus_negative_integer() {
+    let result4 = "count: " + (-5);
+    eq!(result4, "count: -5");
+}
 
-// String + negative integer
-result4 := "count: " + (-5)
-eq!( result4 , "count: -5");
-put!("Test 4: " + result4)
+#[test]
+fn test_integer_to_string_plus_string_with_spaces() {
+    let result5 = 123.to_string() + " items";
+    eq!(result5, "123 items");
+}
 
-// Integer + string with spaces (requires explicit conversion)
-result5 := 123.to_string() + " items"
-eq!( result5 , "123 items");
-put!("Test 5: " + result5)
+#[test]
+fn test_string_plus_float() {
+    let result6 = "pi is " + 3.14159;
+    eq!(result6, "pi is 3.14159");
+}
 
-// String + float (should work with numeric types)
-result6 := "pi is " + 3.14159
-eq!( result6 , "pi is 3.14159");
-put!("Test 6: " + result6)
+#[test]
+fn test_chained_concatenation() {
+    let result7 = "prefix" + 1 + 2 + "suffix";
+    eq!(result7, "prefix12suffix");
+}
 
-// Chained concatenation
-result7 := "prefix" + 1 + 2 + "suffix"
-eq!( result7 , "prefix12suffix");
-put!("Test 7: " + result7)
+#[test]
+fn test_string_plus_boolean_true() {
+    let result8 = "a " + true;
+    eq!(result8, "a ✔️");
+}
 
-result8 := "a " + true
-eq!( result8 , "a ✔️");
-put!("Test 8: " + result8)
+#[test]
+fn test_string_plus_boolean_false() {
+    let result9 = "a " + false;
+    eq!(result9, "a ✖️");
+}
 
-result9 := "a " + false
-eq!( result9 , "a ✖️" );
-put!("Test 9: " + result9)
+#[test]
+fn test_empty_string_plus_string() {
+    let result10 = "" + "hello";
+    eq!(result10, "hello");
+}
 
-// Edge cases: Empty strings
-result10 := "" + "hello"
-eq!( result10 , "hello");
-put!("Test 10: " + result10)
+#[test]
+fn test_string_plus_empty_string() {
+    let result11 = "hello" + "";
+    eq!(result11, "hello");
+}
 
-result11 := "hello" + ""
-eq!( result11 , "hello");
-put!("Test 11: " + result11)
+#[test]
+fn test_empty_string_plus_empty_string() {
+    let result12 = "" + "";
+    eq!(result12, "");
+}
 
-result12 := "" + ""
-eq!( result12 , "");
-put!("Test 12: " + result12)
+#[test]
+fn test_empty_string_plus_integer() {
+    let result13 = "" + 42;
+    eq!(result13, "42");
+}
 
-result13 := "" + 42
-eq!( result13 , "42");
-put!("Test 13: " + result13)
+#[test]
+fn test_string_plus_zero() {
+    let result14 = "value: " + 0;
+    eq!(result14, "value: 0");
+}
 
-// Edge cases: Zero values
-result14 := "value: " + 0
-eq!( result14 , "value: 0");
-put!("Test 14: " + result14)
+#[test]
+fn test_string_plus_zero_float() {
+    let result15 = "float: " + 0.0;
+    eq!(result15, "float: 0");
+}
 
-result15 := "float: " + 0.0
-eq!( result15 , "float: 0");
-put!("Test 15: " + result15)
+#[test]
+fn test_string_plus_unicode_chinese() {
+    let result16 = "Hello " + "世界";
+    eq!(result16, "Hello 世界");
+}
 
-// Edge cases: Unicode characters
-result16 := "Hello " + "世界"
-eq!( result16 , "Hello 世界");
-put!("Test 16: " + result16)
+#[test]
+fn test_string_plus_emoji() {
+    let result17 = "emoji: " + "🎉";
+    eq!(result17, "emoji: 🎉");
+}
 
-result17 := "emoji: " + "🎉"
-eq!( result17 , "emoji: 🎉");
-put!("Test 17: " + result17)
+#[test]
+fn test_string_plus_quote() {
+    let result18 = "quote: " + "\"";
+    eq!(result18, "quote: \"");
+}
 
-// Edge cases: Special characters
-result18 := "quote: " + "\""
-eq!( result18 , "quote: \"");
-put!("Test 18: " + result18)
+#[test]
+fn test_string_plus_newline() {
+    let result19 = "newline" + "\n" + "next";
+    eq!(result19, "newline\nnext");
+}
 
-result19 := "newline" + "\n" + "next"
-eq!( result19 , "newline\nnext");
-put!("Test 19: " + result19)
+#[test]
+fn test_string_plus_tab() {
+    let result20 = "tab" + "\t" + "separated";
+    eq!(result20, "tab\tseparated");
+}
 
-result20 := "tab" + "\t" + "separated"
-eq!( result20 , "tab\tseparated");
-put!("Test 20: " + result20)
+#[test]
+fn test_string_plus_very_large_number() {
+    let result21 = "big: " + 999999999;
+    eq!(result21, "big: 999999999");
+}
 
-// Edge cases: Very large numbers
-result21 := "big: " + 999999999
-eq!( result21 , "big: 999999999");
-put!("Test 21: " + result21)
-
-// Edge cases: Multiple types chained
-result22 := "mixed: " + 1 + " and " + 2.5 + " and " + true
-eq!( result22 , "mixed: 1 and 2.5 and ✔️");
-put!("Test 22: " + result22)
-
-
-put!("All string concatenation tests passed!")
+#[test]
+fn test_mixed_types_chained() {
+    let result22 = "mixed: " + 1 + " and " + 2.5 + " and " + true;
+    eq!(result22, "mixed: 1 and 2.5 and ✔️");
+}

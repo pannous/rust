@@ -1,58 +1,92 @@
 #!/usr/bin/env rust
 // Test only basic methods that don't need imports
-eq!( "a"+"1" , "a1");
-eq!( "a"+1 , "a1" ); // invalid operation: "a" + 1 (mismatched types untyped string and untyped int)
-eq!( "hi".first() , "h");
-eq!( "hi".last() , "i");
-eq!( "hi".size() , 2);
-eq!( "hi".length() , 2);
 
-// Edge cases: Empty string
-eq!( "".first() , "");
-eq!( "".last() , "");
-eq!( "".size() , 0);
-eq!( "".length() , 0);
+#[test]
+fn test_string_concat_basic() {
+    eq!("a" + "1", "a1");
+}
 
-// Edge cases: Single character
-eq!( "x".first() , "x");
-eq!( "x".last() , "x");
-eq!( "x".size() , 1);
-eq!( "x".length() , 1);
+#[test]
+fn test_string_methods_first_last() {
+    eq!("hi".first(), "h");
+    eq!("hi".last(), "i");
+}
 
-// Edge cases: Unicode characters
-eq!( "café".size() , 5);  // byte length
-eq!( "café".length() , 5);  // byte length
-eq!( "café".first() , "c");
-eq!( "café".last() , "é");
+#[test]
+fn test_string_methods_size_and_length() {
+    eq!("hi".size(), 2);
+    eq!("hi".length(), 2);
+}
 
-eq!( "世界".size() , 6);  // 2 Chinese chars * 3 bytes each
-eq!( "世界".first() , "世");
-eq!( "世界".last() , "界");
+#[test]
+fn test_empty_string_first_last() {
+    eq!("".first(), "");
+    eq!("".last(), "");
+}
 
-// Edge cases: Emoji (multi-byte)
-eq!( "🎉".size() , 4);  // emoji is 4 bytes in UTF-8
-eq!( "🎉".length() , 4);
-eq!( "🎉".first() , "🎉");
-eq!( "🎉".last() , "🎉");
+#[test]
+fn test_empty_string_size_and_length() {
+    eq!("".size(), 0);
+    eq!("".length(), 0);
+}
 
-eq!( "a🎉b".size() , 6);  // a(1) + emoji(4) + b(1)
-eq!( "a🎉b".first() , "a");
-eq!( "a🎉b".last() , "b");
+#[test]
+fn test_single_character_first_last() {
+    eq!("x".first(), "x");
+    eq!("x".last(), "x");
+}
 
-// Edge cases: Special characters
-eq!( "\n\t".size() , 2);
-eq!( "\"'".size() , 2);
-eq!( "\"'".first() , "\"");
-eq!( "\"'".last() , "'");
+#[test]
+fn test_single_character_size_and_length() {
+    eq!("x".size(), 1);
+    eq!("x".length(), 1);
+}
 
-// Edge cases: Whitespace only
-eq!( "   ".size() , 3);
-eq!( "   ".first() , " ");
-eq!( "   ".last() , " ");
+#[test]
+fn test_unicode_cafe_size_and_methods() {
+    eq!("café".size(), 5);
+    eq!("café".length(), 5);
+    eq!("café".first(), "c");
+    eq!("café".last(), "é");
+}
 
-// #struct Person {
-// #		name string
-// #		age  int
-// #}
-// #p := Person{name: "Alice", age: 30}
-// // eq!( "Name: " + p.name + ", Age: " + p.age , "Name: Alice, Age: 30");
+#[test]
+fn test_chinese_characters_size_and_methods() {
+    eq!("世界".size(), 6);
+    eq!("世界".first(), "世");
+    eq!("世界".last(), "界");
+}
+
+#[test]
+fn test_emoji_size_and_methods() {
+    eq!("🎉".size(), 4);
+    eq!("🎉".length(), 4);
+    eq!("🎉".first(), "🎉");
+    eq!("🎉".last(), "🎉");
+}
+
+#[test]
+fn test_mixed_ascii_emoji_size_and_methods() {
+    eq!("a🎉b".size(), 6);
+    eq!("a🎉b".first(), "a");
+    eq!("a🎉b".last(), "b");
+}
+
+#[test]
+fn test_special_characters_newline_and_tab() {
+    eq!("\n\t".size(), 2);
+}
+
+#[test]
+fn test_special_characters_quotes() {
+    eq!("\"'".size(), 2);
+    eq!("\"'".first(), "\"");
+    eq!("\"'".last(), "'");
+}
+
+#[test]
+fn test_whitespace_only_string() {
+    eq!("   ".size(), 3);
+    eq!("   ".first(), " ");
+    eq!("   ".last(), " ");
+}

@@ -1,6 +1,9 @@
 #!/usr/bin/env rust
-name := "Alice"
-age := 25
-greeting := "Hello %s, you are %d years old" % name % age
-put!("Greeting: {}", greeting)
-eq!( greeting , "Hello Alice, you are 25 years old");
+
+#[test]
+fn test_string_format_chain() {
+    let name = "Alice";
+    let age = 25;
+    let greeting = "Hello %s, you are %d years old" % name % age;
+    eq!(greeting, "Hello Alice, you are 25 years old");
+}
