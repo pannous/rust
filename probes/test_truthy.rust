@@ -1,5 +1,9 @@
 #!/usr/bin/env rust
 
+if 0 {
+    assert!(false, "0 should be falsy")
+}
+
 #[test]
 fn test_zero_integer_is_falsy() {
     if 0 {

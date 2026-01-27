@@ -3260,8 +3260,51 @@ impl<'a> Parser<'a> {
         // Scoping code checks the top level edition of the `if`; let's match it here.
         // The `CondChecker` also checks the edition of the `let` itself, just to make sure.
         let let_chains_policy = LetChainsPolicy::EditionDependent { current_edition: lo.edition() };
-        let cond = self.parse_expr_cond(let_chains_policy)?;
+        let mut cond = self.parse_expr_cond(let_chains_policy)?;
+
+        // In script mode, wrap non-boolean conditions with .is_truthy() for truthy semantics
+        // Only apply to user code, not macro expansions (to avoid wrapping std library code)
+        if self.is_script_mode() && !lo.from_expansion() {
+            cond = self.wrap_expr_with_is_truthy(cond);
+        }
+
         self.parse_if_after_cond(lo, cond)
+    }
+
+    /// Wrap an expression with `.is_truthy()` for script mode truthy semantics.
+    /// Creates: `(&expr).is_truthy()`
+    fn wrap_expr_with_is_truthy(&mut self, expr: Box<Expr>) -> Box<Expr> {
+        use rustc_span::symbol::Ident;
+
+        let span = expr.span;
+
+        // Create a reference to the expression: &expr
+        let ref_expr = Box::new(Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ExprKind::AddrOf(ast::BorrowKind::Ref, ast::Mutability::Not, expr),
+            span,
+            attrs: ast::AttrVec::new(),
+            tokens: None,
+        });
+
+        // Create the method call: (&expr).is_truthy()
+        let method_name = Ident::from_str_and_span("is_truthy", span);
+        Box::new(Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg: ast::PathSegment {
+                    ident: method_name,
+                    id: ast::DUMMY_NODE_ID,
+                    args: None,
+                },
+                receiver: ref_expr,
+                args: thin_vec![],
+                span,
+            })),
+            span,
+            attrs: ast::AttrVec::new(),
+            tokens: None,
+        })
     }
 
     fn parse_if_after_cond(&mut self, lo: Span, mut cond: Box<Expr>) -> PResult<'a, Box<Expr>> {
