@@ -1,10 +1,12 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_global_variable_access() {
 	let globalVar = "I'm a global variable";
 	assert_eq!(globalVar, "I'm a global variable");
 }
 
+#[test]
 fn test_helper_function() {
 	fn helper() {
 		// Helper function called
@@ -13,6 +15,7 @@ fn test_helper_function() {
 	// If we got here, helper() executed successfully
 }
 
+#[test]
 fn test_program_flow() {
 	let globalVar = "I'm a global variable";
 	fn helper() {
@@ -26,10 +29,4 @@ fn test_program_flow() {
 
 	// Verify the values are as expected
 	assert_eq!(globalVar, "I'm a global variable");
-}
-
-fn main() {
-    test_global_variable_access();
-    test_helper_function();
-    test_program_flow();
 }

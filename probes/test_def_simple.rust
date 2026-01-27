@@ -1,13 +1,10 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_simple_def_definitions() {
 	def hello() {
 	}
 
 	def main(){
 	}
-}
-
-fn main() {
-    test_simple_def_definitions();
 }

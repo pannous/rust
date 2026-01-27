@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_uppercase_synonyms() {
     eq!("hello".to_uppercase(), "HELLO");
     eq!("hello".upper(), "HELLO");
@@ -8,15 +9,11 @@ fn test_uppercase_synonyms() {
     eq!("hello".uppercase(), "HELLO");
 }
 
+#[test]
 fn test_lowercase_synonyms() {
     eq!("HELLO".to_lowercase(), "hello");
     eq!("HELLO".lower(), "hello");
     eq!("HELLO".to_lower(), "hello");
     eq!("HELLO".toLower(), "hello");
     eq!("HELLO".lowercase(), "hello");
-}
-
-fn main() {
-    test_uppercase_synonyms();
-    test_lowercase_synonyms();
 }

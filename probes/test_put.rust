@@ -1,24 +1,21 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_put_integer() {
     put!(42);
 }
 
+#[test]
 fn test_put_string() {
     put!("hello");
 }
 
+#[test]
 fn test_put_bool() {
     put!(true);
 }
 
+#[test]
 fn test_put_float() {
     put!(3.14);
-}
-
-fn main() {
-    test_put_integer();
-    test_put_string();
-    test_put_bool();
-    test_put_float();
 }

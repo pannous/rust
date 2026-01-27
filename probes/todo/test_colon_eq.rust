@@ -1,6 +1,2 @@
 #!/usr/bin/env rust
 # Test := operator
-fn main() {
-    x := 42;
-    put!(x)
-}

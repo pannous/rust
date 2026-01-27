@@ -2,12 +2,14 @@
 
 // Test that .N doesn't conflict with tuple.0 field access
 
+#[test]
 fn test_leading_dot_floats() {
 	// Leading dot floats should work
 	let mut x = .5
 	put!(".5 =", x)
 }
 
+#[test]
 fn test_tuple_field_access() {
 	// Tuple field access should still work
 	let mut t = (1, 2, 3)
@@ -20,6 +22,7 @@ fn test_tuple_field_access() {
 	assert!(t.1 == 2)
 }
 
+#[test]
 fn test_struct_field_access() {
 	// Struct field access also works
 	struct Point { x: i32, y: i32 }
@@ -28,10 +31,4 @@ fn test_struct_field_access() {
 	assert!(p.x == 10)
 
 	put!("No conflicts detected!")
-}
-
-fn main() {
-    test_leading_dot_floats();
-    test_tuple_field_access();
-    test_struct_field_access();
 }

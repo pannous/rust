@@ -1,25 +1,31 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_in_operator_integer_slice() {
 	assert!(2 in [1, 2, 3]);
 }
 
+#[test]
 fn test_in_operator_char_slice() {
 	assert!('b' in ['a', 'b', 'c']);
 }
 
+#[test]
 fn test_in_operator_string_slice() {
 	assert!("hello" in ["hello", "world"]);
 }
 
+#[test]
 fn test_in_operator_float_slice() {
 	assert!(3.14 in [3.14, 2.71, 1.618]);
 }
 
+#[test]
 fn test_in_operator_bool_slice() {
 	assert!(true in [true, false]);
 }
 
+#[test]
 fn test_in_operator_with_variables() {
 	let x = 2;
 	let y = [1, 2, 3];
@@ -38,26 +44,32 @@ fn test_in_operator_with_variables() {
 	assert!(ok in bools);
 }
 
+#[test]
 fn test_in_operator_negative_integer() {
 	assert!(not (4 in [1, 2, 3]));
 }
 
+#[test]
 fn test_in_operator_negative_char() {
 	assert!(not ('d' in ['a', 'b', 'c']));
 }
 
+#[test]
 fn test_in_operator_negative_string() {
 	assert!(not ("goodbye" in ["hello", "world"]));
 }
 
+#[test]
 fn test_in_operator_negative_float() {
 	assert!(not (1.618 in [3.14, 2.71]));
 }
 
+#[test]
 fn test_in_operator_negative_bool() {
 	assert!(not (false in [true, true]));
 }
 
+#[test]
 fn test_in_operator_negative_with_variables() {
 	let x2 = 4;
 	let y2 = [1, 2, 3];
@@ -74,19 +86,4 @@ fn test_in_operator_negative_with_variables() {
 	let ok2 = false;
 	let bools2 = [true, true];
 	assert!(not (ok2 in bools2));
-}
-
-fn main() {
-    test_in_operator_integer_slice();
-    test_in_operator_char_slice();
-    test_in_operator_string_slice();
-    test_in_operator_float_slice();
-    test_in_operator_bool_slice();
-    test_in_operator_with_variables();
-    test_in_operator_negative_integer();
-    test_in_operator_negative_char();
-    test_in_operator_negative_string();
-    test_in_operator_negative_float();
-    test_in_operator_negative_bool();
-    test_in_operator_negative_with_variables();
 }

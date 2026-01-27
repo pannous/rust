@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_tilde_floating_point_precision() {
     let c = 0.1 + 0.2;
     let d = 0.3;
@@ -7,6 +8,7 @@ fn test_tilde_floating_point_precision() {
     assert!(c ~ d);
 }
 
+#[test]
 fn test_tilde_near_identical_floats() {
     let a = 1.00000000001;
     let b = 1.00000000002;
@@ -14,79 +16,74 @@ fn test_tilde_near_identical_floats() {
     assert!(a ~ b);
 }
 
+#[test]
 fn test_tilde_with_implicit_multiplication() {
     put!("τ ~ 2.0π:", τ ~ 2.0π);
     assert!(τ ~ 2.0π);
 }
 
+#[test]
 fn test_tilde_negative_values() {
     assert!(-τ ~ -2π);
     assert!(-0.1 - 0.2 ~ -0.3);
 }
 
+#[test]
 fn test_tilde_zero_and_near_zero() {
     assert!(0.0 ~ 1e-15);
     assert!(π - π ~ 0.0);
     assert!(τ - 2.0π ~ 0.0);
 }
 
+#[test]
 fn test_tilde_fractional_pi_and_tau() {
     assert!(π / 2.0 ~ τ / 4.0);
     assert!(π / 4.0 ~ 0.7853981633974483);
     assert!(τ / 6.0 ~ π / 3.0);
 }
 
+#[test]
 fn test_tilde_large_values() {
     assert!(1000000.0 ~ 1000000.0000001);
     assert!(1e10 ~ 1e10 + 1.0);
 }
 
+#[test]
 fn test_tilde_very_small_values() {
     let e = 1.0 + 1e-11;
     let f = 1.0 + 1.5e-11;
     assert!(e ~ f);
 }
 
+#[test]
 fn test_tilde_complex_expressions() {
     assert!(π + π ~ τ);
     assert!(3π ~ τ + π);
     assert!(τ / π ~ 2.0);
 }
 
+#[test]
 fn test_tilde_mixed_operations_with_negatives() {
     assert!(-π / 2.0 ~ -τ / 4.0);
     assert!(π - τ ~ -π);
     assert!(-10π ~ -5τ);
 }
 
+#[test]
 fn test_tilde_squared_values() {
     assert!(π * π ~ 9.869604401089358);
     assert!(τ * τ ~ 39.478417604357434);
 }
 
+#[test]
 fn test_tilde_reciprocals() {
     assert!(1.0 / π ~ 0.3183098861837907);
     assert!(1.0 / τ ~ 0.15915494309189535);
 }
 
+#[test]
 fn test_tilde_extreme_precision_boundaries() {
     let g = 0.123456789012345;
     let h = 0.123456789012346;
     assert!(g ~ h);
-}
-
-fn main() {
-    test_tilde_floating_point_precision();
-    test_tilde_near_identical_floats();
-    test_tilde_with_implicit_multiplication();
-    test_tilde_negative_values();
-    test_tilde_zero_and_near_zero();
-    test_tilde_fractional_pi_and_tau();
-    test_tilde_large_values();
-    test_tilde_very_small_values();
-    test_tilde_complex_expressions();
-    test_tilde_mixed_operations_with_negatives();
-    test_tilde_squared_values();
-    test_tilde_reciprocals();
-    test_tilde_extreme_precision_boundaries();
 }

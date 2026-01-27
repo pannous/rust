@@ -15,6 +15,7 @@ struct Outer {
 	inner: Option<Inner>,
 }
 
+#[test]
 fn test_optional_field_access_some() {
 	let some_person: Option<Person> = Some(Person {
 		name: "Alice".to_string(),
@@ -25,6 +26,7 @@ fn test_optional_field_access_some() {
 	assert_eq!(name, Some(&"Alice".to_string()));
 }
 
+#[test]
 fn test_optional_field_access_none() {
 	let none_person: Option<Person> = None;
 
@@ -32,30 +34,35 @@ fn test_optional_field_access_none() {
 	assert_eq!(name, None);
 }
 
+#[test]
 fn test_optional_method_call_some() {
 	let opt_string: Option<String> = Some("hello".to_string());
 	let upper = opt_string.as_ref().map(|s| s.to_uppercase());
 	assert_eq!(upper, Some("HELLO".to_string()));
 }
 
+#[test]
 fn test_optional_method_call_none() {
 	let none_string: Option<String> = None;
 	let upper = none_string.as_ref().map(|s| s.to_uppercase());
 	assert_eq!(upper, None);
 }
 
+#[test]
 fn test_optional_method_with_argument() {
 	let opt_vec: Option<Vec<i32>> = Some(vec![1, 2, 3]);
 	let len = opt_vec.as_ref().map(|v| v.len());
 	assert_eq!(len, Some(3));
 }
 
+#[test]
 fn test_optional_tuple_field_access() {
 	let opt_tuple: Option<(i32, String)> = Some((42, "test".to_string()));
 	let num = opt_tuple.as_ref().map(|t| t.0);
 	assert_eq!(num, Some(42));
 }
 
+#[test]
 fn test_chained_optional_field_access() {
 	let outer: Option<Outer> = Some(Outer {
 		inner: Some(Inner { value: 99 }),
@@ -64,18 +71,21 @@ fn test_chained_optional_field_access() {
 	assert_eq!(val, Some(&Some(Inner { value: 99 })));
 }
 
+#[test]
 fn test_chained_optional_none() {
 	let outer_none: Option<Outer> = None;
 	let val = outer_none.as_ref().map(|o| &o.inner);
 	assert_eq!(val, None);
 }
 
+#[test]
 fn test_optional_method_chain_on_none() {
 	let none_vec: Option<Vec<i32>> = None;
 	let len = none_vec.as_ref().map(|v| v.len());
 	assert_eq!(len, None);
 }
 
+#[test]
 fn test_optional_tuple_field_1() {
 	let opt_tuple2: Option<(i32, String)> = Some((10, "second".to_string()));
 	let str_val = opt_tuple2.as_ref().map(|t| &t.1);
@@ -84,17 +94,4 @@ fn test_optional_tuple_field_1() {
 	let none_tuple: Option<(i32, String)> = None;
 	let none_field = none_tuple.as_ref().map(|t| &t.1);
 	assert_eq!(none_field, None);
-}
-
-fn main() {
-    test_optional_field_access_some();
-    test_optional_field_access_none();
-    test_optional_method_call_some();
-    test_optional_method_call_none();
-    test_optional_method_with_argument();
-    test_optional_tuple_field_access();
-    test_chained_optional_field_access();
-    test_chained_optional_none();
-    test_optional_method_chain_on_none();
-    test_optional_tuple_field_1();
 }

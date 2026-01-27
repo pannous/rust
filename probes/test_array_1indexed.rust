@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_1indexed_array_char_access() {
     let mut z = @['a', 'b', 'c']
     if z#1 != 'a' { panic!("First element failed") }
@@ -7,34 +8,40 @@ fn test_1indexed_array_char_access() {
     if z#3 != 'c' { panic!("Third element failed") }
 }
 
+#[test]
 fn test_1indexed_array_numeric_access() {
     let mut nums = @[10, 20, 30, 40]
     if nums#1 != 10 { panic!("nums#1 failed") }
     if nums#4 != 40 { panic!("nums#4 failed") }
 }
 
+#[test]
 fn test_1indexed_array_variable_index() {
     let mut z = @['a', 'b', 'c']
     let mut idx = 2
     if z#idx != 'b' { panic!("z#idx failed") }
 }
 
+#[test]
 fn test_1indexed_single_element_array() {
     let mut single = @['x']
     if single#1 != 'x' { panic!("single#1 failed") }
 }
 
+#[test]
 fn test_1indexed_boundary_access() {
     let mut nums = @[10, 20, 30, 40]
     if nums#4 != 40 { panic!("last element access failed") }
 }
 
+#[test]
 fn test_1indexed_arithmetic_operations() {
     let mut nums = @[10, 20, 30, 40]
     if (nums#1 + nums#2) != 30 { panic!("arithmetic with 1-indexed failed") }
     if (nums#3 - nums#1) != 20 { panic!("subtraction with 1-indexed failed") }
 }
 
+#[test]
 fn test_1indexed_variable_boundaries() {
     let mut nums = @[10, 20, 30, 40]
     let mut first_idx = 1
@@ -43,40 +50,30 @@ fn test_1indexed_variable_boundaries() {
     if nums#last_idx != 40 { panic!("last via variable failed") }
 }
 
+#[test]
 fn test_1indexed_vs_0indexed_equivalence() {
     let mut mixed = @[100, 200, 300]
     if mixed#1 != mixed[0] { panic!("1-indexed != 0-indexed") }
     if mixed#3 != mixed[2] { panic!("last element mismatch") }
 }
 
+#[test]
 fn test_1indexed_computed_index_assignment() {
     let mut writable = @[10, 20, 30]
     writable#(1+1) = 99
     if writable#2 != 99 { panic!("computed index assignment failed") }
 }
 
+#[test]
 fn test_1indexed_char_array_boundaries() {
     let mut chars = @['a', 'b', 'c', 'd', 'e']
     if chars#1 != 'a' { panic!("first char failed") }
     if chars#5 != 'e' { panic!("last char failed") }
 }
 
+#[test]
 fn test_1indexed_complex_expression_index() {
     let mut nums = @[10, 20, 30, 40]
     let mut expr_idx = (4 - 2) + 1
     if nums#expr_idx != 30 { panic!("complex expression index failed") }
-}
-
-fn main() {
-    test_1indexed_array_char_access();
-    test_1indexed_array_numeric_access();
-    test_1indexed_array_variable_index();
-    test_1indexed_single_element_array();
-    test_1indexed_boundary_access();
-    test_1indexed_arithmetic_operations();
-    test_1indexed_variable_boundaries();
-    test_1indexed_vs_0indexed_equivalence();
-    test_1indexed_computed_index_assignment();
-    test_1indexed_char_array_boundaries();
-    test_1indexed_complex_expression_index();
 }

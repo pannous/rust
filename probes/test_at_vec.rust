@@ -1,11 +1,13 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_at_vec_creation() {
     let v = @[1, 2, 3];
     println!("v: {:?}", v);
     assert_eq!(v.len(), 3);
 }
 
+#[test]
 fn test_at_vec_empty() {
     let empty: Vec<i32> = @[];
     let empty_len = empty.len();
@@ -19,8 +21,3 @@ fn test_at_vec_empty() {
 //     let nested = @[vec![1], vec![2, 3]];
 //     println!("nested: {:?}", nested);
 // }
-
-fn main() {
-    test_at_vec_creation();
-    test_at_vec_empty();
-}

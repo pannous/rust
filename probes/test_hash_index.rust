@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_hash_index_basic_access() {
 	let z = ['a', 'b', 'c'];
 	let nums = [10, 20, 30, 40];
@@ -9,6 +10,7 @@ fn test_hash_index_basic_access() {
 	assert_eq!(nums#1, 10);
 }
 
+#[test]
 fn test_hash_index_vs_zero_indexed() {
 	let z = ['a', 'b', 'c'];
 	assert_eq!(z[0], z#1);
@@ -16,6 +18,7 @@ fn test_hash_index_vs_zero_indexed() {
 	assert_eq!(z[2], z#3);
 }
 
+#[test]
 fn test_hash_index_with_comparison_operators() {
 	let z = ['a', 'b', 'c'];
 	let nums = [10, 20, 30, 40];
@@ -27,6 +30,7 @@ fn test_hash_index_with_comparison_operators() {
 	assert!(nums#2 >= 20);
 }
 
+#[test]
 fn test_hash_index_with_arithmetic() {
 	let nums = [10, 20, 30, 40];
 	assert_eq!(nums#1 + 5, 15);
@@ -35,6 +39,7 @@ fn test_hash_index_with_arithmetic() {
 	assert_eq!(nums#2 / 2, 10);
 }
 
+#[test]
 fn test_hash_index_with_logical_operators() {
 	let z = ['a', 'b', 'c'];
 	assert!((z#1 == 'a') && (z#2 == 'b'));
@@ -42,6 +47,7 @@ fn test_hash_index_with_logical_operators() {
 	assert!(!(z#1 == 'x'));
 }
 
+#[test]
 fn test_hash_index_with_variable_index() {
 	let z = ['a', 'b', 'c'];
 	let idx = 2;
@@ -49,12 +55,14 @@ fn test_hash_index_with_variable_index() {
 	assert_eq!(z#(1+1), 'b');
 }
 
+#[test]
 fn test_hash_index_with_parentheses() {
 	let z = ['a', 'b', 'c'];
 	assert_eq!((z#1), 'a');
 	assert_eq!(z#(1), 'a');
 }
 
+#[test]
 fn test_hash_index_assignment() {
 	let mut z = ['a', 'b', 'c'];
 	z#1 = 'X';
@@ -62,6 +70,7 @@ fn test_hash_index_assignment() {
 	assert_eq!(z[0], 'X');
 }
 
+#[test]
 fn test_hash_index_chained_access() {
 	let matrix = [[1, 2, 3], [4, 5, 6]];
 	assert_eq!(matrix#1#1, 1);
@@ -70,18 +79,21 @@ fn test_hash_index_chained_access() {
 	assert_eq!(matrix#2#3, 6);
 }
 
+#[test]
 fn test_hash_index_mixed_indexing() {
 	let matrix = [[1, 2, 3], [4, 5, 6]];
 	assert_eq!(matrix#1[1], 2);
 	assert_eq!(matrix[0]#2, 2);
 }
 
+#[test]
 fn test_hash_index_single_element_array() {
 	let single = ['X'];
 	assert_eq!(single#1, 'X');
 	assert_eq!(single[0], single#1);
 }
 
+#[test]
 fn test_hash_index_boundary_first_element() {
 	let z = ['a', 'b', 'c'];
 	let nums = [10, 20, 30, 40];
@@ -89,12 +101,14 @@ fn test_hash_index_boundary_first_element() {
 	assert_eq!(nums#1, nums[0]);
 }
 
+#[test]
 fn test_hash_index_boundary_last_element() {
 	let last = [10, 20, 30, 40, 50];
 	assert_eq!(last#5, 50);
 	assert_eq!(last[4], last#5);
 }
 
+#[test]
 fn test_hash_index_triple_nested_access() {
 	let deep = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
 	assert_eq!(deep#1#1#1, 1);
@@ -103,6 +117,7 @@ fn test_hash_index_triple_nested_access() {
 	assert_eq!(deep#1#2#1, 3);
 }
 
+#[test]
 fn test_hash_index_complex_arithmetic() {
 	let vals = [100, 200, 300, 400];
 	assert_eq!(vals#(2*2), 400);
@@ -110,6 +125,7 @@ fn test_hash_index_complex_arithmetic() {
 	assert_eq!(vals#(4-2), 200);
 }
 
+#[test]
 fn test_hash_index_assignment_at_boundaries() {
 	let mut boundary = [1, 2, 3, 4, 5];
 	boundary#1 = 99;
@@ -120,6 +136,7 @@ fn test_hash_index_assignment_at_boundaries() {
 	assert_eq!(boundary[4], 88);
 }
 
+#[test]
 fn test_hash_index_in_conditions() {
 	let test_vals = [5, 10, 15, 20];
 	assert!(test_vals#1 < test_vals#4);
@@ -128,29 +145,34 @@ fn test_hash_index_in_conditions() {
 	assert!(test_vals#1 != test_vals#2);
 }
 
+#[test]
 fn test_hash_index_chained_comparison() {
 	let test_vals = [5, 10, 15, 20];
 	assert!(test_vals#1 < test_vals#2 && test_vals#2 < test_vals#3);
 }
 
+#[test]
 fn test_hash_index_with_computed_index() {
 	let nums = [10, 20, 30, 40];
 	let computed = 3 - 1;
 	assert_eq!(nums#computed, 20);
 }
 
+#[test]
 fn test_hash_index_matrix_single_row() {
 	let single_row = [[42, 43, 44]];
 	assert_eq!(single_row#1#1, 42);
 	assert_eq!(single_row#1#3, 44);
 }
 
+#[test]
 fn test_hash_index_matrix_single_column() {
 	let single_col = [[10], [20], [30]];
 	assert_eq!(single_col#1#1, 10);
 	assert_eq!(single_col#3#1, 30);
 }
 
+#[test]
 fn test_hash_index_boolean_context() {
 	let flags = [true, false, true];
 	assert!(flags#1);
@@ -158,36 +180,11 @@ fn test_hash_index_boolean_context() {
 	assert!(flags#3);
 }
 
+#[test]
 fn test_hash_index_modification_preserves_array() {
 	let mut modifiable = [1, 2, 3];
 	modifiable#2 = modifiable#2 * 10;
 	assert_eq!(modifiable#2, 20);
 	assert_eq!(modifiable#1, 1);
 	assert_eq!(modifiable#3, 3);
-}
-
-fn main() {
-    test_hash_index_basic_access();
-    test_hash_index_vs_zero_indexed();
-    test_hash_index_with_comparison_operators();
-    test_hash_index_with_arithmetic();
-    test_hash_index_with_logical_operators();
-    test_hash_index_with_variable_index();
-    test_hash_index_with_parentheses();
-    test_hash_index_assignment();
-    test_hash_index_chained_access();
-    test_hash_index_mixed_indexing();
-    test_hash_index_single_element_array();
-    test_hash_index_boundary_first_element();
-    test_hash_index_boundary_last_element();
-    test_hash_index_triple_nested_access();
-    test_hash_index_complex_arithmetic();
-    test_hash_index_assignment_at_boundaries();
-    test_hash_index_in_conditions();
-    test_hash_index_chained_comparison();
-    test_hash_index_with_computed_index();
-    test_hash_index_matrix_single_row();
-    test_hash_index_matrix_single_column();
-    test_hash_index_boolean_context();
-    test_hash_index_modification_preserves_array();
 }

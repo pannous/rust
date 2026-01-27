@@ -4,6 +4,7 @@
 
 class Point { x: i32, y: i32 }
 
+#[test]
 fn test_class_copy() {
     let p = Point { x: 1, y: 2 };
     // Copy works
@@ -12,6 +13,7 @@ fn test_class_copy() {
     assert_eq!(p2.y, 2);
 }
 
+#[test]
 fn test_class_clone() {
     let p = Point { x: 1, y: 2 };
     // Clone works
@@ -20,6 +22,7 @@ fn test_class_clone() {
     assert_eq!(p3.y, 2);
 }
 
+#[test]
 fn test_class_debug() {
     let p = Point { x: 1, y: 2 };
     let p2 = p;
@@ -30,6 +33,7 @@ fn test_class_debug() {
     println!("{:?}", p3);
 }
 
+#[test]
 fn test_class_copy_clone_verify() {
     let p = Point { x: 1, y: 2 };
     let p2 = p;
@@ -38,11 +42,4 @@ fn test_class_copy_clone_verify() {
     assert!(p.x == p2.x && p.y == p2.y);
     assert!(p.x == p3.x && p.y == p3.y);
     println!("✓ class auto-derives Debug, Clone, Copy");
-}
-
-fn main() {
-    test_class_copy();
-    test_class_clone();
-    test_class_debug();
-    test_class_copy_clone_verify();
 }

@@ -1,40 +1,48 @@
 #!/usr/bin/env rust
 // Test only basic methods that don't need imports
 
+#[test]
 fn test_string_concat_basic() {
     eq!("a" + "1", "a1");
 }
 
+#[test]
 fn test_string_methods_first_last() {
     eq!("hi".first(), "h");
     eq!("hi".last(), "i");
 }
 
+#[test]
 fn test_string_methods_size_and_length() {
     eq!("hi".size(), 2);
     eq!("hi".length(), 2);
 }
 
+#[test]
 fn test_empty_string_first_last() {
     eq!("".first(), "");
     eq!("".last(), "");
 }
 
+#[test]
 fn test_empty_string_size_and_length() {
     eq!("".size(), 0);
     eq!("".length(), 0);
 }
 
+#[test]
 fn test_single_character_first_last() {
     eq!("x".first(), "x");
     eq!("x".last(), "x");
 }
 
+#[test]
 fn test_single_character_size_and_length() {
     eq!("x".size(), 1);
     eq!("x".length(), 1);
 }
 
+#[test]
 fn test_unicode_cafe_size_and_methods() {
     eq!("café".size(), 5);
     eq!("café".length(), 5);
@@ -42,12 +50,14 @@ fn test_unicode_cafe_size_and_methods() {
     eq!("café".last(), "é");
 }
 
+#[test]
 fn test_chinese_characters_size_and_methods() {
     eq!("世界".size(), 6);
     eq!("世界".first(), "世");
     eq!("世界".last(), "界");
 }
 
+#[test]
 fn test_emoji_size_and_methods() {
     eq!("🎉".size(), 4);
     eq!("🎉".length(), 4);
@@ -55,41 +65,28 @@ fn test_emoji_size_and_methods() {
     eq!("🎉".last(), "🎉");
 }
 
+#[test]
 fn test_mixed_ascii_emoji_size_and_methods() {
     eq!("a🎉b".size(), 6);
     eq!("a🎉b".first(), "a");
     eq!("a🎉b".last(), "b");
 }
 
+#[test]
 fn test_special_characters_newline_and_tab() {
     eq!("\n\t".size(), 2);
 }
 
+#[test]
 fn test_special_characters_quotes() {
     eq!("\"'".size(), 2);
     eq!("\"'".first(), "\"");
     eq!("\"'".last(), "'");
 }
 
+#[test]
 fn test_whitespace_only_string() {
     eq!("   ".size(), 3);
     eq!("   ".first(), " ");
     eq!("   ".last(), " ");
-}
-
-fn main() {
-    test_string_concat_basic();
-    test_string_methods_first_last();
-    test_string_methods_size_and_length();
-    test_empty_string_first_last();
-    test_empty_string_size_and_length();
-    test_single_character_first_last();
-    test_single_character_size_and_length();
-    test_unicode_cafe_size_and_methods();
-    test_chinese_characters_size_and_methods();
-    test_emoji_size_and_methods();
-    test_mixed_ascii_emoji_size_and_methods();
-    test_special_characters_newline_and_tab();
-    test_special_characters_quotes();
-    test_whitespace_only_string();
 }

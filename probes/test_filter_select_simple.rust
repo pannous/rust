@@ -1,18 +1,15 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_select_even_numbers() {
     let xs = [1, 2, 3, 4, 5];
     let evens = xs.select(x => x%2 == 0);
     eq!(evens, [2, 4]);
 }
 
+#[test]
 fn test_select_odd_numbers() {
     let xs = [1, 2, 3, 4, 5];
     let odds = xs.select(x => x%2 == 1);
     eq!(odds, [1, 3, 5]);
-}
-
-fn main() {
-    test_select_even_numbers();
-    test_select_odd_numbers();
 }

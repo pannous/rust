@@ -1,21 +1,25 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_nil_assignment() {
 	let opt: Option<i32> = None;
 	assert_eq!(opt, None);
 }
 
+#[test]
 fn test_nil_with_explicit_type() {
 	let typed: Option<i32> = None;
 	assert!(typed.is_none());
 }
 
+#[test]
 fn test_some_value_not_equal_to_nil() {
 	let opt2: Option<i32> = Some(42);
 	assert_ne!(opt2, None);
 	assert!(opt2.is_some());
 }
 
+#[test]
 fn test_function_returning_nil() {
 	fn get_opt() -> Option<i32> {
 		None
@@ -25,23 +29,27 @@ fn test_function_returning_nil() {
 	assert_eq!(result, None);
 }
 
+#[test]
 fn test_nil_with_zero() {
 	let val: Option<i32> = Some(0);
 	assert_ne!(val, None);
 	assert!(val.is_some());
 }
 
+#[test]
 fn test_nil_with_negative() {
 	let neg: Option<i32> = Some(-1);
 	assert_ne!(neg, None);
 	assert!(neg.is_some());
 }
 
+#[test]
 fn test_nil_with_explicit_string_type() {
 	let explicit: Option<String> = None;
 	assert!(explicit.is_none());
 }
 
+#[test]
 fn test_function_returning_nil_complex_type() {
 	fn get_complex() -> Option<Vec<i32>> {
 		None
@@ -50,6 +58,7 @@ fn test_function_returning_nil_complex_type() {
 	assert_eq!(complex_result, None);
 }
 
+#[test]
 fn test_nil_in_struct_field() {
 	struct Container {
 		value: Option<i32>,
@@ -58,28 +67,16 @@ fn test_nil_in_struct_field() {
 	assert_eq!(container.value, None);
 }
 
+#[test]
 fn test_nil_compared_to_false_value() {
 	let false_opt: Option<bool> = Some(false);
 	assert_ne!(false_opt, None);
 	assert!(false_opt.is_some());
 }
 
+#[test]
 fn test_nil_compared_to_empty_string() {
 	let empty_str: Option<&str> = Some("");
 	assert_ne!(empty_str, None);
 	assert!(empty_str.is_some());
-}
-
-fn main() {
-    test_nil_assignment();
-    test_nil_with_explicit_type();
-    test_some_value_not_equal_to_nil();
-    test_function_returning_nil();
-    test_nil_with_zero();
-    test_nil_with_negative();
-    test_nil_with_explicit_string_type();
-    test_function_returning_nil_complex_type();
-    test_nil_in_struct_field();
-    test_nil_compared_to_false_value();
-    test_nil_compared_to_empty_string();
 }

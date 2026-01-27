@@ -39,12 +39,3 @@ def testLambdaArg() {
 		eq!( apply(x => x + 1, 5) , 6 ); // 5+1 = 6
 		put!("Lambda argument test passed")
 }
-
-fn main() {
-    testBasicLambda()
-    testLambdaInVariableAssignment()
-    testMultipleLambdas()
-    testLambdaWithComplexExpression()
-    testLambdaArg()
-    put!("All lambda tests passed!")
-}

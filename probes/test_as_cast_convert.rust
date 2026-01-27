@@ -1,39 +1,36 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_int_to_string_conversion() {
     eq!( 1 as string , "1");
 }
 
+#[test]
 fn test_int_to_rune_conversion() {
     eq!( 1 as rune , '1');
 }
 
+#[test]
 fn test_rune_to_int_conversion() {
     eq!( '1' as int , 1);
 }
 
+#[test]
 fn test_int_to_float_conversion() {
     eq!( 3 as float , 3.0);
 }
 
+#[test]
 fn test_float_to_int_conversion() {
     eq!( 3.14 as int , 3);
 }
 
+#[test]
 fn test_float_to_string_conversion() {
     eq!( 3.14 as string , "3.14");
 }
 
+#[test]
 fn test_string_to_int_conversion() {
     eq!( "1" as int , 1 );
-}
-
-fn main() {
-    test_int_to_string_conversion();
-    test_int_to_rune_conversion();
-    test_rune_to_int_conversion();
-    test_int_to_float_conversion();
-    test_float_to_int_conversion();
-    test_float_to_string_conversion();
-    test_string_to_int_conversion();
 }

@@ -1,12 +1,9 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_select_suggestion_over_filter() {
     // Test that select() works for filtering slices (not filter())
     let xs = [1, 2, 3, 4, 5];
     let evens = xs.select(x => x%2 == 0);
     eq!(evens, [2, 4]);
-}
-
-fn main() {
-    test_select_suggestion_over_filter();
 }

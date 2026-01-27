@@ -2,18 +2,15 @@
 
 // Test ellipsis range syntax - collect to vec for comparison
 
+#[test]
 fn test_integer_ellipsis_range() {
 	// range 1…4 gives [1,2,3,4]
 	eq!( (1…4).collect::<Vec<_>>() , vec![1, 2, 3, 4] );
 }
 
+#[test]
 fn test_char_ellipsis_range() {
 	// char range
 	eq!( ('a'…'d').collect::<Vec<_>>() , vec!['a', 'b', 'c', 'd'] );
 	put!("Range checks passed!\n")
-}
-
-fn main() {
-    test_integer_ellipsis_range();
-    test_char_ellipsis_range();
 }

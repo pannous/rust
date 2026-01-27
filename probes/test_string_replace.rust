@@ -1,10 +1,7 @@
 #!/usr/bin/env rust
 // In script mode, use & to pass &str to methods expecting Pattern
 
+#[test]
 fn test_string_replace() {
     eq!("hello".replace(&"h", &"H"), "Hello");
-}
-
-fn main() {
-    test_string_replace();
 }

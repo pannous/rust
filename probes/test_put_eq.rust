@@ -1,28 +1,25 @@
 #!/usr/bin/env rust
 // Test put! and eq! macros for script mode
 
+#[test]
 fn test_put_macro_integer() {
     put!(42);
 }
 
+#[test]
 fn test_put_macro_string() {
     put!("hello world");
 }
 
+#[test]
 fn test_eq_macro_integers() {
     let x = 5;
     let y = 5;
     eq!(x, y);
 }
 
+#[test]
 fn test_eq_macro_strings() {
     let s = "test";
     eq!(s, "test");
-}
-
-fn main() {
-    test_put_macro_integer();
-    test_put_macro_string();
-    test_eq_macro_integers();
-    test_eq_macro_strings();
 }

@@ -15,20 +15,17 @@ pub fn greet(name: &str) -> String {
     format!("Hello, {}!", name)
 }
 
+#[test]
 fn test_dynexport_function() {
     eq!(add_numbers(2, 3), 5);
 }
 
+#[test]
 fn test_dynexport_static() {
     eq!(MAGIC_NUMBER, 42);
 }
 
+#[test]
 fn test_dynexport_greet() {
     eq!(greet("World"), "Hello, World!");
-}
-
-fn main() {
-    test_dynexport_function();
-    test_dynexport_static();
-    test_dynexport_greet();
 }

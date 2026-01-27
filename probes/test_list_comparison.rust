@@ -1,53 +1,62 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_simple_integer_equality() {
     let x = 42;
     let y = 41 + 1;
     eq!(x, y);
 }
 
+#[test]
 fn test_list_equality_with_if_statement() {
     list1 := @[1, 2];
     list2 := @[1, 2];
     assert!(list1 == list2);
 }
 
+#[test]
 fn test_three_element_list_equality() {
     a := @[1, 2, 3];
     b := @[1, 2, 3];
     eq!(a, b);
 }
 
+#[test]
 fn test_list_equality_repeated() {
     list1 := @[1, 2];
     list2 := @[1, 2];
     eq!(list1, list2);
 }
 
+#[test]
 fn test_basic_type_comparisons() {
     assert!(1 == 1);
     assert!("a" == "a");
     assert!(true == true);
 }
 
+#[test]
 fn test_single_element_list_comparison() {
     a1 := @[1];
     b1 := @[1];
     assert!(a1 == b1);
 }
 
+#[test]
 fn test_two_element_list_comparison() {
     c := @[1, 2];
     d := @[1, 2];
     assert!(c == d);
 }
 
+#[test]
 fn test_empty_vec_equality() {
     let empty1: Vec<i32> = vec![];
     let empty2: Vec<i32> = vec![];
     assert!(empty1 == empty2);
 }
 
+#[test]
 fn test_empty_vec_length() {
     let empty1: Vec<i32> = vec![];
     let empty2: Vec<i32> = vec![];
@@ -56,30 +65,18 @@ fn test_empty_vec_length() {
     assert_eq!(empty1.len(), empty2.len());
 }
 
+#[test]
 fn test_nil_vec_equality() {
     let nil1: Vec<i32> = vec![];
     let nil2: Vec<i32> = vec![];
     assert!(nil1 == nil2);
 }
 
+#[test]
 fn test_different_list_content() {
     arr1 := @[1, 2];
     arr2 := @[1, 2];
     arr3 := @[3, 4];
     assert!(arr1 == arr2);
     assert!(!(arr1 == arr3));
-}
-
-fn main() {
-    test_simple_integer_equality();
-    test_list_equality_with_if_statement();
-    test_three_element_list_equality();
-    test_list_equality_repeated();
-    test_basic_type_comparisons();
-    test_single_element_list_comparison();
-    test_two_element_list_comparison();
-    test_empty_vec_equality();
-    test_empty_vec_length();
-    test_nil_vec_equality();
-    test_different_list_content();
 }

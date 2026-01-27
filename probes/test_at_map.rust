@@ -1,22 +1,19 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_basic_map_literal() {
     my_map := @{"a": 1, "b": 2, "c": 3}
     if my_map.len() != 3 { panic!("Map length should be 3") }
 }
 
+#[test]
 fn test_map_with_different_values() {
     ages := @{"alice": 30, "bob": 25}
     if ages.len() != 2 { panic!("Ages map length should be 2") }
 }
 
+#[test]
 fn test_map_with_trailing_comma() {
     trailing := @{"x": 1, "y": 2,}
     if trailing.len() != 2 { panic!("Trailing comma map length should be 2") }
-}
-
-fn main() {
-    test_basic_map_literal();
-    test_map_with_different_values();
-    test_map_with_trailing_comma();
 }

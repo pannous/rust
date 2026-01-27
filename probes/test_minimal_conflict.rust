@@ -1,10 +1,7 @@
 #!/usr/bin/env rust
 // import "os"
 
+#[test]
 fn test_minimal_output() {
     put!("test")
-}
-
-fn main() {
-    test_minimal_output();
 }

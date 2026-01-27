@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_in_operator_string_contains() {
 	let result1 = "hello" in "hello world";
 	println!("'hello' in 'hello world': {}", result1);
@@ -10,6 +11,7 @@ fn test_in_operator_string_contains() {
 	assert!(!result2);
 }
 
+#[test]
 fn test_in_operator_vec_contains() {
 	let numbers = vec![1, 2, 3, 4, 5];
 	let result3 = &3 in numbers;
@@ -21,6 +23,7 @@ fn test_in_operator_vec_contains() {
 	assert!(!result4);
 }
 
+#[test]
 fn test_in_operator_array_slice() {
 	let arr = [1, 2, 3];
 	let result5 = &2 in &arr[..];
@@ -28,6 +31,7 @@ fn test_in_operator_array_slice() {
 	assert!(result5);
 }
 
+#[test]
 fn test_in_operator_string_in_condition() {
 	if "rust" in "hello rust world" {
 		println!("Found 'rust' in the string!");
@@ -36,6 +40,7 @@ fn test_in_operator_string_in_condition() {
 	}
 }
 
+#[test]
 fn test_in_operator_vec_in_condition() {
 	let numbers = vec![1, 2, 3, 4, 5];
 	if &5 in &numbers {
@@ -45,6 +50,7 @@ fn test_in_operator_vec_in_condition() {
 	}
 }
 
+#[test]
 fn test_in_operator_string_variables() {
 	let text = "hello world";
 	let result1 = "hello" in text;
@@ -59,41 +65,48 @@ fn test_in_operator_string_variables() {
 	assert!(needle in text);
 }
 
+#[test]
 fn test_in_operator_empty_string_edge_case() {
 	assert!("" in "hello");
 	assert!("" in "");
 }
 
+#[test]
 fn test_in_operator_empty_vec_edge_case() {
 	let empty_vec: Vec<i32> = vec![];
 	assert!(!(&1 in &empty_vec));
 	assert!(!(&0 in &empty_vec));
 }
 
+#[test]
 fn test_in_operator_single_element_vec() {
 	let single = vec![42];
 	assert!(&42 in &single);
 	assert!(!(&41 in &single));
 }
 
+#[test]
 fn test_in_operator_string_at_boundaries() {
 	assert!("hello" in "hello world");
 	assert!("world" in "hello world");
 	assert!("hello world" in "hello world");
 }
 
+#[test]
 fn test_in_operator_substring_not_found() {
 	assert!(!("Hello" in "hello"));
 	assert!(!("helo" in "hello"));
 	assert!(!("hello world!" in "hello world"));
 }
 
+#[test]
 fn test_in_operator_single_character_search() {
 	assert!("h" in "hello");
 	assert!("o" in "hello");
 	assert!(!("x" in "hello"));
 }
 
+#[test]
 fn test_in_operator_repeated_elements() {
 	let repeated = vec![1, 2, 2, 3, 2, 4];
 	assert!(&2 in &repeated);
@@ -102,27 +115,11 @@ fn test_in_operator_repeated_elements() {
 	assert!(!(&5 in &repeated));
 }
 
+#[test]
 fn test_in_operator_boundary_values() {
 	let range_vec = vec![0, 1, 2, 3, 4, 5];
 	assert!(&0 in &range_vec);
 	assert!(&5 in &range_vec);
 	assert!(!(&-1 in &range_vec));
 	assert!(!(&6 in &range_vec));
-}
-
-fn main() {
-    test_in_operator_string_contains();
-    test_in_operator_vec_contains();
-    test_in_operator_array_slice();
-    test_in_operator_string_in_condition();
-    test_in_operator_vec_in_condition();
-    test_in_operator_string_variables();
-    test_in_operator_empty_string_edge_case();
-    test_in_operator_empty_vec_edge_case();
-    test_in_operator_single_element_vec();
-    test_in_operator_string_at_boundaries();
-    test_in_operator_substring_not_found();
-    test_in_operator_single_character_search();
-    test_in_operator_repeated_elements();
-    test_in_operator_boundary_values();
 }

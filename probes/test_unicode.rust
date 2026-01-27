@@ -1,26 +1,31 @@
 #!/usr/bin/env rust
 #![allow(mixed_script_confusables)]
 
+#[test]
 fn test_greek_variable() {
     let δ = 42;
     assert_eq!(δ, 42);
 }
 
+#[test]
 fn test_chinese_variable() {
     let 变量 = "Chinese variable 变量";
     assert_eq!(变量, "Chinese variable 变量");
 }
 
+#[test]
 fn test_russian_variable() {
     let переменная = "Russian variable";
     assert_eq!(переменная, "Russian variable");
 }
 
+#[test]
 fn test_pi_custom_variable() {
     let π_custom = 3.14159;
     assert!((π_custom - 3.14159).abs() < 0.00001);
 }
 
+#[test]
 fn test_chinese_function() {
     fn 函数() -> String {
         return "Unicode function name".to_string();
@@ -28,19 +33,11 @@ fn test_chinese_function() {
     assert_eq!(函数(), "Unicode function name");
 }
 
+#[test]
 fn test_greek_letters_function() {
     fn αβγ() -> i32 {
         let δ = 42;
         return δ + 10;
     }
     assert_eq!(αβγ(), 52);
-}
-
-fn main() {
-    test_greek_variable();
-    test_chinese_variable();
-    test_russian_variable();
-    test_pi_custom_variable();
-    test_chinese_function();
-    test_greek_letters_function();
 }

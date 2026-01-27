@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_transform_synonyms() {
     let nums = [1, 2, 3];
 
@@ -18,8 +19,4 @@ fn test_transform_synonyms() {
     put!("✅ convert() works");
     put!("🛡️ No map keyword conflict!");
     put!("🎉 Transform synonyms working safely!");
-}
-
-fn main() {
-    test_transform_synonyms();
 }

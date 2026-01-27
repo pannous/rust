@@ -1,10 +1,12 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_vec_indexing() {
     aList := vec![1, 2, 3];
     eq!(aList[0], 1);
 }
 
+#[test]
 fn test_vec_shift_basic() {
     aList := vec![1, 2, 3];
     let first = aList.shift();
@@ -14,6 +16,7 @@ fn test_vec_shift_basic() {
     eq!(aList[0], 2);
 }
 
+#[test]
 fn test_vec_sortdesc_basic() {
     bList := vec![3, 1, 4, 1, 5, 9, 2, 6];
     let sorted = bList.sortDesc();
@@ -23,12 +26,14 @@ fn test_vec_sortdesc_basic() {
     eq!(bList[0], 3);
 }
 
+#[test]
 fn test_vec_shift_on_empty() {
     emptyList := vec![] as Vec<i32>;
     let empty_shift = emptyList.shift();
     eq!(empty_shift, None);
 }
 
+#[test]
 fn test_vec_shift_single_element() {
     single := vec![99];
     eq!(single.shift(), Some(99));
@@ -36,6 +41,7 @@ fn test_vec_shift_single_element() {
     eq!(single.is_empty(), true);
 }
 
+#[test]
 fn test_vec_shift_until_empty() {
     countdown := vec![3, 2, 1];
     eq!(countdown.shift(), Some(3));
@@ -45,16 +51,19 @@ fn test_vec_shift_until_empty() {
     eq!(countdown.len(), 0);
 }
 
+#[test]
 fn test_vec_sortdesc_single_element() {
     single_desc := vec![42];
     eq!(single_desc.sortDesc(), vec![42]);
 }
 
+#[test]
 fn test_vec_sortdesc_two_elements() {
     two := vec![2, 1];
     eq!(two.sortDesc(), vec![2, 1]);
 }
 
+#[test]
 fn test_vec_sortdesc_with_duplicates() {
     dups := vec![3, 1, 3, 2, 1];
     let dups_sorted = dups.sortDesc();
@@ -63,6 +72,7 @@ fn test_vec_sortdesc_with_duplicates() {
     eq!(dups_sorted[4], 1);
 }
 
+#[test]
 fn test_vec_sortdesc_preserves_original() {
     orig := vec![5, 1, 3];
     let desc_copy = orig.sortDesc();
@@ -71,6 +81,7 @@ fn test_vec_sortdesc_preserves_original() {
     eq!(desc_copy[2], 1);
 }
 
+#[test]
 fn test_vec_shift_after_sortdesc() {
     mixed := vec![9, 1, 5];
     let mut sorted_mix = mixed.sortDesc();
@@ -78,37 +89,23 @@ fn test_vec_shift_after_sortdesc() {
     eq!(sorted_mix.shift(), Some(5));
 }
 
+#[test]
 fn test_vec_is_empty() {
     emptyList := vec![] as Vec<i32>;
     eq!(emptyList.is_empty(), true);
 }
 
+#[test]
 fn test_vec_sortdesc_negative_numbers() {
     negatives := vec![-3, -1, -2];
     eq!(negatives.sortDesc(), vec![-1, -2, -3]);
 }
 
+#[test]
 fn test_vec_shift_preserves_remaining_order() {
     ordered := vec![1, 2, 3, 4];
     ordered.shift();
     eq!(ordered[0], 2);
     eq!(ordered[1], 3);
     eq!(ordered[2], 4);
-}
-
-fn main() {
-    test_vec_indexing();
-    test_vec_shift_basic();
-    test_vec_sortdesc_basic();
-    test_vec_shift_on_empty();
-    test_vec_shift_single_element();
-    test_vec_shift_until_empty();
-    test_vec_sortdesc_single_element();
-    test_vec_sortdesc_two_elements();
-    test_vec_sortdesc_with_duplicates();
-    test_vec_sortdesc_preserves_original();
-    test_vec_shift_after_sortdesc();
-    test_vec_is_empty();
-    test_vec_sortdesc_negative_numbers();
-    test_vec_shift_preserves_remaining_order();
 }

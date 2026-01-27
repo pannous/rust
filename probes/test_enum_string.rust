@@ -6,6 +6,7 @@
 enum State { OK, ERROR, PENDING }
 use State::*;
 
+#[test]
 fn test_enum_string_conversion() {
 	put!("Testing enum String() method:")
 
@@ -34,8 +35,4 @@ fn test_enum_string_conversion() {
 	// put!("Direct formatting: %s\n", OK)
 
 	// put!("All tests passed!\n")
-}
-
-fn main() {
-    test_enum_string_conversion();
 }

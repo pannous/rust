@@ -17,12 +17,3 @@ fn testFunction() error {
 	put!("This should not be reached")
 	return nil  
 }
-
-fn main() {
-	err := testFunction()
-	if err != nil {
-		put!("Success! Error propagated:", err.Error())
-	} else {
-		put!("No error returned")
-	}
-}

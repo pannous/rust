@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_multiplication_int_float() {
     assert!(2 * 3.0 ≈ 6.0);
     assert!(3.0 * 2 ≈ 6.0);
@@ -7,6 +8,7 @@ fn test_multiplication_int_float() {
     assert!(τ ≈ 2 * π);
 }
 
+#[test]
 fn test_division_int_float() {
     assert!(1 / 2.0 ≈ 0.5);
     assert!(1.0 / 2 ≈ 0.5);
@@ -14,23 +16,27 @@ fn test_division_int_float() {
     assert!(5.0 / 2 ≈ 2.5);
 }
 
+#[test]
 fn test_addition_int_float() {
     assert!(1 + 2.5 ≈ 3.5);
     assert!(2.5 + 1 ≈ 3.5);
     assert!(0 + 0.5 ≈ 0.5);
 }
 
+#[test]
 fn test_subtraction_int_float() {
     assert!(5 - 2.5 ≈ 2.5);
     assert!(5.5 - 2 ≈ 3.5);
     assert!(0 - 0.5 ≈ -0.5);
 }
 
+#[test]
 fn test_combined_expressions() {
     assert!((2 * π) + 1.0 ≈ τ + 1.0);
     assert!(10 / 4.0 - 0.5 ≈ 2.0);
 }
 
+#[test]
 fn test_zero_edge_cases_with_coercion() {
     assert!(0 * 3.0 ≈ 0.0);
     assert!(0.0 * 3 ≈ 0.0);
@@ -41,24 +47,15 @@ fn test_zero_edge_cases_with_coercion() {
     assert!(0.0 / 5 ≈ 0.0);
 }
 
+#[test]
 fn test_large_number_coercion() {
     assert!(1000 * 0.001 ≈ 1.0);
     assert!(0.001 * 1000 ≈ 1.0);
     assert!(1000000 / 1000.0 ≈ 1000.0);
 }
 
+#[test]
 fn test_boundary_behavior_near_zero() {
     assert!(1 / 1000.0 ≈ 0.001);
     assert!(0.0001 * 10000 ≈ 1.0);
-}
-
-fn main() {
-    test_multiplication_int_float();
-    test_division_int_float();
-    test_addition_int_float();
-    test_subtraction_int_float();
-    test_combined_expressions();
-    test_zero_edge_cases_with_coercion();
-    test_large_number_coercion();
-    test_boundary_behavior_near_zero();
 }

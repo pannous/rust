@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_or_and_precedence_true_or_false_and_false() {
     let t = true;
     let f = false;
@@ -8,6 +9,7 @@ fn test_or_and_precedence_true_or_false_and_false() {
     assert!(t or f and f);
 }
 
+#[test]
 fn test_and_or_precedence_false_and_true_or_true() {
     let t = true;
     let f = false;
@@ -16,6 +18,7 @@ fn test_and_or_precedence_false_and_true_or_true() {
     assert!(f and t or t);
 }
 
+#[test]
 fn test_comparison_with_and_operator() {
     let x = 5;
     let y = 10;
@@ -23,6 +26,7 @@ fn test_comparison_with_and_operator() {
     assert!(x < y and y > 0);
 }
 
+#[test]
 fn test_short_circuit_and_false_left_side() {
     // This should NOT evaluate the right side because left side is false
     let result = false and {
@@ -32,6 +36,7 @@ fn test_short_circuit_and_false_left_side() {
     assert!(!result);
 }
 
+#[test]
 fn test_short_circuit_or_true_left_side() {
     // This should NOT evaluate the right side because left side is true
     let result = true or {
@@ -39,12 +44,4 @@ fn test_short_circuit_or_true_left_side() {
         false
     };
     assert!(result);
-}
-
-fn main() {
-    test_or_and_precedence_true_or_false_and_false();
-    test_and_or_precedence_false_and_true_or_true();
-    test_comparison_with_and_operator();
-    test_short_circuit_and_false_left_side();
-    test_short_circuit_or_true_left_side();
 }

@@ -9,4 +9,3 @@ t := Point{x: 3, y: 4}
 #t := Point(3, 4) // Alternative constructor syntax
 t.display()
 put!("Sum: %d\n", t.sum())
-

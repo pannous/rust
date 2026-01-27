@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_select_synonym() {
     let nums = [1, 2, 3, 4, 5, 6];
     let evens = nums.select(x => x%2 == 0);
@@ -7,6 +8,7 @@ fn test_select_synonym() {
     eq!(evens, expected);
 }
 
+#[test]
 fn test_chose_synonym() {
     let nums = [1, 2, 3, 4, 5, 6];
     let evens = nums.chose(x => x%2 == 0);
@@ -14,6 +16,7 @@ fn test_chose_synonym() {
     eq!(evens, expected);
 }
 
+#[test]
 fn test_that_synonym() {
     let nums = [1, 2, 3, 4, 5, 6];
     let evens = nums.that(x => x%2 == 0);
@@ -21,16 +24,10 @@ fn test_that_synonym() {
     eq!(evens, expected);
 }
 
+#[test]
 fn test_which_synonym() {
     let nums = [1, 2, 3, 4, 5, 6];
     let evens = nums.which(x => x%2 == 0);
     let expected = [2, 4, 6];
     eq!(evens, expected);
-}
-
-fn main() {
-    test_select_synonym();
-    test_chose_synonym();
-    test_that_synonym();
-    test_which_synonym();
 }

@@ -5,6 +5,7 @@ struct User {
     age: int,
 }
 
+#[test]
 fn test_user_filter_and_first() {
     let users = vec![
         User { name: "Bob".to_string(), age: 17 },
@@ -25,6 +26,7 @@ fn test_user_filter_and_first() {
     eq!(result, "Charlie");
 }
 
+#[test]
 fn test_empty_users_list() {
     let empty_users: Vec<User> = vec![];
     let empty_result = empty_users.chose(|u| u.age > 18).first().cloned();
@@ -37,6 +39,7 @@ fn test_empty_users_list() {
     assert!(empty_result.is_none());
 }
 
+#[test]
 fn test_user_with_age_exactly_eighteen() {
     let border_users = vec![User {
         name: "Border".to_string(),
@@ -53,6 +56,7 @@ fn test_user_with_age_exactly_eighteen() {
     assert!(border_user.is_none());
 }
 
+#[test]
 fn test_all_users_under_age() {
     let young_users = vec![
         User { name: "Kid1".to_string(), age: 10 },
@@ -69,6 +73,7 @@ fn test_all_users_under_age() {
     assert!(young_result.is_none());
 }
 
+#[test]
 fn test_user_with_empty_name() {
     let users_empty_name = vec![User {
         name: "".to_string(),
@@ -83,12 +88,4 @@ fn test_user_with_empty_name() {
         panic!("FAIL: user with empty name should still exist");
     }
     assert!(user_empty_name.is_some());
-}
-
-fn main() {
-    test_user_filter_and_first();
-    test_empty_users_list();
-    test_user_with_age_exactly_eighteen();
-    test_all_users_under_age();
-    test_user_with_empty_name();
 }

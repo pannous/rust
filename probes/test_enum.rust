@@ -3,6 +3,7 @@
 enum Status { OK, BAD }
 use Status::*;
 
+#[test]
 fn test_enum_basic_functionality() {
 	put!("OK = %v\n", OK)
 	put!("OK = %d\n", OK)
@@ -13,8 +14,4 @@ fn test_enum_basic_functionality() {
 	put!("Variable status = %v\n", status)
 	eq!( status , OK);
 	eqs!( status , "OK");
-}
-
-fn main() {
-    test_enum_basic_functionality();
 }

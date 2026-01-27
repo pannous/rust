@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_hash_index_minimal_basic() {
 	let z = ['a', 'b', 'c'];
 	assert_eq!(z#1, 'a');
@@ -7,20 +8,16 @@ fn test_hash_index_minimal_basic() {
 	assert_eq!(z#3, 'c');
 }
 
+#[test]
 fn test_hash_index_minimal_variable_index() {
 	let z = ['a', 'b', 'c'];
 	let i = 2;
 	assert_eq!(z#i, 'b');
 }
 
+#[test]
 fn test_hash_index_minimal_chained() {
 	let matrix = [[1, 2], [3, 4]];
 	assert_eq!(matrix#1#1, 1);
 	assert_eq!(matrix#2#2, 4);
-}
-
-fn main() {
-    test_hash_index_minimal_basic();
-    test_hash_index_minimal_variable_index();
-    test_hash_index_minimal_chained();
 }

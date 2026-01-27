@@ -1,5 +1,6 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_list_equality_two_elements() {
     a := @[1, 2];
     b := @[1, 2];
@@ -7,27 +8,23 @@ fn test_list_equality_two_elements() {
     assert!(result);
 }
 
+#[test]
 fn test_different_slices_same_content() {
     c := @[1, 2];
     d := @[1, 2];
     assert!(c == d);
 }
 
+#[test]
 fn test_empty_vec_equality() {
     let e: Vec<i32> = vec![];
     let f: Vec<i32> = vec![];
     assert!(e == f);
 }
 
+#[test]
 fn test_empty_vec_equality_alternative() {
     let g: Vec<i32> = vec![];
     let h: Vec<i32> = vec![];
     assert!(g == h);
-}
-
-fn main() {
-    test_list_equality_two_elements();
-    test_different_slices_same_content();
-    test_empty_vec_equality();
-    test_empty_vec_equality_alternative();
 }

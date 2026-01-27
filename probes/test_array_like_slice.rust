@@ -1,24 +1,21 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_slice_1indexed_char_access() {
     z := @['a', 'b', 'c']
     if z#1 ≠ 'a' { panic!("First element via #1 fails") }
 }
 
+#[test]
 fn test_slice_1indexed_numeric_array() {
     nums := @[10, 20, 30, 40]
     if nums#1 != 10 { panic!("nums#1 failed") }
     if nums#4 != 40 { panic!("nums#4 failed") }
 }
 
+#[test]
 fn test_slice_1indexed_variable_index() {
     z := @['a', 'b', 'c']
     idx := 2
     if z#idx ≠ 'b' { panic!("First element via #idx fails") }
-}
-
-fn main() {
-    test_slice_1indexed_char_access();
-    test_slice_1indexed_numeric_array();
-    test_slice_1indexed_variable_index();
 }

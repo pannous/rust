@@ -1,10 +1,7 @@
 #!/usr/bin/env rust
 
+#[test]
 fn test_with_main() {
     println!("Has main");
     assert!(true);
-}
-
-fn main() {
-    test_with_main();
 }

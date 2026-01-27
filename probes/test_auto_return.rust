@@ -4,12 +4,9 @@
 // # def meaning(){return 42} // without type annotation
 // # def meaning(){42} // implicit return without type
 
+#[test]
 fn test_implicit_return() {
     fn meaning() -> i32 { 42 }
     assert_eq!(meaning(), 42);
     println!("Meaning of life is {}", meaning());
-}
-
-fn main() {
-    test_implicit_return();
 }
