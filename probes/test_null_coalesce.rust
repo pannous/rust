@@ -37,7 +37,6 @@ fn test_null_coalesce_double_try() {
 		Ok(Ok(10))
 	}
 
-	#[test]
 	fn test_double_try() -> Result<i32, ()> {
 		let val = returns_result()??;
 		Ok(val)

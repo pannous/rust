@@ -125,7 +125,7 @@ compile_test() {
     local name=$(basename "$file" .rust)
     local output_bin="$TEMP_DIR/$name"
 
-    "$RUSTC" "$file" -o "$output_bin" -A unused 2>&1
+    "$RUSTC" --test "$file" -o "$output_bin" -A unused 2>&1
 }
 
 run_test() {
