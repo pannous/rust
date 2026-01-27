@@ -1,27 +1,25 @@
 #!/usr/bin/env rust
 
-// Test all existing syntaxes still work
-put!("=== Testing all syntax variations ===")
+#[test]
+fn test_map_literal_with_string_keys() {
+    let z1 := @{"a": 1, "b": 2}
+    put!("map{}: %v\n", z1)
+}
 
-// Original syntaxes
-// z1 := map{"a": 1, "b": 2}
-// z1 := map{a: 1, b: 2}
-z1 := @{"a": 1, "b": 2}
-// z1 := @{a: 1, b: 2}
-z2 := {a: 1, b: 2}
-put!("map{}: %v\n", z1)
-put!("{}: %v\n", z2)
+#[test]
+fn test_map_literal_with_identifier_keys() {
+    let z2 := {a: 1, b: 2}
+    put!("{}: %v\n", z2)
+}
 
-// New bracket syntax - with commas (backward compatible)
-z3 := {active: true, age: 30, name: "Alice"}
-put!("map[] with commas: %v\n", z3)
+#[test]
+fn test_map_literal_with_commas() {
+    let z3 := {active: true, age: 30, name: "Alice"}
+    put!("map[] with commas: %v\n", z3)
+}
 
-// New bracket syntax - without commas (new feature!)
-// z4 := map{x: 10 y: 20 z: 30}
-// put!("map[] no commas: %v\n", z4)
-
-// Edge cases
-empty := {}
-put!("Empty: %v\n", empty)
-
-// put!("All types: %T %T %T %T\n", z1, z2, z3, z4)
+#[test]
+fn test_empty_map_literal() {
+    let empty := {}
+    put!("Empty: %v\n", empty)
+}

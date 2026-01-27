@@ -2,172 +2,244 @@
 // Test working list methods
 // DON'T REMOVE TESTS even if they fail
 
-my_list := [1, 2, 3]
+#[test]
+fn test_list_indexing() {
+    let my_list := [1, 2, 3]
+    eq!( my_list[1] , 2 )
+}
 
-// Basic indexing
-eq!( my_list[1] , 2 )
+#[test]
+fn test_list_first_last() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.first() , Some(&1) )
+    eq!( my_list.last() , Some(&3) )
+}
 
-// first/last - note: returns Option<&T>
-eq!( my_list.first() , Some(&1) )
-eq!( my_list.last() , Some(&3) )
+#[test]
+fn test_list_len_methods() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.len() , 3 )
+    eq!( my_list.size() , 3 )
+    eq!( my_list.length() , 3 )
+}
 
-// len / size / length
-eq!( my_list.len() , 3 )
-eq!( my_list.size() , 3 )
-eq!( my_list.length() , 3 )
+#[test]
+fn test_list_contains() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.contains(&2) , true )
+    eq!( my_list.contains(&5) , false )
+}
 
-// contains - needs & or use 'in' operator
-eq!( my_list.contains(&2) , true )
-eq!( my_list.contains(&5) , false )
+#[test]
+fn test_list_in_operator() {
+    let my_list := [1, 2, 3]
+    eq!( 2 in my_list , true )
+    eq!( 5 in my_list , false )
+}
 
-// 'in' operator (auto-borrows)
-eq!( 2 in my_list , true )
-eq!( 5 in my_list , false )
+#[test]
+fn test_list_sort() {
+    let sorted := [3, 1, 2]
+    sorted.sort()
+    eq!( sorted , [1,2,3] )
+}
 
-// sort (in place)
-sorted := [3, 1, 2]
-sorted.sort()
-eq!( sorted , [1,2,3] )
+#[test]
+fn test_list_to_vec() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.to_vec() , vec![1,2,3] )
+}
 
-// to_vec (clone)
-eq!( my_list.to_vec() , vec![1,2,3] )
+#[test]
+fn test_string_list_join() {
+    let stringList := ["3", "2", "1"]
+    eq!( stringList.join("-") , "3-2-1" )
+    eq!( stringList.join("") , "321" )
+}
 
-// String list join
-stringList := ["3", "2", "1"]
-eq!( stringList.join("-") , "3-2-1" )
-eq!( stringList.join("") , "321" )
+#[test]
+fn test_list_iter() {
+    let my_list := [1, 2, 3]
+    let sum := 0
+    for x in my_list.iter() { sum += x }
+    eq!( sum , 6 )
+}
 
-// iter
-sum := 0
-for x in my_list.iter() { sum += x }
-eq!( sum , 6 )
+#[test]
+fn test_list_get() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.get(1) , Some(&2) )
+    eq!( my_list.get(99) , None )
+}
 
-// get (safe indexing)
-eq!( my_list.get(1) , Some(&2) )
-eq!( my_list.get(99) , None )
+#[test]
+fn test_list_is_empty() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.is_empty() , false )
+    let empty: [i32; 0] = []
+    eq!( empty.is_empty() , true )
+}
 
-// is_empty
-eq!( my_list.is_empty() , false )
-let empty: [i32; 0] = []
-eq!( empty.is_empty() , true )
+#[test]
+fn test_vec_reverse() {
+    let rev := vec![1, 2, 3]
+    rev.reverse()
+    eq!( rev , vec![3, 2, 1] )
+}
 
-// reverse on vec (mutating)
-rev := vec![1, 2, 3]
-rev.reverse()
-eq!( rev , vec![3, 2, 1] )
+#[test]
+fn test_list_indexof() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.indexOf(&2) , 1 )
+    eq!( my_list.indexOf(&5) , -1 )
+}
 
-// ===== NEW METHODS FROM ScriptSliceExt =====
+#[test]
+fn test_list_slice() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.slice(1,3) , vec![2,3] )
+    eq!( my_list.slice(0,2) , vec![1,2] )
+}
 
-// indexOf - returns index or -1 if not found
-eq!( my_list.indexOf(&2) , 1 )
-eq!( my_list.indexOf(&5) , -1 )
+#[test]
+fn test_list_copy() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.copy() , vec![1,2,3] )
+}
 
-// slice(start, end) - non-mutating slice to vec
-eq!( my_list.slice(1,3) , vec![2,3] )
-eq!( my_list.slice(0,2) , vec![1,2] )
+#[test]
+fn test_list_append() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.append(4) , vec![1,2,3,4] )
+}
 
-// copy - clone to vec
-eq!( my_list.copy() , vec![1,2,3] )
+#[test]
+fn test_list_prepend() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.prepend(0) , vec![0,1,2,3] )
+}
 
-// append - non-mutating, returns new vec
-eq!( my_list.append(4) , vec![1,2,3,4] )
+#[test]
+fn test_list_insert() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.insert(1, 99) , vec![1,99,2,3] )
+}
 
-// prepend - non-mutating, returns new vec
-eq!( my_list.prepend(0) , vec![0,1,2,3] )
+#[test]
+fn test_list_reversed() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.reversed() , vec![3,2,1] )
+}
 
-// insert - non-mutating, returns new vec
-eq!( my_list.insert(1, 99) , vec![1,99,2,3] )
+#[test]
+fn test_list_sorted() {
+    eq!( [3,1,2].sorted() , vec![1,2,3] )
+}
 
-// reversed - non-mutating reverse
-eq!( my_list.reversed() , vec![3,2,1] )
+#[test]
+fn test_list_sorted_desc() {
+    eq!( [1,2,3].sortDesc() , vec![3,2,1] )
+}
 
-// sorted - non-mutating sort
-eq!( [3,1,2].sorted() , vec![1,2,3] )
+#[test]
+fn test_len_function() {
+    let emptyVec: Vec<i32> = @[]
+    eq!( len(emptyVec) , 0 )
+    eq!( len(@[1]) , 1 )
+    eq!( len(@[1,2,3]) , 3 )
+}
 
-// sortDesc - non-mutating descending sort
-eq!( [1,2,3].sortDesc() , vec![3,2,1] )
+#[test]
+fn test_empty_collection_edge_cases() {
+    let empty_arr: [i32; 0] = []
+    eq!( empty_arr.first() , None )
+    eq!( empty_arr.last() , None )
+    eq!( empty_arr.indexOf(&1) , -1 )
+    eq!( empty_arr.contains(&1) , false )
+    eq!( empty_arr.reversed() , vec![] as Vec<i32> )
+}
 
-// len() function form (needs typed vec for empty case)
-let emptyVec: Vec<i32> = @[]
-eq!( len(emptyVec) , 0 )
-eq!( len(@[1]) , 1 )
-eq!( len(@[1,2,3]) , 3 )
+#[test]
+fn test_single_element_collection() {
+    let single := [42]
+    eq!( single.first() , Some(&42) )
+    eq!( single.last() , Some(&42) )
+    eq!( single.indexOf(&42) , 0 )
+    eq!( single.len() , 1 )
+    eq!( single.reversed() , vec![42] )
+    eq!( single.sorted() , vec![42] )
+    eq!( single.sortDesc() , vec![42] )
+}
 
-// ===== EDGE CASE TESTS =====
+#[test]
+fn test_boundary_slice_operations() {
+    let three := [1, 2, 3]
+    eq!( three.slice(0, 0) , vec![] as Vec<i32> )
+    eq!( three.slice(0, 3) , vec![1, 2, 3] )
+    eq!( three.slice(2, 3) , vec![3] )
+    eq!( three.slice(3, 3) , vec![] as Vec<i32> )
+}
 
-// Empty collection edge cases
-let empty_arr: [i32; 0] = []
-eq!( empty_arr.first() , None )
-eq!( empty_arr.last() , None )
-eq!( empty_arr.indexOf(&1) , -1 )
-eq!( empty_arr.contains(&1) , false )
-eq!( empty_arr.reversed() , vec![] as Vec<i32> )
+#[test]
+fn test_indexof_with_duplicates() {
+    let dups := [1, 2, 2, 3, 2]
+    eq!( dups.indexOf(&2) , 1 )
+    eq!( dups.indexOf(&3) , 3 )
+}
 
-// Single-element collection
-single := [42]
-eq!( single.first() , Some(&42) )
-eq!( single.last() , Some(&42) )
-eq!( single.indexOf(&42) , 0 )
-eq!( single.len() , 1 )
-eq!( single.reversed() , vec![42] )
-eq!( single.sorted() , vec![42] )
-eq!( single.sortDesc() , vec![42] )
+#[test]
+fn test_insert_at_boundaries() {
+    let three := [1, 2, 3]
+    eq!( three.insert(0, 99) , vec![99, 1, 2, 3] )
+    eq!( three.insert(3, 99) , vec![1, 2, 3, 99] )
+}
 
-// Boundary slice operations
-three := [1, 2, 3]
-eq!( three.slice(0, 0) , vec![] as Vec<i32> )
-eq!( three.slice(0, 3) , vec![1, 2, 3] )
-eq!( three.slice(2, 3) , vec![3] )
-eq!( three.slice(3, 3) , vec![] as Vec<i32> )
+#[test]
+fn test_append_prepend_single_element() {
+    let single := [42]
+    eq!( single.append(99) , vec![42, 99] )
+    eq!( single.prepend(99) , vec![99, 42] )
+}
 
-// indexOf with duplicates (returns first occurrence)
-dups := [1, 2, 2, 3, 2]
-eq!( dups.indexOf(&2) , 1 )
-eq!( dups.indexOf(&3) , 3 )
+#[test]
+fn test_join_on_empty_and_single_element() {
+    let empty_str: [&str; 0] = []
+    eq!( empty_str.join(",") , "" )
+    eq!( ["solo"].join(",") , "solo" )
+}
 
-// insert at boundaries
-eq!( three.insert(0, 99) , vec![99, 1, 2, 3] )
-eq!( three.insert(3, 99) , vec![1, 2, 3, 99] )
+#[test]
+fn test_get_with_boundary_indices() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.get(0) , Some(&1) )
+    eq!( my_list.get(2) , Some(&3) )
+    eq!( my_list.get(3) , None )
+}
 
-// append/prepend on single element
-eq!( single.append(99) , vec![42, 99] )
-eq!( single.prepend(99) , vec![99, 42] )
+#[test]
+fn test_contains_with_boundary_elements() {
+    let my_list := [1, 2, 3]
+    eq!( my_list.contains(&1) , true )
+    eq!( my_list.contains(&3) , true )
+}
 
-// join on empty and single element
-let empty_str: [&str; 0] = []
-eq!( empty_str.join(",") , "" )
-eq!( ["solo"].join(",") , "solo" )
+#[test]
+fn test_in_operator_with_boundaries() {
+    let my_list := [1, 2, 3]
+    eq!( 1 in my_list , true )
+    eq!( 3 in my_list , true )
+    eq!( 0 in my_list , false )
+    eq!( 4 in my_list , false )
+}
 
-// Nested collections
-// TODO: mixed size nested arrays not supported
-// nested := [[1, 2], [3, 4], [5]]
-// eq!( nested.len() , 3 )
-// eq!( nested[0].len() , 2 )
-// eq!( nested[2].len() , 1 )
-// eq!( nested.first() , Some(&vec![1, 2]) )
-// eq!( nested.last() , Some(&vec![5]) )
+#[test]
+fn test_sorted_desc_on_descending() {
+    let desc := [5, 4, 3, 2, 1]
+    eq!( desc.sortDesc() , vec![5, 4, 3, 2, 1] )
+}
 
-// get with boundary indices
-eq!( my_list.get(0) , Some(&1) )
-eq!( my_list.get(2) , Some(&3) )
-eq!( my_list.get(3) , None )
-
-// contains with first and last elements
-eq!( my_list.contains(&1) , true )
-eq!( my_list.contains(&3) , true )
-
-// 'in' operator with boundaries
-eq!( 1 in my_list , true )
-eq!( 3 in my_list , true )
-eq!( 0 in my_list , false )
-eq!( 4 in my_list , false )
-
-// sortDesc on already descending
-desc := [5, 4, 3, 2, 1]
-eq!( desc.sortDesc() , vec![5, 4, 3, 2, 1] )
-
-// sorted on already ascending
-asc := [1, 2, 3, 4, 5]
-eq!( asc.sorted() , vec![1, 2, 3, 4, 5] )
-
-put!("All list method tests passed!\n")
+#[test]
+fn test_sorted_on_ascending() {
+    let asc := [1, 2, 3, 4, 5]
+    eq!( asc.sorted() , vec![1, 2, 3, 4, 5] )
+}
