@@ -1,7 +1,7 @@
 #!/usr/bin/env rust
-// import "strings"
 
-assert!('b' in "abc")
-assert!(not ('d' in "abc"))
-
-put!("ALL TESTS PASSED\n")
+#[test]
+fn test_in_operator_char_in_string() {
+	assert!('b' in "abc");
+	assert!(not ('d' in "abc"));
+}

@@ -1,14 +1,19 @@
 #!/usr/bin/env rust
 
+#[test]
+fn test_implicit_main_output() {
+	put!("Hello, ");
+	println!("world!");
 
-// main-less top level code ok via bin/go run goo/test_implicit_main.go but not in GoLang :(
-package main
-put!("Hello, ")    // writes to stderr
-println!("world!")   // adds newline
-fn helper() -> i32 {
-	return 42
+	fn helper() -> i32 {
+		return 42;
+	}
+
+	put!("The answer is: ", helper());
 }
-put!("The answer is: ", helper()) // UN-formatted output
 
-x := 421
-put!("The answer is: ", x, "\n")
+#[test]
+fn test_implicit_main_with_variable() {
+	let x = 421;
+	put!("The answer is: ", x, "\n");
+}

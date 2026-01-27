@@ -1,77 +1,84 @@
 #!/usr/bin/env rust
-xs := [1,2,3]
 
-sum := 0
-for i in [1,2,3] {
-		put!(i)
-		sum += i
-}
-eq!( sum , 6);
-
-
-// While with for-in syntax for slices
-numbers := [1, 2, 3]
-put!("While with slice:")
-for num in numbers {
-	printf!("  num = {}\n", num)
+#[test]
+fn test_for_loop_basic_sum() {
+	let xs = [1, 2, 3];
+	let mut sum = 0;
+	for i in [1, 2, 3] {
+		put!(i);
+		sum += i;
+	}
+	eq!(sum, 6);
 }
 
-// While with for-in syntax for maps (iterates key-value pairs)
-myMap := @{"a": 1, "b": 2, "c": 3}
-put!("While with map:")
-for (key, value) in myMap {
-	printf!("  {} = {:?}\n", key, value)
-}
-
-// Edge case: Empty array
-// TODO: empty array type inference not working
-// empty := []
-// empty_sum := 0
-// for x in empty {
-// 	empty_sum += 1
-// }
-// eq!(empty_sum, 0);
-
-// Edge case: Single element array
-single := [42]
-single_sum := 0
-for x in single {
-	single_sum += x
-}
-eq!(single_sum, 42);
-
-// Edge case: Break on first iteration
-break_sum := 0
-for i in [1, 2, 3, 4, 5] {
-	break;
-	break_sum += i
-}
-eq!(break_sum, 0);
-
-// Edge case: Continue skipping all additions
-continue_sum := 0
-for i in [10, 20, 30] {
-	continue;
-	continue_sum += i
-}
-eq!(continue_sum, 0);
-
-// Edge case: Break after partial iteration
-partial := 0
-for i in [1, 2, 3, 4, 5] {
-	partial += i
-	if i == 3 {
-		break
+#[test]
+fn test_for_loop_slice_iteration() {
+	let numbers = [1, 2, 3];
+	put!("While with slice:");
+	for num in numbers {
+		printf!("  num = {}\n", num);
 	}
 }
-eq!(partial, 6);
 
-// Edge case: Continue skipping even numbers
-odd_sum := 0
-for i in [1, 2, 3, 4, 5, 6] {
-	if i % 2 == 0 {
-		continue
+#[test]
+fn test_for_loop_map_iteration() {
+	let myMap = @{"a": 1, "b": 2, "c": 3};
+	put!("While with map:");
+	for (key, value) in myMap {
+		printf!("  {} = {:?}\n", key, value);
 	}
-	odd_sum += i
 }
-eq!(odd_sum, 9);
+
+#[test]
+fn test_for_loop_single_element() {
+	let single = [42];
+	let mut single_sum = 0;
+	for x in single {
+		single_sum += x;
+	}
+	eq!(single_sum, 42);
+}
+
+#[test]
+fn test_for_loop_break_immediate() {
+	let mut break_sum = 0;
+	for i in [1, 2, 3, 4, 5] {
+		break;
+		break_sum += i;
+	}
+	eq!(break_sum, 0);
+}
+
+#[test]
+fn test_for_loop_continue_skip_all() {
+	let mut continue_sum = 0;
+	for i in [10, 20, 30] {
+		continue;
+		continue_sum += i;
+	}
+	eq!(continue_sum, 0);
+}
+
+#[test]
+fn test_for_loop_break_partial() {
+	let mut partial = 0;
+	for i in [1, 2, 3, 4, 5] {
+		partial += i;
+		if i == 3 {
+			break;
+		}
+	}
+	eq!(partial, 6);
+}
+
+#[test]
+fn test_for_loop_continue_skip_even() {
+	let mut odd_sum = 0;
+	for i in [1, 2, 3, 4, 5, 6] {
+		if i % 2 == 0 {
+			continue;
+		}
+		odd_sum += i;
+	}
+	eq!(odd_sum, 9);
+}

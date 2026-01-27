@@ -1,143 +1,190 @@
 #!/usr/bin/env rust
 
-// Test arrays with 1-indexed access
-z := ['a', 'b', 'c']
-nums := [10, 20, 30, 40]
+#[test]
+fn test_hash_index_basic_access() {
+	let z = ['a', 'b', 'c'];
+	let nums = [10, 20, 30, 40];
+	assert_eq!(z#1, 'a');
+	assert_eq!(z#2, 'b');
+	assert_eq!(z#3, 'c');
+	assert_eq!(nums#1, 10);
+}
 
-// Basic 1-indexed access
-assert_eq!(z#1, 'a')
-assert_eq!(z#2, 'b')
-assert_eq!(z#3, 'c')
-assert_eq!(nums#1, 10)
+#[test]
+fn test_hash_index_vs_zero_indexed() {
+	let z = ['a', 'b', 'c'];
+	assert_eq!(z[0], z#1);
+	assert_eq!(z[1], z#2);
+	assert_eq!(z[2], z#3);
+}
 
-// Compare with 0-indexed
-assert_eq!(z[0], z#1)
-assert_eq!(z[1], z#2)
-assert_eq!(z[2], z#3)
+#[test]
+fn test_hash_index_with_comparison_operators() {
+	let z = ['a', 'b', 'c'];
+	let nums = [10, 20, 30, 40];
+	assert!(z#1 == 'a');
+	assert!(z#1 != 'b');
+	assert!(nums#1 < 15);
+	assert!(nums#2 > 15);
+	assert!(nums#1 <= 10);
+	assert!(nums#2 >= 20);
+}
 
-// Test with comparison operators (precedence)
-assert!(z#1 == 'a')
-assert!(z#1 != 'b')
-assert!(nums#1 < 15)
-assert!(nums#2 > 15)
-assert!(nums#1 <= 10)
-assert!(nums#2 >= 20)
+#[test]
+fn test_hash_index_with_arithmetic() {
+	let nums = [10, 20, 30, 40];
+	assert_eq!(nums#1 + 5, 15);
+	assert_eq!(nums#2 - 5, 15);
+	assert_eq!(nums#1 * 2, 20);
+	assert_eq!(nums#2 / 2, 10);
+}
 
-// Test with arithmetic operators (# should have higher precedence)
-assert_eq!(nums#1 + 5, 15)
-assert_eq!(nums#2 - 5, 15)
-assert_eq!(nums#1 * 2, 20)
-assert_eq!(nums#2 / 2, 10)
+#[test]
+fn test_hash_index_with_logical_operators() {
+	let z = ['a', 'b', 'c'];
+	assert!((z#1 == 'a') && (z#2 == 'b'));
+	assert!((z#1 == 'a') || (z#2 == 'x'));
+	assert!(!(z#1 == 'x'));
+}
 
-// Test with logical operators
-assert!((z#1 == 'a') && (z#2 == 'b'))
-assert!((z#1 == 'a') || (z#2 == 'x'))
-assert!(!(z#1 == 'x'))
+#[test]
+fn test_hash_index_with_variable_index() {
+	let z = ['a', 'b', 'c'];
+	let idx = 2;
+	assert_eq!(z#idx, 'b');
+	assert_eq!(z#(1+1), 'b');
+}
 
-// Test with expressions as index
-idx := 2
-assert_eq!(z#idx, 'b')
-assert_eq!(z#(1+1), 'b')
+#[test]
+fn test_hash_index_with_parentheses() {
+	let z = ['a', 'b', 'c'];
+	assert_eq!((z#1), 'a');
+	assert_eq!(z#(1), 'a');
+}
 
-// Test with parentheses
-assert_eq!((z#1), 'a')
-assert_eq!(z#(1), 'a')
+#[test]
+fn test_hash_index_assignment() {
+	let mut z = ['a', 'b', 'c'];
+	z#1 = 'X';
+	assert_eq!(z#1, 'X');
+	assert_eq!(z[0], 'X');
+}
 
-// Test assignment with hash indexing
-z#1 = 'X'
-assert_eq!(z#1, 'X')
-assert_eq!(z[0], 'X')
+#[test]
+fn test_hash_index_chained_access() {
+	let matrix = [[1, 2, 3], [4, 5, 6]];
+	assert_eq!(matrix#1#1, 1);
+	assert_eq!(matrix#1#2, 2);
+	assert_eq!(matrix#2#1, 4);
+	assert_eq!(matrix#2#3, 6);
+}
 
-// Chained access
-matrix := [[1, 2, 3], [4, 5, 6]]
-assert_eq!(matrix#1#1, 1)
-assert_eq!(matrix#1#2, 2)
-assert_eq!(matrix#2#1, 4)
-assert_eq!(matrix#2#3, 6)
+#[test]
+fn test_hash_index_mixed_indexing() {
+	let matrix = [[1, 2, 3], [4, 5, 6]];
+	assert_eq!(matrix#1[1], 2);
+	assert_eq!(matrix[0]#2, 2);
+}
 
-// Mixed with regular indexing
-assert_eq!(matrix#1[1], 2)
-assert_eq!(matrix[0]#2, 2)
+#[test]
+fn test_hash_index_single_element_array() {
+	let single = ['X'];
+	assert_eq!(single#1, 'X');
+	assert_eq!(single[0], single#1);
+}
 
-// ===== EDGE CASE TESTS =====
+#[test]
+fn test_hash_index_boundary_first_element() {
+	let z = ['a', 'b', 'c'];
+	let nums = [10, 20, 30, 40];
+	assert_eq!(z#1, z[0]);
+	assert_eq!(nums#1, nums[0]);
+}
 
-// Single-element array
-single := ['X']
-assert_eq!(single#1, 'X')
-assert_eq!(single[0], single#1)
+#[test]
+fn test_hash_index_boundary_last_element() {
+	let last = [10, 20, 30, 40, 50];
+	assert_eq!(last#5, 50);
+	assert_eq!(last[4], last#5);
+}
 
-// Boundary: first element
-assert_eq!(z#1, z[0])
-assert_eq!(nums#1, nums[0])
+#[test]
+fn test_hash_index_triple_nested_access() {
+	let deep = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
+	assert_eq!(deep#1#1#1, 1);
+	assert_eq!(deep#1#1#2, 2);
+	assert_eq!(deep#2#2#2, 8);
+	assert_eq!(deep#1#2#1, 3);
+}
 
-// Boundary: last element
-last := [10, 20, 30, 40, 50]
-assert_eq!(last#5, 50)
-assert_eq!(last[4], last#5)
+#[test]
+fn test_hash_index_complex_arithmetic() {
+	let vals = [100, 200, 300, 400];
+	assert_eq!(vals#(2*2), 400);
+	assert_eq!(vals#((10/5)+1), 300);
+	assert_eq!(vals#(4-2), 200);
+}
 
-// Triple-nested access
-deep := [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
-assert_eq!(deep#1#1#1, 1)
-assert_eq!(deep#1#1#2, 2)
-assert_eq!(deep#2#2#2, 8)
-assert_eq!(deep#1#2#1, 3)
+#[test]
+fn test_hash_index_assignment_at_boundaries() {
+	let mut boundary = [1, 2, 3, 4, 5];
+	boundary#1 = 99;
+	boundary#5 = 88;
+	assert_eq!(boundary#1, 99);
+	assert_eq!(boundary#5, 88);
+	assert_eq!(boundary[0], 99);
+	assert_eq!(boundary[4], 88);
+}
 
-// Hash index with complex arithmetic
-vals := [100, 200, 300, 400]
-assert_eq!(vals#(2*2), 400)
-assert_eq!(vals#((10/5)+1), 300)
-assert_eq!(vals#(4-2), 200)
+#[test]
+fn test_hash_index_in_conditions() {
+	let test_vals = [5, 10, 15, 20];
+	assert!(test_vals#1 < test_vals#4);
+	assert!(test_vals#2 <= 10);
+	assert!(test_vals#4 >= 20);
+	assert!(test_vals#1 != test_vals#2);
+}
 
-// Assignment at boundaries
-boundary := [1, 2, 3, 4, 5]
-boundary#1 = 99
-boundary#5 = 88
-assert_eq!(boundary#1, 99)
-assert_eq!(boundary#5, 88)
-assert_eq!(boundary[0], 99)
-assert_eq!(boundary[4], 88)
+#[test]
+fn test_hash_index_chained_comparison() {
+	let test_vals = [5, 10, 15, 20];
+	assert!(test_vals#1 < test_vals#2 && test_vals#2 < test_vals#3);
+}
 
-// Hash index in conditions
-test_vals := [5, 10, 15, 20]
-assert!(test_vals#1 < test_vals#4)
-assert!(test_vals#2 <= 10)
-assert!(test_vals#4 >= 20)
-assert!(test_vals#1 != test_vals#2)
+#[test]
+fn test_hash_index_with_computed_index() {
+	let nums = [10, 20, 30, 40];
+	let computed = 3 - 1;
+	assert_eq!(nums#computed, 20);
+}
 
-// Chained comparison with hash index
-assert!(test_vals#1 < test_vals#2 && test_vals#2 < test_vals#3)
+#[test]
+fn test_hash_index_matrix_single_row() {
+	let single_row = [[42, 43, 44]];
+	assert_eq!(single_row#1#1, 42);
+	assert_eq!(single_row#1#3, 44);
+}
 
-// Hash index with variable holding result of expression
-computed := 3 - 1
-assert_eq!(nums#computed, 20)
+#[test]
+fn test_hash_index_matrix_single_column() {
+	let single_col = [[10], [20], [30]];
+	assert_eq!(single_col#1#1, 10);
+	assert_eq!(single_col#3#1, 30);
+}
 
-// Matrix with single row
-single_row := [[42, 43, 44]]
-assert_eq!(single_row#1#1, 42)
-assert_eq!(single_row#1#3, 44)
+#[test]
+fn test_hash_index_boolean_context() {
+	let flags = [true, false, true];
+	assert!(flags#1);
+	assert!(!flags#2);
+	assert!(flags#3);
+}
 
-// Matrix with single column
-single_col := [[10], [20], [30]]
-assert_eq!(single_col#1#1, 10)
-assert_eq!(single_col#3#1, 30)
-
-// Empty nested arrays edge case
-// TODO: mixed size nested arrays not supported
-// nested_with_empty := [[], [1, 2], []]
-// assert_eq!(nested_with_empty#2#1, 1)
-// assert_eq!(nested_with_empty#2#2, 2)
-
-// Hash index with boolean context
-flags := [true, false, true]
-assert!(flags#1)
-assert!(!flags#2)
-assert!(flags#3)
-
-// Modification via hash index preserves array
-modifiable := [1, 2, 3]
-modifiable#2 = modifiable#2 * 10
-assert_eq!(modifiable#2, 20)
-assert_eq!(modifiable#1, 1)
-assert_eq!(modifiable#3, 3)
-
-put!("All hash index tests passed!")
+#[test]
+fn test_hash_index_modification_preserves_array() {
+	let mut modifiable = [1, 2, 3];
+	modifiable#2 = modifiable#2 * 10;
+	assert_eq!(modifiable#2, 20);
+	assert_eq!(modifiable#1, 1);
+	assert_eq!(modifiable#3, 3);
+}

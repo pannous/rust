@@ -1,44 +1,89 @@
 #!/usr/bin/env rust
-// import "slices"
 
-assert!(2 in [1,2,3])
-assert!('b' in ['a','b','c'])
-assert!("hello" in ["hello", "world"])
-assert!(3.14 in [3.14, 2.71, 1.618])
-assert!(true in [true, false])
-# assert!('a' in "abcde" ) // true
-# now with variables
-x := 2
-y := [1, 2, 3]
-assert!(x in y ) // true
-needle := 'b'
-haystack := ['a', 'b', 'c']
-assert!(needle in haystack ) // true
-pi3 := 3.14
-ps := [3.14, 2.71, 1.618]
-assert!(pi3 in ps)
-ok := true
-bools := [true, false]
-assert!(ok in bools ) // true
+#[test]
+fn test_in_operator_integer_slice() {
+	assert!(2 in [1, 2, 3]);
+}
 
-# counterexamples
-assert!(not (4 in [1, 2, 3] ))
-assert!(not ('d' in ['a', 'b', 'c'] ))
-assert!(not ("goodbye" in ["hello", "world"] ))
-assert!(not (1.618 in [3.14, 2.71] ))
-assert!(not (false in [true, true] ))
-// counterexamples with variables
-x2 := 4
-y2 := [1, 2, 3]
-assert!(not (x2 in y2) ) // false
-needle2 := 'd'
-haystack2 := ['a', 'b', 'c']
-assert!(not (needle2 in haystack2) ) // false
-pi2 := 1.618
-ps2 := [3.14, 2.71]
-assert!(not (pi2 in ps2) ) // false
-ok2 := false
-bools2 := [true, true]
-assert!(not (ok2 in bools2) ) // false
+#[test]
+fn test_in_operator_char_slice() {
+	assert!('b' in ['a', 'b', 'c']);
+}
 
-put!("ALL TESTS PASSED\n")
+#[test]
+fn test_in_operator_string_slice() {
+	assert!("hello" in ["hello", "world"]);
+}
+
+#[test]
+fn test_in_operator_float_slice() {
+	assert!(3.14 in [3.14, 2.71, 1.618]);
+}
+
+#[test]
+fn test_in_operator_bool_slice() {
+	assert!(true in [true, false]);
+}
+
+#[test]
+fn test_in_operator_with_variables() {
+	let x = 2;
+	let y = [1, 2, 3];
+	assert!(x in y);
+
+	let needle = 'b';
+	let haystack = ['a', 'b', 'c'];
+	assert!(needle in haystack);
+
+	let pi3 = 3.14;
+	let ps = [3.14, 2.71, 1.618];
+	assert!(pi3 in ps);
+
+	let ok = true;
+	let bools = [true, false];
+	assert!(ok in bools);
+}
+
+#[test]
+fn test_in_operator_negative_integer() {
+	assert!(not (4 in [1, 2, 3]));
+}
+
+#[test]
+fn test_in_operator_negative_char() {
+	assert!(not ('d' in ['a', 'b', 'c']));
+}
+
+#[test]
+fn test_in_operator_negative_string() {
+	assert!(not ("goodbye" in ["hello", "world"]));
+}
+
+#[test]
+fn test_in_operator_negative_float() {
+	assert!(not (1.618 in [3.14, 2.71]));
+}
+
+#[test]
+fn test_in_operator_negative_bool() {
+	assert!(not (false in [true, true]));
+}
+
+#[test]
+fn test_in_operator_negative_with_variables() {
+	let x2 = 4;
+	let y2 = [1, 2, 3];
+	assert!(not (x2 in y2));
+
+	let needle2 = 'd';
+	let haystack2 = ['a', 'b', 'c'];
+	assert!(not (needle2 in haystack2));
+
+	let pi2 = 1.618;
+	let ps2 = [3.14, 2.71];
+	assert!(not (pi2 in ps2));
+
+	let ok2 = false;
+	let bools2 = [true, true];
+	assert!(not (ok2 in bools2));
+}
