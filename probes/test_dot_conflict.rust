@@ -4,13 +4,13 @@
 
 fn test_leading_dot_floats() {
 	// Leading dot floats should work
-	x := .5
+	let mut x = .5
 	put!(".5 =", x)
 }
 
 fn test_tuple_field_access() {
 	// Tuple field access should still work
-	t := (1, 2, 3)
+	let mut t = (1, 2, 3)
 	put!("tuple.0 =", t.0)
 	put!("tuple.1 =", t.1)
 	put!("tuple.2 =", t.2)
@@ -23,7 +23,7 @@ fn test_tuple_field_access() {
 fn test_struct_field_access() {
 	// Struct field access also works
 	struct Point { x: i32, y: i32 }
-	p := Point { x: 10, y: 20 }
+	let mut p = Point { x: 10, y: 20 }
 	put!("point.x =", p.x)
 	assert!(p.x == 10)
 

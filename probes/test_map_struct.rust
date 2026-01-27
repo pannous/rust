@@ -1,22 +1,22 @@
 #!/usr/bin/env rust
 
 fn test_map_literal_with_string_keys() {
-    let z1 := @{"a": 1, "b": 2}
+    let z1 =@{"a": 1, "b": 2}
     put!("map{}: %v\n", z1)
 }
 
 fn test_map_literal_with_identifier_keys() {
-    let z2 := {a: 1, b: 2}
+    let z2 ={a: 1, b: 2}
     put!("{}: %v\n", z2)
 }
 
 fn test_map_literal_with_commas() {
-    let z3 := {active: true, age: 30, name: "Alice"}
+    let z3 ={active: true, age: 30, name: "Alice"}
     put!("map[] with commas: %v\n", z3)
 }
 
 fn test_empty_map_literal() {
-    let empty := {}
+    let empty ={}
     put!("Empty: %v\n", empty)
 }
 

@@ -1,37 +1,37 @@
 #!/usr/bin/env rust
 
 fn test_untyped_map_mixed_values() {
-    let person := {name: "Alice", age: 30}
+    let person ={name: "Alice", age: 30}
     put!("person = %v\n", person)
 }
 
 fn test_homogeneous_map() {
-    let coords := {x: 10, y: 20, z: 30}
+    let coords ={x: 10, y: 20, z: 30}
     put!("coords = %v\n", coords)
 }
 
 fn test_empty_map() {
-    let empty := {}
+    let empty ={}
     put!("empty map = %v\n", empty)
 }
 
 fn test_single_element_map() {
-    let single := {key: 42}
+    let single ={key: 42}
     put!("single element map = %v\n", single)
 }
 
 fn test_map_duplicate_keys() {
-    let duplicate := {x: 1, y: 2, x: 3}
+    let duplicate ={x: 1, y: 2, x: 3}
     put!("duplicate keys map = %v\n", duplicate)
 }
 
 fn test_map_negative_values() {
-    let negatives := {min: -100, max: -1, zero: 0}
+    let negatives ={min: -100, max: -1, zero: 0}
     put!("negatives map = %v\n", negatives)
 }
 
 fn test_map_boolean_values() {
-    let bools := {isActive: true, isDeleted: false}
+    let bools ={isActive: true, isDeleted: false}
     put!("booleans map = %v\n", bools)
 }
 

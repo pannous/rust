@@ -1,18 +1,18 @@
 #!/usr/bin/env rust
 
 fn test_slice_literal_syntax() {
-    let z := @[1, 2, 3]
+    let z =@[1, 2, 3]
     put!("Slice z: {:?}\n", z)
 }
 
 fn test_slice_element_access() {
-    let z := @[1, 2, 3]
+    let z =@[1, 2, 3]
     put!("First element: {}\n", z[0])
     put!("Second element: {}\n", z[1])
 }
 
 fn test_mixed_type_slice() {
-    let mixed := @["hello", 42, true]
+    let mixed =@["hello", 42, true]
     put!("Mixed slice: {:?}\n", mixed)
 }
 

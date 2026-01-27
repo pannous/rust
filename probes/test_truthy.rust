@@ -121,7 +121,7 @@ fn test_some_option_is_truthy() {
 }
 
 fn test_nonzero_value_in_if_condition() {
-    x := 5;
+    let mut x = 5;
     if x {
         // pass - x is 5, which is nonzero
     } else {

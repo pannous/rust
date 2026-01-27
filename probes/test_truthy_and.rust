@@ -43,7 +43,7 @@ fn test_empty_slice_is_falsy() {
 }
 
 fn test_nonempty_slice_is_truthy() {
-    nonEmptySlice := @[1, 2, 3];
+    let mut nonEmptySlice = @[1, 2, 3];
     if nonEmptySlice {
         // pass
     } else {
@@ -73,7 +73,7 @@ fn test_none_option_is_falsy() {
 }
 
 fn test_some_option_is_truthy() {
-    someOpt := Some(42);
+    let mut someOpt = Some(42);
     if someOpt {
         // pass
     } else {
@@ -89,7 +89,7 @@ fn test_vec_with_capacity_but_empty_is_falsy() {
 }
 
 fn test_vec_with_zero_element_is_truthy() {
-    zeroVec := vec![0];
+    let mut zeroVec = vec![0];
     if zeroVec {
         // pass
     } else {
@@ -98,7 +98,7 @@ fn test_vec_with_zero_element_is_truthy() {
 }
 
 fn test_vec_with_false_element_is_truthy() {
-    boolVec := vec![false];
+    let mut boolVec = vec![false];
     if boolVec {
         // pass
     } else {
@@ -121,14 +121,14 @@ fn test_negative_zero_is_falsy() {
 }
 
 fn test_empty_string_from_is_falsy() {
-    emptyString := String::from("");
+    let mut emptyString = String::from("");
     if emptyString {
         assert!(false, "String::from(\"\") should be falsy")
     }
 }
 
 fn test_single_element_slice_is_truthy() {
-    singleElemSlice := @[0];
+    let mut singleElemSlice = @[0];
     if singleElemSlice {
         // pass
     } else {
