@@ -1,7 +1,21 @@
 #!/usr/bin/env rust
-put!(42)
-// x := {a: 1, b: 2}
-// put!(x)
-put!("hello")
-put!(true)
-put!(3.14)
+
+#[test]
+fn test_put_integer() {
+    put!(42);
+}
+
+#[test]
+fn test_put_string() {
+    put!("hello");
+}
+
+#[test]
+fn test_put_bool() {
+    put!(true);
+}
+
+#[test]
+fn test_put_float() {
+    put!(3.14);
+}

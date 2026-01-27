@@ -1,40 +1,127 @@
 #!/usr/bin/env rust
-let a = 2 ** 3;
-println!("{}", a);
-eq!(a, 8);
-eq!(3.0**3.0, 27.0);
-eq!(3**3.0, 27.0);
-eq!(3.0**3, 27.0);
 
-// Negative base edge cases
-eq!((-2)**3, -8);
-eq!((-2.0)**3.0, -8.0);
-eq!((-3)**2, 9);
-eq!((-3.0)**2.0, 9.0);
+#[test]
+fn test_basic_power_integer() {
+    let a = 2 ** 3;
+    eq!(a, 8);
+}
 
-// Zero edge cases
-eq!(0**0, 1);
-eq!(0.0**0.0, 1.0);
-eq!(0**5, 0);
-eq!(5**0, 1);
-eq!(5.0**0.0, 1.0);
+#[test]
+fn test_power_float_float() {
+    eq!(3.0**3.0, 27.0);
+}
 
-// Negative exponent edge cases
-assert!(2.0**(-1.0) ≈ 0.5);
-assert!(2.0**(-2.0) ≈ 0.25);
-assert!(10.0**(-1.0) ≈ 0.1);
+#[test]
+fn test_power_int_float() {
+    eq!(3**3.0, 27.0);
+}
 
-// One edge cases
-eq!(1**100, 1);
-eq!(1.0**100.0, 1.0);
-eq!((-1)**2, 1);
-eq!((-1)**3, -1);
+#[test]
+fn test_power_float_int() {
+    eq!(3.0**3, 27.0);
+}
 
-// Fractional exponents (roots)
-assert!(4.0**0.5 ≈ 2.0);
-assert!(27.0**(1.0/3.0) ≈ 3.0);
-assert!(16.0**0.25 ≈ 2.0);
+#[test]
+fn test_negative_base_odd_exponent() {
+    eq!((-2)**3, -8);
+}
 
-// Mixed sign operations
-assert!((-2.0)**2.0 ≈ 4.0);
-assert!(2.0**(-3.0) ≈ 0.125);
+#[test]
+fn test_negative_base_odd_exponent_float() {
+    eq!((-2.0)**3.0, -8.0);
+}
+
+#[test]
+fn test_negative_base_even_exponent() {
+    eq!((-3)**2, 9);
+}
+
+#[test]
+fn test_negative_base_even_exponent_float() {
+    eq!((-3.0)**2.0, 9.0);
+}
+
+#[test]
+fn test_zero_to_zero() {
+    eq!(0**0, 1);
+}
+
+#[test]
+fn test_zero_to_zero_float() {
+    eq!(0.0**0.0, 1.0);
+}
+
+#[test]
+fn test_zero_to_positive() {
+    eq!(0**5, 0);
+}
+
+#[test]
+fn test_positive_to_zero() {
+    eq!(5**0, 1);
+}
+
+#[test]
+fn test_positive_to_zero_float() {
+    eq!(5.0**0.0, 1.0);
+}
+
+#[test]
+fn test_negative_exponent_half() {
+    assert!(2.0**(-1.0) ≈ 0.5);
+}
+
+#[test]
+fn test_negative_exponent_quarter() {
+    assert!(2.0**(-2.0) ≈ 0.25);
+}
+
+#[test]
+fn test_negative_exponent_tenth() {
+    assert!(10.0**(-1.0) ≈ 0.1);
+}
+
+#[test]
+fn test_one_to_large_exponent() {
+    eq!(1**100, 1);
+}
+
+#[test]
+fn test_one_to_large_exponent_float() {
+    eq!(1.0**100.0, 1.0);
+}
+
+#[test]
+fn test_negative_one_even_exponent() {
+    eq!((-1)**2, 1);
+}
+
+#[test]
+fn test_negative_one_odd_exponent() {
+    eq!((-1)**3, -1);
+}
+
+#[test]
+fn test_fractional_exponent_square_root() {
+    assert!(4.0**0.5 ≈ 2.0);
+}
+
+#[test]
+fn test_fractional_exponent_cube_root() {
+    assert!(27.0**(1.0/3.0) ≈ 3.0);
+}
+
+#[test]
+fn test_fractional_exponent_fourth_root() {
+    assert!(16.0**0.25 ≈ 2.0);
+}
+
+#[test]
+fn test_negative_base_even_exponent_result() {
+    assert!((-2.0)**2.0 ≈ 4.0);
+}
+
+#[test]
+fn test_positive_base_negative_exponent() {
+    assert!(2.0**(-3.0) ≈ 0.125);
+}

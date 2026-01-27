@@ -1,10 +1,10 @@
 #!/usr/bin/env rust
 // Test power operator **
 
-fn main() {
-    // Test parsing of **
+#[test]
+fn test_power_operator_parsing() {
     let a = 2;
     let b = 3;
     let result = a ** b;
-    println!("2 ** 3 = {}", result);
+    eq!(result, 8);
 }

@@ -1,13 +1,13 @@
 #!/usr/bin/env rust
-fn main() {
-    // Test power operator
-    let result = 3 ** 2;
-    println!("3 ** 2 = {}", result);
-    eq!(3 ** 2, 9);
 
-    // Const eval works correctly
+#[test]
+fn test_power_operator_basic() {
+    let result = 3 ** 2;
+    eq!(result, 9);
+}
+
+#[test]
+fn test_power_operator_const_eval() {
     const A: i32 = 2 ** 3;
     eq!(A, 8);
-
-    println!("Power operator tests passed!");
 }

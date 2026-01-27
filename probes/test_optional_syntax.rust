@@ -21,98 +21,157 @@ struct Config {
     port: u16?,
 }
 
-// Basic usage with explicit Some/None
-let _a: i32? = Some(5);
-let _b: i32? = None;
+struct Outer {
+    inner: Config?,
+}
 
-// Automatic wrapping: T coerces to Option<T>
-let auto_wrap: i32? = 42;  // Automatically becomes Some(42)
-assert_eq!(auto_wrap, Some(42));
-
-// Function return type
-let result = get_value(true);
-assert_eq!(result, Some(42));
-
-let none_result = get_value(false);
-assert_eq!(none_result, None);
-
-// Multiple optional params
-let processed = process(Some(10), Some("hello".to_string()));
-assert_eq!(processed, Some(true));
-
-// Struct fields
-let cfg = Config {
-    name: Some("test".to_string()),
-    port: None,
-};
-assert!(cfg.name.is_some());
-assert!(cfg.port.is_none());
-
-// Nested optionals: i32?? -> Option<Option<i32>>
-let nested: i32?? = Some(Some(99));
-assert_eq!(nested.flatten(), Some(99));
-
-// Auto-wrap in function return
-let auto_ret = auto_return(5);
-assert_eq!(auto_ret, Some(15));
-
-// Auto-wrap in struct field initialization
-let cfg_auto = Config {
-    name: "auto".to_string(),  // Auto-wrapped to Some("auto".to_string())
-    port: 8080,                // Auto-wrapped to Some(8080)
-};
-assert_eq!(cfg_auto.name, Some("auto".to_string()));
-assert_eq!(cfg_auto.port, Some(8080));
-
-// Auto-wrap in function arguments
 fn takes_optional(x: i32?) -> i32 {
     x.unwrap_or(0)
 }
-assert_eq!(takes_optional(42), 42);  // 42 auto-wrapped to Some(42)
-assert_eq!(takes_optional(None), 0);
 
-// Edge case: Nested optionals with None at different levels
-let nested_none_outer: i32?? = None;
-assert_eq!(nested_none_outer.flatten(), None);
-
-let nested_none_inner: i32?? = Some(None);
-assert_eq!(nested_none_inner.flatten(), None);
-
-// Edge case: Triple nesting
-let triple: i32??? = Some(Some(Some(7)));
-assert_eq!(triple.flatten().flatten(), Some(7));
-
-// Edge case: Auto-wrap with ? operator in function
 fn chain_with_early_return(x: i32?, y: i32?) -> i32? {
     let val = x? + y?;
     val * 2
 }
-assert_eq!(chain_with_early_return(Some(5), Some(3)), Some(16));
-assert_eq!(chain_with_early_return(None, Some(3)), None);
-assert_eq!(chain_with_early_return(Some(5), None), None);
 
-// Edge case: Nested struct with optional fields
-struct Outer {
-    inner: Config?,
+#[test]
+fn test_basic_explicit_some_none() {
+    let _a: i32? = Some(5);
+    let _b: i32? = None;
+    assert!(true);
 }
-let outer = Outer { inner: Some(Config { name: "test".to_string(), port: 80 }) };
-assert!(outer.inner.is_some());
 
-let outer_none = Outer { inner: None };
-assert!(outer_none.inner.is_none());
+#[test]
+fn test_automatic_wrapping() {
+    let auto_wrap: i32? = 42;  // Automatically becomes Some(42)
+    assert_eq!(auto_wrap, Some(42));
+}
 
-// Edge case: Zero value auto-wrap
-let zero: i32? = 0;
-assert_eq!(zero, Some(0));
-assert!(zero.is_some());
+#[test]
+fn test_function_return_some() {
+    let result = get_value(true);
+    assert_eq!(result, Some(42));
+}
 
-// Edge case: Empty string auto-wrap
-let empty: String? = "".to_string();
-assert_eq!(empty, Some("".to_string()));
+#[test]
+fn test_function_return_none() {
+    let none_result = get_value(false);
+    assert_eq!(none_result, None);
+}
 
-// Edge case: Process with mixed Some/None
-assert_eq!(process(None, Some("test".to_string())), None);
-assert_eq!(process(Some(0), Some("test".to_string())), Some(false));
-assert_eq!(process(Some(-5), Some("test".to_string())), Some(false));
+#[test]
+fn test_multiple_optional_params() {
+    let processed = process(Some(10), Some("hello".to_string()));
+    assert_eq!(processed, Some(true));
+}
 
-println!("All optional syntax tests passed!");
+#[test]
+fn test_struct_fields_with_optionals() {
+    let cfg = Config {
+        name: Some("test".to_string()),
+        port: None,
+    };
+    assert!(cfg.name.is_some());
+    assert!(cfg.port.is_none());
+}
+
+#[test]
+fn test_nested_optionals_flatten() {
+    let nested: i32?? = Some(Some(99));
+    assert_eq!(nested.flatten(), Some(99));
+}
+
+#[test]
+fn test_auto_wrap_in_function_return() {
+    let auto_ret = auto_return(5);
+    assert_eq!(auto_ret, Some(15));
+}
+
+#[test]
+fn test_auto_wrap_in_struct_initialization() {
+    let cfg_auto = Config {
+        name: "auto".to_string(),  // Auto-wrapped to Some("auto".to_string())
+        port: 8080,                // Auto-wrapped to Some(8080)
+    };
+    assert_eq!(cfg_auto.name, Some("auto".to_string()));
+    assert_eq!(cfg_auto.port, Some(8080));
+}
+
+#[test]
+fn test_auto_wrap_in_function_arguments() {
+    assert_eq!(takes_optional(42), 42);  // 42 auto-wrapped to Some(42)
+    assert_eq!(takes_optional(None), 0);
+}
+
+#[test]
+fn test_nested_none_outer() {
+    let nested_none_outer: i32?? = None;
+    assert_eq!(nested_none_outer.flatten(), None);
+}
+
+#[test]
+fn test_nested_none_inner() {
+    let nested_none_inner: i32?? = Some(None);
+    assert_eq!(nested_none_inner.flatten(), None);
+}
+
+#[test]
+fn test_triple_nesting() {
+    let triple: i32??? = Some(Some(Some(7)));
+    assert_eq!(triple.flatten().flatten(), Some(7));
+}
+
+#[test]
+fn test_chain_with_early_return_both_some() {
+    assert_eq!(chain_with_early_return(Some(5), Some(3)), Some(16));
+}
+
+#[test]
+fn test_chain_with_early_return_first_none() {
+    assert_eq!(chain_with_early_return(None, Some(3)), None);
+}
+
+#[test]
+fn test_chain_with_early_return_second_none() {
+    assert_eq!(chain_with_early_return(Some(5), None), None);
+}
+
+#[test]
+fn test_nested_struct_with_optional_some() {
+    let outer = Outer { inner: Some(Config { name: "test".to_string(), port: 80 }) };
+    assert!(outer.inner.is_some());
+}
+
+#[test]
+fn test_nested_struct_with_optional_none() {
+    let outer_none = Outer { inner: None };
+    assert!(outer_none.inner.is_none());
+}
+
+#[test]
+fn test_zero_value_auto_wrap() {
+    let zero: i32? = 0;
+    assert_eq!(zero, Some(0));
+    assert!(zero.is_some());
+}
+
+#[test]
+fn test_empty_string_auto_wrap() {
+    let empty: String? = "".to_string();
+    assert_eq!(empty, Some("".to_string()));
+}
+
+#[test]
+fn test_process_with_first_none() {
+    assert_eq!(process(None, Some("test".to_string())), None);
+}
+
+#[test]
+fn test_process_with_zero_value() {
+    assert_eq!(process(Some(0), Some("test".to_string())), Some(false));
+}
+
+#[test]
+fn test_process_with_negative_value() {
+    assert_eq!(process(Some(-5), Some("test".to_string())), Some(false));
+}
