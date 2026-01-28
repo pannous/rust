@@ -1,0 +1,76 @@
+#!/usr/bin/env rust
+// Test unwrap shorthand: expr.! -> expr.unwrap()
+
+#[test]
+fn test_basic_unwrap_shorthand() {
+    let some_val: i32? = Some(42);
+    let result = some_val.!;
+    assert_eq!(result, 42);
+    put!("✓ some_val.! works");
+}
+
+#[test]
+fn test_unwrap_shorthand_with_string() {
+    let some_str: String? = Some("hello".to_string());
+    let result = some_str.!;
+    assert_eq!(result, "hello");
+    put!("✓ String unwrap shorthand works");
+}
+
+#[test]
+fn test_chained_unwrap_shorthand() {
+    let nested: Option<Option<i32>> = Some(Some(99));
+    let result = nested.!.!;
+    assert_eq!(result, 99);
+    put!("✓ Chained .! works");
+}
+
+#[test]
+fn test_unwrap_shorthand_in_expression() {
+    let val: i32? = Some(10);
+    let result = val.! + 5;
+    assert_eq!(result, 15);
+    put!("✓ .! in expression works");
+}
+
+#[test]
+fn test_unwrap_shorthand_with_method_call() {
+    let val: String? = Some("HELLO".to_string());
+    let result = val.!.to_lowercase();
+    assert_eq!(result, "hello");
+    put!("✓ .! followed by method call works");
+}
+
+#[test]
+#[should_panic]
+fn test_unwrap_shorthand_panics_on_none() {
+    let none_val: i32? = None;
+    let _ = none_val.!; // This should panic
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+#[test]
+fn test_unwrap_shorthand_with_struct() {
+    let point: Point? = Some(Point { x: 3, y: 4 });
+    let p = point.!;
+    assert_eq!(p.x, 3);
+    assert_eq!(p.y, 4);
+    put!("✓ .! with struct works");
+}
+
+#[test]
+fn test_unwrap_shorthand_field_access() {
+    let point: Point? = Some(Point { x: 7, y: 8 });
+    let x_val = point.!.x;
+    assert_eq!(x_val, 7);
+    put!("✓ .! followed by field access works");
+}
+
+fn main() {
+    put!("Running unwrap shorthand tests...");
+}

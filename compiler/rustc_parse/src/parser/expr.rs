@@ -1079,6 +1079,11 @@ impl<'a> Parser<'a> {
                         e = self.parse_optional_chain_suffix(lo, e)?;
                         continue;
                     }
+                    // Check for unwrap shorthand: `expr.!` -> `expr.unwrap()`
+                    if self.eat(exp!(Bang)) {
+                        e = self.parse_unwrap_shorthand(lo, e)?;
+                        continue;
+                    }
                     // expr.f
                     e = self.parse_dot_suffix_expr(lo, e)?;
                     continue;
@@ -1700,6 +1705,41 @@ impl<'a> Parser<'a> {
                 Ok(self.mk_expr(lo.to(self.prev_token.span), ExprKind::Err(guar)))
             }
         }
+    }
+
+    /// Parse unwrap shorthand: `expr.!` -> `expr.unwrap()`
+    fn parse_unwrap_shorthand(
+        &mut self,
+        lo: Span,
+        base: Box<Expr>,
+    ) -> PResult<'a, Box<Expr>> {
+        use rustc_ast::PathSegment;
+        use rustc_span::symbol::Ident;
+
+        // Create the "unwrap" identifier
+        let unwrap_span = self.prev_token.span;
+        let unwrap_ident = Ident::new(rustc_span::sym::unwrap, unwrap_span);
+
+        // Create a PathSegment for "unwrap" with no generic args
+        let seg = PathSegment::from_ident(unwrap_ident);
+
+        // Empty arguments for unwrap()
+        let args = ThinVec::new();
+
+        // Create the method call span
+        let fn_span = unwrap_span;
+        let span = lo.to(unwrap_span);
+
+        // Create the MethodCall expression
+        Ok(self.mk_expr(
+            span,
+            ExprKind::MethodCall(Box::new(ast::MethodCall {
+                seg,
+                receiver: base,
+                args,
+                span: fn_span,
+            })),
+        ))
     }
 
     /// At the bottom (top?) of the precedence hierarchy,
