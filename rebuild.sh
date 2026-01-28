@@ -31,12 +31,12 @@ edition = "2024"
 rand = "0.10.0-rc.8"
 EOF
 
-cat > "$SCRIPT_DEPS_DIR/src/lib.rs" << 'EOF'
+    mkdir -p "$SCRIPT_DEPS_DIR/src"
+
+    cat > "$SCRIPT_DEPS_DIR/src/lib.rs" << 'EOF'
 // Dummy library to build rand as dependency
 pub use rand;
 EOF
-
-    mkdir -p "$SCRIPT_DEPS_DIR/src"
 fi
 
 # Build with the system cargo (or use new rustc if available)

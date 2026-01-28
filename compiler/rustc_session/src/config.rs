@@ -968,10 +968,18 @@ impl Externs {
     pub fn iter(&self) -> BTreeMapIter<'_, String, ExternEntry> {
         self.0.iter()
     }
+
+    pub fn insert(&mut self, key: String, value: ExternEntry) {
+        self.0.insert(key, value);
+    }
+
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.0.contains_key(key)
+    }
 }
 
 impl ExternEntry {
-    fn new(location: ExternLocation) -> ExternEntry {
+    pub fn new(location: ExternLocation) -> ExternEntry {
         ExternEntry {
             location,
             is_private_dep: false,

@@ -403,7 +403,7 @@ pub(crate) fn initialize_checked_jobserver(early_dcx: &EarlyDiagCtxt) {
 
 // JUSTIFICATION: before session exists, only config
 #[allow(rustc::bad_opt_access)]
-pub fn run_compiler<R: Send>(config: Config, f: impl FnOnce(&Compiler) -> R + Send) -> R {
+pub fn run_compiler<R: Send>(mut config: Config, f: impl FnOnce(&Compiler) -> R + Send) -> R {
     trace!("run_compiler");
 
     // Set parallel mode before thread pool creation, which will create `Lock`s.
@@ -465,6 +465,60 @@ pub fn run_compiler<R: Send>(config: Config, f: impl FnOnce(&Compiler) -> R + Se
 
             let mut locale_resources = config.locale_resources;
             locale_resources.push(codegen_backend.locale_resource());
+
+            // Auto-provide rand for script mode
+            if config.opts.unstable_opts.script {
+                use std::collections::BTreeSet;
+                use rustc_session::config::{ExternEntry, ExternLocation};
+                use rustc_session::utils::CanonicalizedPath;
+                use rustc_session::search_paths::{PathKind, SearchPath};
+
+                let sysroot = config.opts.sysroot.path();
+                let target_triple = config.opts.target_triple.tuple();
+                let lib_dir = sysroot.join("lib/rustlib").join(target_triple).join("lib");
+
+                // Find rand rlib files
+                if lib_dir.exists() {
+                    if let Ok(entries) = std::fs::read_dir(&lib_dir) {
+                        let rand_libs: Vec<_> = entries
+                            .filter_map(|e| e.ok())
+                            .filter(|e| {
+                                e.file_name()
+                                    .to_str()
+                                    .map(|name| name.starts_with("librand-") && name.ends_with(".rlib"))
+                                    .unwrap_or(false)
+                            })
+                            .collect();
+
+                        if !rand_libs.is_empty() {
+                            // Add library search path for script mode dependencies
+                            let search_path = SearchPath::new(PathKind::All, lib_dir.clone());
+                            config.opts.search_paths.push(search_path);
+
+                            // Add rand extern if not already present
+                            if !config.opts.externs.contains_key("rand") {
+                                let rand_paths: BTreeSet<_> = rand_libs
+                                    .into_iter()
+                                    .map(|e| CanonicalizedPath::new(e.path()))
+                                    .collect();
+
+                                if !rand_paths.is_empty() {
+                                    config.opts.externs.insert(
+                                        "rand".to_string(),
+                                        ExternEntry {
+                                            location: ExternLocation::ExactPaths(rand_paths),
+                                            is_private_dep: false,
+                                            add_prelude: true,
+                                            nounused_dep: true,
+                                            force: false,
+                                        },
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             let mut sess = rustc_session::build_session(
                 config.opts,
