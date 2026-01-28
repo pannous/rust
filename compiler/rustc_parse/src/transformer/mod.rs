@@ -23,6 +23,32 @@ pub use extensions::parse_extensions;
 pub use macros::build_script_macros;
 pub use val::build_simple_ty;
 
+/// Create #[no_mangle] attribute for exported functions
+pub fn create_no_mangle_attr(span: Span) -> ast::Attribute {
+    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+
+    let path = Path {
+        span,
+        segments: vec![PathSegment::from_ident(Ident::new(sym::no_mangle, span))].into(),
+        tokens: None,
+    };
+
+    ast::Attribute {
+        kind: AttrKind::Normal(Box::new(NormalAttr {
+            item: ast::AttrItem {
+                unsafety: Safety::Default,
+                path,
+                args: AttrItemKind::Unparsed(AttrArgs::Empty),
+                tokens: None,
+            },
+            tokens: None,
+        })),
+        id: ast::AttrId::from_u32(0),
+        style: AttrStyle::Outer,
+        span,
+    }
+}
+
 /// Create #[allow(lint_name)] attribute for suppressing warnings
 pub fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribute {
     use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};

@@ -1034,6 +1034,7 @@ symbols! {
         exp2f64,
         exp2f128,
         expect,
+        export,
         expected,
         expf16,
         expf32,

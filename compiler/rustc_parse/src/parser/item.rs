@@ -26,7 +26,7 @@ use super::{
     Recovered, Trailing, UsePreAttrPos,
 };
 use crate::errors::{self, FnPointerCannotBeAsync, FnPointerCannotBeConst, MacroExpandsToAdtField};
-use crate::transformer::create_derive_attr;
+use crate::transformer::{create_derive_attr, create_no_mangle_attr};
 use crate::{exp, fluent_generated as fluent};
 
 impl<'a> Parser<'a> {
@@ -509,7 +509,21 @@ impl<'a> Parser<'a> {
 
         self.collect_tokens(None, attrs, force_collect, |this, mut attrs| {
             let lo = this.token.span;
-            let vis = this.parse_visibility(FollowedByType::No)?;
+            // Check for `export fn` which generates public, no-mangle, extern "C" functions
+            let is_export = this.token.is_ident_named(sym::export)
+                && this.look_ahead(1, |t| t.is_keyword(kw::Fn));
+            let (vis, export_span) = if is_export {
+                let export_span = this.token.span;
+                this.bump(); // consume `export`
+                // Force public visibility for exported functions
+                (Visibility {
+                    span: export_span,
+                    kind: VisibilityKind::Public,
+                    tokens: None,
+                }, Some(export_span))
+            } else {
+                (this.parse_visibility(FollowedByType::No)?, None)
+            };
             let mut def = this.parse_defaultness();
             let kind = this.parse_item_kind(
                 &mut attrs,
@@ -520,8 +534,26 @@ impl<'a> Parser<'a> {
                 fn_parse_mode,
                 Case::Sensitive,
             )?;
-            if let Some(kind) = kind {
+            if let Some(mut kind) = kind {
                 this.error_on_unconsumed_default(def, &kind);
+                // Handle export fn: add #[no_mangle] and make it extern "C"
+                if let Some(export_span) = export_span {
+                    if let ItemKind::Fn(ref mut fn_) = kind {
+                        // Add #[no_mangle] attribute
+                        attrs.push(create_no_mangle_attr(export_span));
+                        // Set extern "C" ABI
+                        fn_.sig.header.ext = Extern::from_abi(
+                            Some(StrLit {
+                                symbol: sym::C,
+                                suffix: None,
+                                symbol_unescaped: sym::C,
+                                style: StrStyle::Cooked,
+                                span: export_span,
+                            }),
+                            export_span,
+                        );
+                    }
+                }
                 let span = lo.to(this.prev_token.span);
                 let id = DUMMY_NODE_ID;
                 let item = Item { attrs, id, kind, vis, span, tokens: None };

@@ -29,8 +29,9 @@ fn test_user_filter_and_first() {
 
 #[test]
 fn test_empty_users_list() {
+    // let empty_users = vec![] as Vec<User>;
     let empty_users: Vec<User> = vec![];
-    let empty_result = empty_users.chose(|u| u.age > 18).head();
+    let empty_result = empty_users.chose(|u| u.age > 18).random();
 
     if empty_result {
         panic!("FAIL: emptyResult should be None");

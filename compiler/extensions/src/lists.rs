@@ -50,6 +50,13 @@ pub trait ListExtensions<T: Clone> {
 	fn that<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
 	fn which<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
 
+	// Inverse filter utilities
+	// `without` returns a new Vec with all elements equal to `item` removed
+	fn without(&self, item: &T) -> Vec<T> where T: PartialEq;
+
+	// `except` returns a new Vec with elements matching predicate removed
+	fn except<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T>;
+
 	// Element access (non-mutating)
 	fn first_cloned(&self) -> Option<T>;
 
@@ -69,13 +76,22 @@ pub trait ListExtensions<T: Clone> {
 	fn reversed(&self) -> Vec<T>;
 
 	// Index finding
+	#[allow(nonstandard_style)]
 	fn indexOf(&self, item: &T) -> i64 where T: PartialEq;
 	fn index_of(&self, item: &T) -> i64 where T: PartialEq;
 
 	// Sorting (returns new vec)
 	fn sorted(&self) -> Vec<T> where T: Ord;
+	#[allow(nonstandard_style)]
 	fn sortDesc(&self) -> Vec<T> where T: Ord;
 	fn sort_desc(&self) -> Vec<T> where T: Ord;
+
+	// Random utilities
+	// `random` returns a single random element (cloned) or `None` for empty slices
+	fn random(&self) -> Option<T>;
+
+	// `shuffle` returns a new Vec with the elements shuffled (non-mutating)
+	fn shuffle(&self) -> Vec<T>;
 }
 
 impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
@@ -93,6 +109,14 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 	fn chose<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T> { self.filtered(f) }
 	fn that<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T> { self.filtered(f) }
 	fn which<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T> { self.filtered(f) }
+
+	fn without(&self, item: &T) -> Vec<T> where T: PartialEq {
+		self.as_ref().iter().filter(|x| x != &item).cloned().collect()
+	}
+
+	fn except<F: Fn(&T) -> bool>(&self, f: F) -> Vec<T> {
+		self.as_ref().iter().filter(|x| !f(x)).cloned().collect()
+	}
 
 	fn first_cloned(&self) -> Option<T> {
 		self.as_ref().first().cloned()
@@ -131,6 +155,7 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 	}
 
 	// Index finding - returns -1 if not found (like JS/Python convention)
+	#[allow(nonstandard_style)]
 	fn indexOf(&self, item: &T) -> i64 where T: PartialEq {
 		self.as_ref().iter().position(|x| x == item).map(|i| i as i64).unwrap_or(-1)
 	}
@@ -142,6 +167,7 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 		v.sort();
 		v
 	}
+	#[allow(nonstandard_style)]
 	fn sortDesc(&self) -> Vec<T> where T: Ord {
 		let mut v = self.as_ref().to_vec();
 		v.sort();
@@ -149,6 +175,26 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 		v
 	}
 	fn sort_desc(&self) -> Vec<T> where T: Ord { self.sortDesc() }
+
+	// Random utilities implementation
+	fn random(&self) -> Option<T> {
+		let slice = self.as_ref();
+		if slice.is_empty() { return None }
+		let idx = rand_index(slice.len());
+		slice.get(idx).cloned()
+	}
+
+	fn shuffle(&self) -> Vec<T> {
+		let mut v = self.as_ref().to_vec();
+		// Fisher-Yates shuffle
+		let mut n = v.len();
+		while n > 1 {
+			let j = rand_index(n);
+			n -= 1;
+			v.swap(n, j);
+		}
+		v
+	}
 }
 
 // Free function for len(collection)
@@ -184,10 +230,48 @@ impl<T> SliceSizeExt for Vec<T> {
 #[allow(dead_code)]
 pub trait VecMutExtensions<T> {
 	fn shift(&mut self) -> Option<T>;
+	// Remove last element (alias of Vec::pop)
+	fn pop_last(&mut self) -> Option<T>;
+	// Remove first element (remove index 0)
+	fn pop_first(&mut self) -> Option<T>;
+	// Delete element at index, returning it if in-bounds
+	fn delete_at(&mut self, index: usize) -> Option<T>;
+	// Delete a range [start, end) of elements and return them as a Vec
+	fn delete_range(&mut self, start: usize, end: usize) -> Vec<T>;
+	// Replace element at index with `item`, returning the old value if index in-bounds
+	fn replace_at(&mut self, index: usize, item: T) -> Option<T>;
+	// Swap-remove at index (may change order), returning removed element if in-bounds
+	fn swap_remove_at(&mut self, index: usize) -> Option<T>;
 }
 
 impl<T> VecMutExtensions<T> for Vec<T> {
 	fn shift(&mut self) -> Option<T> {
 		if self.is_empty() { None } else { Some(self.remove(0)) }
+	}
+	fn pop_last(&mut self) -> Option<T> { self.pop() }
+
+	fn pop_first(&mut self) -> Option<T> { if self.is_empty() { None } else { Some(self.remove(0)) } }
+
+	fn delete_at(&mut self, index: usize) -> Option<T> {
+		if index < self.len() { Some(self.remove(index)) } else { None }
+	}
+
+	fn delete_range(&mut self, start: usize, end: usize) -> Vec<T> {
+		let len = self.len();
+		if start >= len || start >= end { return Vec::new(); }
+		let end = end.min(len);
+		// Drain and collect
+		self.drain(start..end).collect()
+	}
+
+	fn replace_at(&mut self, index: usize, item: T) -> Option<T> {
+		if index < self.len() {
+			let old = std::mem::replace(&mut self[index], item);
+			Some(old)
+		} else { None }
+	}
+
+	fn swap_remove_at(&mut self, index: usize) -> Option<T> {
+		if index < self.len() { Some(self.swap_remove(index)) } else { None }
 	}
 }

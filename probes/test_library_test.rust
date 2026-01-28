@@ -1,0 +1,13 @@
+#!/usr/bin/env lust
+
+// use test_library::foo42;
+use test_library;
+
+// extern pub fn foo42() -> i32;
+import foo42() -> i32;
+
+#[test]
+fn test_foo42() {
+    let result = foo42();
+    eq!(result, 42);
+}
