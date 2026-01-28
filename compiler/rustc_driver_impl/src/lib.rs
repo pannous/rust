@@ -289,6 +289,19 @@ pub fn run_compiler(at_args: &[String], callbacks: &mut (dyn Callbacks + Send)) 
 
     drop(default_early_dcx);
 
+    // Add input file's directory to library search path in script mode
+    let mut sopts = sopts;
+    if let Some(Input::File(ref path)) = input {
+        if has_shebang(&Input::File(path.clone())) || sopts.unstable_opts.script {
+            if let Some(parent) = path.parent() {
+                // Add the script's directory to the library search path
+                use rustc_session::search_paths::{PathKind, SearchPath};
+                let script_dir = SearchPath::new(PathKind::All, parent.to_path_buf());
+                sopts.search_paths.insert(0, script_dir);
+            }
+        }
+    }
+
     let mut config = interface::Config {
         opts: sopts,
         crate_cfg: matches.opt_strs("cfg"),
