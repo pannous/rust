@@ -1,0 +1,26 @@
+#!/usr/bin/env rust
+// Demo of the new .! unwrap shorthand syntax
+
+# Basic unwrap
+let val: i32? = Some(42)
+put!("val.! = ", val.!)
+
+# Chained unwrap
+let nested = Some(Some("nested"))
+put!("nested.!.! = ", nested.!.!)
+
+# In expressions
+let x: i32? = Some(10)
+let y = x.! * 2 + 5
+put!("x.! * 2 + 5 = ", y)
+
+# With method chaining
+let text: String? = Some("HELLO WORLD".to_string())
+put!("text.!.to_lowercase() = ", text.!.to_lowercase())
+
+# With field access
+struct Point { x: int, y: int }
+let point: Point? = Some(Point { x: 3, y: 4 })
+put!("point.!.x = ", point.!.x)
+
+put!("✓ All unwrap shorthand examples work!")
