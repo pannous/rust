@@ -107,3 +107,111 @@ Calling double(21) from C: 42
 ✓ Confirmed: export fn generates true C-compatible extern "C" functions
 ✓ FFI calls work correctly across Rust-to-C boundary
 ✓ Function arguments and return values properly marshalled
+
+## Import Function Feature (Counterpart)
+
+### Implementation Summary
+
+Implemented `import fn` syntax as the counterpart to `export fn` for importing functions from dynamic libraries.
+
+### Key Changes
+
+**Parser Modification** (compiler/rustc_parse/src/parser/item.rs:695-703, 3046-3114)
+- Detects `import fn` token sequence before general import handling
+- Parses function signature similar to regular fn declarations
+- Creates ForeignMod (extern block) containing the function
+- Automatically uses extern "C" ABI for C-compatible calling convention
+
+### Usage Example
+
+```rust
+#!/usr/bin/env rust
+
+// Import functions from a dynamic library
+import fn foo42() -> i32;
+import fn doubled(x: i64) -> i64;
+
+#[test]
+fn test_library_import_magic() {
+    let result = unsafe { foo42() };
+    eq!(result, 42);
+
+    let result2 = unsafe { doubled(21) };
+    eq!(result2, 42);
+}
+```
+
+### Generated Code
+
+The `import fn` syntax generates an extern "C" block:
+
+```rust
+extern "C" {
+    fn foo42() -> i32;
+    fn doubled(x: i64) -> i64;
+}
+```
+
+### Compilation & Linking
+
+```bash
+# Compile the library
+rustc test_library.rust --crate-type dylib -o /tmp/libtest_library.dylib
+
+# Compile the test with linking flags
+rustc --test test_library_test.rust -L /tmp -l test_library -o test
+
+# Run (with library path for dynamic linking)
+DYLD_LIBRARY_PATH=/tmp ./test
+```
+
+### Safety
+
+Imported functions are correctly marked as unsafe FFI calls, requiring unsafe blocks:
+```rust
+let result = unsafe { foo42() };  // Explicit unsafe for FFI
+```
+
+### Complete Workflow
+
+1. **Export side** (test_library.rust):
+   ```rust
+   export fn foo42() -> int { 42 }
+   export fn doubled(x: int) -> int { x * 2 }
+   ```
+
+2. **Import side** (test_library_test.rust):
+   ```rust
+   import fn foo42() -> i32;
+   import fn doubled(x: i64) -> i64;
+   ```
+
+3. **Build**:
+   ```bash
+   rustc test_library.rust --crate-type dylib -o libtest_library.dylib
+   rustc test.rust -L . -l test_library
+   ```
+
+### Implementation Details
+
+The feature works by:
+1. Detecting `import fn` during item parsing
+2. Parsing the function signature (name, parameters, return type)
+3. Creating a ForeignItem::Fn with the signature
+4. Wrapping it in a ForeignMod (extern block) with "C" ABI
+5. Returning ItemKind::ForeignMod containing the declaration
+
+This generates the exact same structure as writing `extern "C" { fn ... }` manually, but with cleaner syntax.
+
+### Test Results
+
+- Manual compilation and linking: ✓ working
+- FFI calls successful: ✓ passing
+- Symbols correctly resolved at link time
+- Type-safe FFI with explicit unsafe markers
+
+### Future Enhancements
+
+- Auto-detect library name from file name pattern (e.g., `*_test.rust` imports from `*`)
+- Add `#[link(name = "...")]` attribute generation for automatic linking
+- Support batch imports: `import { foo, bar, baz } from "library";`
