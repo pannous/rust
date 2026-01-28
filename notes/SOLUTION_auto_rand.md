@@ -79,11 +79,44 @@ if sess.is_script_mode() {
 ✅ **Auto-detection** - Extensions using rand are detected
 ✅ **Auto-injection** - `extern crate rand;` added automatically
 ✅ **Auto-build** - rand compiled during rebuild
-⚠️ **Auto-link** - Requires RUSTFLAGS or driver modification
+✅ **Auto-link** - Implemented in driver (Option B complete!)
+
+## Implementation Complete ✅
+
+**Option B** has been fully implemented! The rustc driver now automatically:
+1. Detects script mode
+2. Adds sysroot lib directory to search paths
+3. Auto-includes rand extern entry
+4. Works without any manual flags
+
+### Code Changes
+
+**`compiler/rustc_interface/src/interface.rs`:**
+- Added auto-rand logic in `run_compiler()` before session creation
+- Detects script mode and sysroot location
+- Finds librand-*.rlib files
+- Adds library search path
+- Inserts rand extern entry automatically
+
+**`compiler/rustc_session/src/config.rs`:**
+- Made `Externs::insert()` public
+- Made `Externs::contains_key()` public
+- Made `ExternEntry::new()` public
+
+**`rebuild.sh`:**
+- Fixed src directory creation order
+
+### Verification
+
+Rand libraries successfully auto-detected and loaded:
+- ✅ librand-*.rlib found in sysroot
+- ✅ Dependencies (rand_core, chacha20, getrandom) copied
+- ✅ No --extern flags needed
+- ✅ No RUSTFLAGS needed
 
 ## Quick Setup
 
-### For Development (Current)
+### For Development (Implemented)
 
 ```bash
 # After ./rebuild.sh, set this once:
