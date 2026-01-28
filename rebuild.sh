@@ -14,12 +14,12 @@ else
     ./x.py build --stage 1 library
 fi
 
-# Build rand for script mode extensions
-echo "Building rand for script mode..."
+# Build external dependencies for script mode extensions
+echo "Building external dependencies for script mode..."
 SCRIPT_DEPS_DIR="./build/script-deps"
 mkdir -p "$SCRIPT_DEPS_DIR"
 
-# Only rebuild if Cargo.toml doesn't exist or rand version changed
+# Only rebuild if Cargo.toml doesn't exist or dependencies changed
 if [ ! -f "$SCRIPT_DEPS_DIR/Cargo.toml" ]; then
     cat > "$SCRIPT_DEPS_DIR/Cargo.toml" << 'EOF'
 [package]
@@ -28,30 +28,45 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# Add external crates needed by extensions here
 rand = "0.10.0-rc.8"
+# Example: Add more dependencies as needed
+# serde = { version = "1.0", features = ["derive"] }
+# regex = "1.10"
 EOF
 
     mkdir -p "$SCRIPT_DEPS_DIR/src"
 
     cat > "$SCRIPT_DEPS_DIR/src/lib.rs" << 'EOF'
-// Dummy library to build rand as dependency
+// Dummy library to build dependencies
+// Add new dependencies as needed
 pub use rand;
+// pub use serde;
+// pub use regex;
 EOF
 fi
 
-# Build with the system cargo (or use new rustc if available)
-(cd "$SCRIPT_DEPS_DIR" && cargo build --release 2>/dev/null) || true
+# Build with the stage1 rustc for version compatibility
+if [ -f "./build/host/stage1/bin/rustc" ]; then
+    RUSTC="$(pwd)/build/host/stage1/bin/rustc" cargo build --release --manifest-path="$SCRIPT_DEPS_DIR/Cargo.toml" 2>/dev/null || true
+else
+    # Fallback to system cargo if stage1 not available yet
+    (cd "$SCRIPT_DEPS_DIR" && cargo build --release 2>/dev/null) || true
+fi
 
-# Find and copy rand rlibs to compiler lib directory
+# Copy ALL built rlibs to compiler lib directory (excluding script-deps itself)
 if [ -d "$SCRIPT_DEPS_DIR/target/release/deps" ]; then
     TARGET_TRIPLE=$(./build/host/stage1/bin/rustc --version --verbose | grep host | cut -d' ' -f2)
     LIB_DIR="./build/host/stage1/lib/rustlib/$TARGET_TRIPLE/lib"
 
-    # Copy rand and its dependencies
-    find "$SCRIPT_DEPS_DIR/target/release/deps" -name "librand-*.rlib" -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
-    find "$SCRIPT_DEPS_DIR/target/release/deps" -name "librand_core-*.rlib" -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
+    # Copy all dependency rlibs except the script-deps crate itself
+    find "$SCRIPT_DEPS_DIR/target/release/deps" -name "lib*.rlib" ! -name "libscript_deps-*.rlib" -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
 
-    echo "✓ rand available for scripts in $LIB_DIR"
+    # Count how many external crates were copied
+    EXTERNAL_COUNT=$(find "$LIB_DIR" -name "lib*.rlib" -type f 2>/dev/null | \
+        grep -v -E "(libstd|libcore|liballoc|libproc_macro|libtest|libpanic|libunwind|librustc|libgetopts|libgimli|libhashbrown|liblibc|libmemchr|libminiz|libobject|libaddr2line|libcfg_if|libcompiler_builtins|libsysroot|libstd_detect)" | wc -l | tr -d ' ')
+
+    echo "✓ External crates available for script mode ($EXTERNAL_COUNT crate variants in $LIB_DIR)"
 fi
 
 # cp ./build/host/stage1/bin/rustc rustc # current
