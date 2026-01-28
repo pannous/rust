@@ -3,6 +3,8 @@ name = "rustc_extensions"
 version = "0.0.0"
 edition = "2024"
 
+[workspace]
+
 # This crate contains Rust source code that gets injected into scripts.
 # It is NOT compiled as a library - the source files are read at compile time
 # by script_harness.rs and parsed into AST for injection.
@@ -23,3 +25,5 @@ edition = "2024"
 # 2. Easy testing of the extensions code
 # 3. Documentation
 # 4. Aditional standalone usage OUTSIDE of the modified rust https://github.com/pannous/rust
+[dependencies]
+rand = "0.10.0-rc.8"

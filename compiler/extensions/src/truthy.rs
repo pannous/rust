@@ -2,6 +2,8 @@
 //
 // Allows values to be used in boolean contexts like Python/JavaScript.
 
+use crate::val::Val;
+
 #[allow(dead_code)]
 pub trait Truthy {
 	fn is_truthy(&self) -> bool;
@@ -36,3 +38,18 @@ impl Truthy for String { fn is_truthy(&self) -> bool { !self.is_empty() } }
 // Collections
 impl<T> Truthy for Vec<T> { fn is_truthy(&self) -> bool { !self.is_empty() } }
 impl<T> Truthy for Option<T> { fn is_truthy(&self) -> bool { self.is_some() } }
+
+
+// Truthy implementation
+impl Truthy for Val {
+	fn is_truthy(&self) -> bool {
+		match self {
+			Val::Str(s) => !s.is_empty(),
+			Val::Int(n) => *n != 0,
+			Val::Float(n) => *n != 0.0,
+			Val::Bool(b) => *b,
+			Val::List(v) => !v.is_empty(),
+			Val::Nil => false,
+		}
+	}
+}

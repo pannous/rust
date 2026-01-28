@@ -4,6 +4,10 @@
 
 // Array accessor methods (head, tail, first, last, etc.)
 // Implemented specifically for arrays/slices to avoid conflict with StringExtensions
+// use crate::numbers::rand_index;
+
+use rand::RngExt;
+
 #[allow(dead_code)]
 pub trait ArrayExtensions<T: Clone> {
 	// First element access - returns Option<T> (cloned)
@@ -180,7 +184,7 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 	fn random(&self) -> Option<T> {
 		let slice = self.as_ref();
 		if slice.is_empty() { return None }
-		let idx = rand_index(slice.len());
+		let idx = rand::rng().random_range(0..slice.len());
 		slice.get(idx).cloned()
 	}
 
@@ -189,7 +193,7 @@ impl<T: Clone, S: AsRef<[T]>> ListExtensions<T> for S {
 		// Fisher-Yates shuffle
 		let mut n = v.len();
 		while n > 1 {
-			let j = rand_index(n);
+			let j = rand::rng().random_range(0..len(self));
 			n -= 1;
 			v.swap(n, j);
 		}

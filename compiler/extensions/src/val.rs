@@ -63,16 +63,3 @@ impl PartialEq<char> for Val {
 	}
 }
 
-// Truthy implementation
-impl Truthy for Val {
-	fn is_truthy(&self) -> bool {
-		match self {
-			Val::Str(s) => !s.is_empty(),
-			Val::Int(n) => *n != 0,
-			Val::Float(n) => *n != 0.0,
-			Val::Bool(b) => *b,
-			Val::List(v) => !v.is_empty(),
-			Val::Nil => false,
-		}
-	}
-}

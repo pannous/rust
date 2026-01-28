@@ -215,3 +215,108 @@ This generates the exact same structure as writing `extern "C" { fn ... }` manua
 - Auto-detect library name from file name pattern (e.g., `*_test.rust` imports from `*`)
 - Add `#[link(name = "...")]` attribute generation for automatic linking
 - Support batch imports: `import { foo, bar, baz } from "library";`
+
+## Include Library Feature
+
+### Implementation Summary
+
+Implemented `include library_name;` syntax to automatically handle library linking without manual `-L` and `-l` compiler flags.
+
+### Key Changes
+
+**Parser Modification** (compiler/rustc_parse/src/parser/item.rs:699-702, 3048-3085)
+- Detects `include <ident>;` token sequence
+- Parses library name identifier
+- Creates #[link(name = "library")] attribute
+- Generates empty extern "C" {} block with the link attribute
+
+### Usage Example
+
+**Old way** (manual linking):
+```bash
+rustc test.rust -L /path/to/libs -l test_library
+```
+
+**New way** (automatic linking):
+```rust
+#!/usr/bin/env rust
+
+include test_library;  // Automatically links to libtest_library.dylib/so
+
+import fn foo42() -> i32;
+import fn doubled(x: i64) -> i64;
+```
+
+### Generated Code
+
+The `include test_library;` statement generates:
+
+```rust
+#[link(name = "test_library")]
+extern "C" {}
+```
+
+This tells the linker to automatically link against `libtest_library.dylib` (or `.so` on Linux, `.dll` on Windows).
+
+### Complete Workflow Example
+
+**test_library.rust** (library to export):
+```rust
+#!/usr/bin/env rust
+
+export fn foo42() -> int { 42 }
+export fn doubled(x: int) -> int { x * 2 }
+```
+
+**test_library_test.rust** (consumer):
+```rust
+#!/usr/bin/env rust
+
+include test_library;  // Auto-link!
+
+import fn foo42() -> i32;
+import fn doubled(x: i64) -> i64;
+
+#[test]
+fn test() {
+    unsafe {
+        assert_eq!(foo42(), 42);
+        assert_eq!(doubled(21), 42);
+    }
+}
+```
+
+**Build** (simplified):
+```bash
+# Build library  
+rustc test_library.rust --crate-type dylib
+
+# Build test (no -L or -l flags needed if library is in standard path!)
+rustc --test test_library_test.rust
+
+# Run
+LD_LIBRARY_PATH=. ./test_library_test
+```
+
+### Implementation Details
+
+1. Parser detects `include <ident>;` syntax
+2. Calls `parse_include_library()` which:
+   - Parses the library name as an identifier
+   - Creates a #[link(name = "...")] attribute using `create_link_attr()`
+   - Generates an empty ForeignMod (extern "C" {})
+   - Attaches the link attribute to the item
+3. Linker automatically finds and links the library
+
+### Benefits
+
+✅ **Cleaner syntax** - No command-line flags needed  
+✅ **Self-documenting** - Library dependencies visible in source code  
+✅ **Portable** - Works across platforms (dylib/so/dll handled automatically)  
+✅ **Composable** - Combine with `import fn` for complete FFI workflow  
+
+### Future Enhancements
+
+- Auto-detect library path from relative imports
+- Support library search paths: `include test_library from "./libs";`
+- Version specifications: `include test_library@1.0;`

@@ -1,5 +1,7 @@
 #!/usr/bin/env rust
 
+include test_library;
+
 import fn foo42() -> i32;
 import fn doubled(x: i64) -> i64;
 

@@ -696,6 +696,10 @@ impl<'a> Parser<'a> {
             // import fn: creates extern "C" function declarations
             self.bump(); // consume `import`
             return self.parse_import_fn(lo, attrs);
+        } else if self.token.is_ident_named(sym::include) && self.look_ahead(1, |t| t.is_ident()) {
+            // include library_name; -> generates #[link(name = "library_name")] extern "C" {}
+            self.bump(); // consume `include`
+            return self.parse_include_library(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -3042,6 +3046,84 @@ pub(crate) enum FnContext {
 
 /// Parsing of functions and methods.
 impl<'a> Parser<'a> {
+    /// Parse `include library_name;` and convert to #[link(name = "library_name")] extern "C" {}
+    fn parse_include_library(
+        &mut self,
+        lo: Span,
+        attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        // Parse library name
+        let lib_name = self.parse_ident()?;
+        self.expect_semi()?;
+
+        // Create #[link(name = "library_name")] attribute
+        let link_attr = self.create_link_attr(lo, lib_name.name);
+
+        // Create empty extern "C" {} block
+        let abi = Some(StrLit {
+            symbol: sym::C,
+            suffix: None,
+            symbol_unescaped: sym::C,
+            style: StrStyle::Cooked,
+            span: lo,
+        });
+
+        // Create the ForeignMod item with the link attribute
+        let foreign_mod = ItemKind::ForeignMod(ast::ForeignMod {
+            extern_span: lo,
+            safety: Safety::Default,
+            abi,
+            items: ThinVec::new(), // Empty block
+        });
+
+        // Add the link attribute to the item's attributes
+        attrs.push(link_attr);
+
+        Ok(Some(foreign_mod))
+    }
+
+    /// Create #[link(name = "library_name")] attribute
+    fn create_link_attr(&self, span: Span, library_name: Symbol) -> ast::Attribute {
+        use rustc_ast::token::{IdentIsRaw, TokenKind};
+        use rustc_ast::tokenstream::{TokenStream, TokenTree};
+        use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+
+        // Build path: link
+        let path = Path {
+            span,
+            segments: vec![PathSegment::from_ident(Ident::new(sym::link, span))].into(),
+            tokens: None,
+        };
+
+        // Build tokens: name = "library_name"
+        let tokens = vec![
+            TokenTree::token_alone(TokenKind::Ident(sym::name, IdentIsRaw::No), span),
+            TokenTree::token_alone(TokenKind::Eq, span),
+            TokenTree::token_alone(TokenKind::lit(token::Str, library_name, None), span),
+        ];
+
+        let args = AttrArgs::Delimited(ast::DelimArgs {
+            dspan: ast::tokenstream::DelimSpan::from_single(span),
+            delim: ast::token::Delimiter::Parenthesis,
+            tokens: TokenStream::new(tokens),
+        });
+
+        ast::Attribute {
+            kind: AttrKind::Normal(Box::new(NormalAttr {
+                item: ast::AttrItem {
+                    unsafety: Safety::Default,
+                    path,
+                    args: AttrItemKind::Unparsed(args),
+                    tokens: None,
+                },
+                tokens: None,
+            })),
+            id: ast::AttrId::from_u32(0),
+            style: AttrStyle::Outer,
+            span,
+        }
+    }
+
     /// Parse `import fn name(args) -> ret;` and convert to extern "C" { fn name(args) -> ret; }
     fn parse_import_fn(
         &mut self,
