@@ -13,6 +13,47 @@ else
     ./x.py build --stage 1 compiler
     ./x.py build --stage 1 library
 fi
+
+# Build rand for script mode extensions
+echo "Building rand for script mode..."
+SCRIPT_DEPS_DIR="./build/script-deps"
+mkdir -p "$SCRIPT_DEPS_DIR"
+
+# Only rebuild if Cargo.toml doesn't exist or rand version changed
+if [ ! -f "$SCRIPT_DEPS_DIR/Cargo.toml" ]; then
+    cat > "$SCRIPT_DEPS_DIR/Cargo.toml" << 'EOF'
+[package]
+name = "script-deps"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rand = "0.10.0-rc.8"
+EOF
+
+cat > "$SCRIPT_DEPS_DIR/src/lib.rs" << 'EOF'
+// Dummy library to build rand as dependency
+pub use rand;
+EOF
+
+    mkdir -p "$SCRIPT_DEPS_DIR/src"
+fi
+
+# Build with the system cargo (or use new rustc if available)
+(cd "$SCRIPT_DEPS_DIR" && cargo build --release 2>/dev/null) || true
+
+# Find and copy rand rlibs to compiler lib directory
+if [ -d "$SCRIPT_DEPS_DIR/target/release/deps" ]; then
+    TARGET_TRIPLE=$(./build/host/stage1/bin/rustc --version --verbose | grep host | cut -d' ' -f2)
+    LIB_DIR="./build/host/stage1/lib/rustlib/$TARGET_TRIPLE/lib"
+
+    # Copy rand and its dependencies
+    find "$SCRIPT_DEPS_DIR/target/release/deps" -name "librand-*.rlib" -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
+    find "$SCRIPT_DEPS_DIR/target/release/deps" -name "librand_core-*.rlib" -exec cp {} "$LIB_DIR/" \; 2>/dev/null || true
+
+    echo "✓ rand available for scripts in $LIB_DIR"
+fi
+
 # cp ./build/host/stage1/bin/rustc rustc # current
 # cp ./build/host/stage1/bin/rustc /usr/local/bin/rust
 
