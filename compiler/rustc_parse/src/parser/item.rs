@@ -692,6 +692,10 @@ impl<'a> Parser<'a> {
             // Go-style short variable declaration: x := expr -> __walrus!(x = expr)
             // Only at module level (Free context), not inside impl/trait/blocks/macros
             return self.parse_walrus_assignment(lo, attrs);
+        } else if self.token.is_ident_named(sym::import) && self.look_ahead(1, |t| t.is_keyword(kw::Fn)) {
+            // import fn: creates extern "C" function declarations
+            self.bump(); // consume `import`
+            return self.parse_import_fn(lo, attrs);
         } else if self.isnt_macro_invocation()
             && (self.token.is_ident_named(sym::import)
                 || self.token.is_ident_named(sym::using)
@@ -3038,6 +3042,80 @@ pub(crate) enum FnContext {
 
 /// Parsing of functions and methods.
 impl<'a> Parser<'a> {
+    /// Parse `import fn name(args) -> ret;` and convert to extern "C" { fn name(args) -> ret; }
+    fn parse_import_fn(
+        &mut self,
+        lo: Span,
+        _attrs: &mut AttrVec,
+    ) -> PResult<'a, Option<ItemKind>> {
+        self.expect_keyword(exp!(Fn))?; // consume `fn`
+
+        // Parse function signature
+        let ident = self.parse_ident()?;
+        let mut generics = self.parse_generics()?;
+        let mode = FnParseMode {
+            req_name: |_, _| true,
+            context: FnContext::Free,
+            req_body: false,
+            in_block: false,
+        };
+        let decl = self.parse_fn_decl(&mode, AllowPlus::Yes, RecoverReturnSign::Yes)?;
+        generics.where_clause = self.parse_where_clause()?;
+        self.expect_semi()?; // import fn must end with semicolon
+
+        let fn_span = lo.to(self.prev_token.span);
+
+        // Build function signature (no extern needed in signature for foreign fns)
+        let header = ast::FnHeader::default();
+        let sig = ast::FnSig {
+            decl,
+            header,
+            span: fn_span,
+        };
+
+        // Create foreign function item
+        let foreign_fn = ast::Fn {
+            defaultness: ast::Defaultness::Final,
+            sig,
+            ident,
+            generics,
+            contract: None,
+            body: None,
+            define_opaque: None,
+            eii_impls: ThinVec::new(),
+        };
+
+        // Create ForeignItem wrapping the function
+        let foreign_item = Box::new(ast::Item {
+            attrs: ThinVec::new(),
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::ForeignItemKind::Fn(Box::new(foreign_fn)),
+            vis: ast::Visibility {
+                span: lo,
+                kind: ast::VisibilityKind::Inherited,
+                tokens: None,
+            },
+            span: fn_span,
+            tokens: None,
+        });
+
+        // Create extern "C" block containing the function
+        let abi = Some(StrLit {
+            symbol: sym::C,
+            suffix: None,
+            symbol_unescaped: sym::C,
+            style: StrStyle::Cooked,
+            span: lo,
+        });
+
+        Ok(Some(ItemKind::ForeignMod(ast::ForeignMod {
+            extern_span: lo,
+            safety: Safety::Default,
+            abi,
+            items: thin_vec![foreign_item],
+        })))
+    }
+
     /// Parse a function starting from the front matter (`const ...`) to the body `{ ... }` or `;`.
     fn parse_fn(
         &mut self,

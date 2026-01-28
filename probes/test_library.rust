@@ -4,7 +4,7 @@ export fn foo42() -> int {
     return 42;
 }
 
-export fn double(x: int) -> int {
+export fn doubled(x: int) -> int {
     return x * 2;
 }
 

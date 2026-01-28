@@ -1,13 +1,13 @@
-#!/usr/bin/env lust
+#!/usr/bin/env rust
 
-// use test_library::foo42;
-use test_library;
-
-// extern pub fn foo42() -> i32;
-import foo42() -> i32;
+import fn foo42() -> i32;
+import fn doubled(x: i64) -> i64;
 
 #[test]
-fn test_foo42() {
-    let result = foo42();
+fn test_library_import_magic() {
+    let result = unsafe { foo42() };
     eq!(result, 42);
+
+    let result2 = unsafe { doubled(21) };
+    eq!(result2, 42);
 }
