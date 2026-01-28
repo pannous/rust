@@ -154,8 +154,20 @@ fn filter_out_macros(source: &str) -> String {
     let mut brace_depth = 0;
 
     while let Some(line) = lines.next() {
+        let trimmed = line.trim();
+
+        // Check if next line is a macro - if so, skip any attributes
+        if let Some(next_line) = lines.peek() {
+            if next_line.contains("macro_rules!") || next_line.trim().starts_with("#[macro_export]") {
+                // Current line is an attribute before a macro - skip it
+                if trimmed.starts_with("#[") {
+                    continue;
+                }
+            }
+        }
+
         // Check for #[macro_export] - skip this line and the following macro
-        if line.trim().starts_with("#[macro_export]") {
+        if trimmed.starts_with("#[macro_export]") {
             in_macro = true;
             brace_depth = 0;
             continue;
