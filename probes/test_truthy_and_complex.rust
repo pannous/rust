@@ -14,11 +14,11 @@ fn test_user_filter_and_first() {
         User { name: "Alice".to_string(), age: 20 },
     ];
 
-    let user = users.chose(|u| u.age > 18).first().cloned();
+    let user = users.chose(|u| u.age > 18).head();
 
     let result: String;
     if user {
-        result = user.unwrap().name;
+        result = user.!.name;
     } else {
         result = "Anonymous".to_string();
     }
@@ -30,7 +30,7 @@ fn test_user_filter_and_first() {
 #[test]
 fn test_empty_users_list() {
     let empty_users: Vec<User> = vec![];
-    let empty_result = empty_users.chose(|u| u.age > 18).first().cloned();
+    let empty_result = empty_users.chose(|u| u.age > 18).head();
 
     if empty_result {
         panic!("FAIL: emptyResult should be None");
@@ -47,7 +47,7 @@ fn test_user_with_age_exactly_eighteen() {
         age: 18,
     }];
 
-    let border_user = border_users.chose(|u| u.age > 18).first().cloned();
+    let border_user = border_users.chose(|u| u.age > 18).head();
 
     if border_user {
         panic!("FAIL: user with age 18 should not match > 18");
@@ -64,7 +64,7 @@ fn test_all_users_under_age() {
         User { name: "Kid2".to_string(), age: 15 },
     ];
 
-    let young_result = young_users.chose(|u| u.age > 18).first().cloned();
+    let young_result = young_users.chose(|u| u.age > 18).head();
 
     if young_result {
         panic!("FAIL: no users should match > 18");
@@ -81,7 +81,7 @@ fn test_user_with_empty_name() {
         age: 25,
     }];
 
-    let user_empty_name = users_empty_name.chose(|u| u.age > 18).first().cloned();
+    let user_empty_name = users_empty_name.chose(|u| u.age > 18).head();
 
     if user_empty_name {
         put!("PASS: user exists with empty name");

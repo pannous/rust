@@ -2,6 +2,38 @@
 //
 // Provides convenient collection methods with intuitive synonyms.
 
+// Array accessor methods (head, tail, first, last, etc.)
+// Implemented specifically for arrays/slices to avoid conflict with StringExtensions
+#[allow(dead_code)]
+pub trait ArrayExtensions<T: Clone> {
+	// First element access - returns Option<T> (cloned)
+	// Note: 'first' and 'last' methods removed to avoid shadowing std library methods
+	fn head(&self) -> Option<T>;
+	fn start(&self) -> Option<T>;
+	fn begin(&self) -> Option<T>;
+
+	// Last element access - returns Option<T> (cloned)
+	fn tail(&self) -> Option<T>;
+	fn end(&self) -> Option<T>;
+}
+
+impl<T: Clone> ArrayExtensions<T> for [T] {
+	fn head(&self) -> Option<T> { <[T]>::first(self).cloned() }
+	fn start(&self) -> Option<T> { <[T]>::first(self).cloned() }
+	fn begin(&self) -> Option<T> { <[T]>::first(self).cloned() }
+
+	fn tail(&self) -> Option<T> { <[T]>::last(self).cloned() }
+	fn end(&self) -> Option<T> { <[T]>::last(self).cloned() }
+}
+
+impl<T: Clone> ArrayExtensions<T> for Vec<T> {
+	fn head(&self) -> Option<T> { self.as_slice().head() }
+	fn start(&self) -> Option<T> { self.as_slice().start() }
+	fn begin(&self) -> Option<T> { self.as_slice().begin() }
+
+	fn tail(&self) -> Option<T> { self.as_slice().tail() }
+	fn end(&self) -> Option<T> { self.as_slice().end() }
+}
 
 #[allow(dead_code)]
 pub trait ListExtensions<T: Clone> {

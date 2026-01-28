@@ -4,6 +4,8 @@
 
 #[allow(dead_code)]
 pub trait StringExtensions {
+	// Names cannot overlap with list extensions because a str& is a list, but of u8 (bytes) not of chars as we want here.
+	// Solution: find all the common ground over there at ListExtensions!
 	fn first(&self) -> String;
 	fn head(&self) -> String;
 	fn start(&self) -> String;

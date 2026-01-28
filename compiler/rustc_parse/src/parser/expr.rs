@@ -309,8 +309,17 @@ impl<'a> Parser<'a> {
             let span = self.mk_expr_sp(&lhs, lhs_span, op_span, rhs.span);
             lhs = match op {
                 AssocOp::Binary(ast_op) => {
-                    let binary = self.mk_binary(source_map::respan(cur_op_span, ast_op), lhs, rhs);
-                    self.mk_expr(span, binary)
+                    // In script mode, transform `a or b` to `if (&a).is_truthy() { a } else { b }`
+                    // This gives Python-style truthy or: returns first truthy value, not boolean
+                    if self.is_script_mode()
+                        && ast_op == BinOpKind::Or
+                        && !cur_op_span.from_expansion()
+                    {
+                        self.mk_truthy_or_expr(lhs, rhs, span)
+                    } else {
+                        let binary = self.mk_binary(source_map::respan(cur_op_span, ast_op), lhs, rhs);
+                        self.mk_expr(span, binary)
+                    }
                 }
                 AssocOp::Assign => self.mk_expr(span, ExprKind::Assign(lhs, rhs, cur_op_span)),
                 AssocOp::AssignOp(aop) => {
@@ -346,11 +355,24 @@ impl<'a> Parser<'a> {
         match (self.expr_is_complete(lhs), AssocOp::from_token(&self.token)) {
             // Semi-statement forms are odd:
             // See https://github.com/rust-lang/rust/issues/29071
-            (true, None) => false,
+            (true, None) => {
+                // Check if the token is an identifier that represents an operator (or, and, xor)
+                // In script mode, these should be treated as value-returning operators
+                if self.is_script_mode() {
+                    if let Some((ident, token::IdentIsRaw::No)) = self.token.ident() {
+                        return matches!(ident.name, sym::or | sym::and | sym::xor);
+                    }
+                }
+                false
+            }
             (false, _) => true, // Continue parsing the expression.
             // An exhaustive check is done in the following block, but these are checked first
             // because they *are* ambiguous but also reasonable looking incorrect syntax, so we
             // want to keep their span info to improve diagnostics in these cases in a later stage.
+            // In script mode, BinOpKind::Or returns values not booleans, so skip ambiguity check
+            (true, Some(AssocOp::Binary(BinOpKind::Or))) if self.is_script_mode() => {
+                true // Continue parsing as value-returning or
+            }
             (true, Some(AssocOp::Binary(
                 BinOpKind::Mul | // `{ 42 } *foo = bar;` or `{ 42 } * 3`
                 BinOpKind::Sub | // `{ 42 } -5`
@@ -3341,6 +3363,60 @@ impl<'a> Parser<'a> {
                 args: thin_vec![],
                 span,
             })),
+            span,
+            attrs: ast::AttrVec::new(),
+            tokens: None,
+        })
+    }
+
+    /// Create Python-style truthy or expression for script mode.
+    /// Transforms `a or b` into `if (&a).is_truthy() { a } else { b }`
+    /// This returns the first truthy value, not a boolean.
+    fn mk_truthy_or_expr(&mut self, lhs: Box<Expr>, rhs: Box<Expr>, span: Span) -> Box<Expr> {
+        // Create condition: (&lhs).is_truthy()
+        let lhs_span = lhs.span;
+        let cond = self.wrap_expr_with_is_truthy(lhs.clone());
+
+        // Create then block containing lhs as final expression
+        let lhs_stmt = ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(lhs),
+            span: lhs_span,
+        };
+        let then_block = Box::new(ast::Block {
+            stmts: thin_vec![lhs_stmt],
+            id: ast::DUMMY_NODE_ID,
+            rules: ast::BlockCheckMode::Default,
+            span: lhs_span,
+            tokens: None,
+        });
+
+        // Create else block containing rhs wrapped in block expression
+        let rhs_span = rhs.span;
+        let rhs_stmt = ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(rhs),
+            span: rhs_span,
+        };
+        let else_block = Box::new(ast::Block {
+            stmts: thin_vec![rhs_stmt],
+            id: ast::DUMMY_NODE_ID,
+            rules: ast::BlockCheckMode::Default,
+            span: rhs_span,
+            tokens: None,
+        });
+        let else_expr = Box::new(Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ExprKind::Block(else_block, None),
+            span: rhs_span,
+            attrs: ast::AttrVec::new(),
+            tokens: None,
+        });
+
+        // Create if expression: If(cond, then_block, Some(else_expr))
+        Box::new(Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ExprKind::If(cond, then_block, Some(else_expr)),
             span,
             attrs: ast::AttrVec::new(),
             tokens: None,
