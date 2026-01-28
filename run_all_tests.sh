@@ -125,7 +125,18 @@ compile_test() {
     local name=$(basename "$file" .rust)
     local output_bin="$TEMP_DIR/$name"
 
-    "$RUSTC" --test "$file" -o "$output_bin" -A unused 2>&1
+    # Check if this file contains 'export fn' (library file)
+    if grep -q "^export fn" "$file"; then
+        # First compile as test binary
+        local test_output
+        test_output=$("$RUSTC" --test "$file" -o "$output_bin" -L "$SCRIPT_DIR" -A unused 2>&1) || { echo "$test_output"; return 1; }
+
+        # Then compile as dylib and output to probes directory for other tests to use
+        "$RUSTC" "$file" --crate-type dylib -o "$SCRIPT_DIR/lib$name.dylib" -A unused 2>&1
+    else
+        # Regular test - add library search path in case it uses libraries
+        "$RUSTC" --test "$file" -o "$output_bin" -L "$SCRIPT_DIR" -A unused 2>&1
+    fi
 }
 
 run_test() {

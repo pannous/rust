@@ -7,3 +7,8 @@ test_*
 
 # Temp files
 *.tmp
+
+# Compiled library outputs (dylib files generated from test_library.rust etc)
+*.dylib
+*.so
+*.dll
