@@ -57,10 +57,11 @@ Philosophy:
 • string case conversion: .upper() .lower() .capitalize()  
 • 100+ convenience functions: "hello".reverse() = "olleh"  
 
-### Optionals & Null Safety  
-• Optionals via '?' as in other sane languages: i32?  
-• Optional chaining via ?. and ??  
-• nil as alias for None  
+### Optionals & Null Safety
+• Optionals via '?' as in other sane languages: i32?
+• Optional chaining via ?. and ??
+• Unwrap shorthand via .! : val.! → val.unwrap()
+• nil as alias for None
 
 ### Collections  
 • Simple lists @[1, 2, 3] → homogeneous Vec<i32>  
