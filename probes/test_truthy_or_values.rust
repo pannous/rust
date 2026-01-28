@@ -5,20 +5,13 @@
 // 0 or 5 == 5
 // "" or "hello" == "hello"
 //
-// NOTE: This feature is NOT YET IMPLEMENTED
-// This test documents the desired behavior for future implementation
-// Currently `or` only works as boolean operator in if conditions
-//
 // To implement:
 // - Add `or` as infix operator (like `??` for Option)
+// similar to 0 and 4 see test_truthy_and_complex.rust and test_truthy_and.rust
 // - Desugar `a or b` to `if (&a).is_truthy() { a } else { b }`
 // - Handle short-circuit evaluation
 // - Support type coercion when needed
 //
-// WORKAROUND: See test_truthy_or_workaround.rust for how to achieve
-// the same behavior using truthy if expressions: if a { a } else { b }
-//
-// Tests below are COMMENTED OUT because feature is not yet implemented
 
 #[test]
 fn test_integer_or_returns_value() {
