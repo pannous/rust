@@ -2,25 +2,25 @@
 
 #[derive(Clone, Debug)]
 struct User {
-    name: String,
+    name: string,
     age: int,
 }
 
 #[test]
 fn test_user_filter_and_first() {
     let users = vec![
-        User { name: "Bob".to_string(), age: 17 },
-        User { name: "Charlie".to_string(), age: 22 },
-        User { name: "Alice".to_string(), age: 20 },
+        User { name: "Bob", age: 17 },
+        User { name: "Charlie", age: 22 },
+        User { name: "Alice", age: 20 },
     ];
 
     let user = users.chose(|u| u.age > 18).head();
 
-    let result: String;
+    let result: string;
     if user {
         result = user.!.name;
     } else {
-        result = "Anonymous".to_string();
+        result = "Anonymous";
     }
 
     put!("First user over 18: ", result);
@@ -43,7 +43,7 @@ fn test_empty_users_list() {
 #[test]
 fn test_user_with_age_exactly_eighteen() {
     let border_users = vec![User {
-        name: "Border".to_string(),
+        name: "Border",
         age: 18,
     }];
 
@@ -60,8 +60,8 @@ fn test_user_with_age_exactly_eighteen() {
 #[test]
 fn test_all_users_under_age() {
     let young_users = vec![
-        User { name: "Kid1".to_string(), age: 10 },
-        User { name: "Kid2".to_string(), age: 15 },
+        User { name: "Kid1", age: 10 },
+        User { name: "Kid2", age: 15 },
     ];
 
     let young_result = young_users.chose(|u| u.age > 18).head();
@@ -77,7 +77,7 @@ fn test_all_users_under_age() {
 #[test]
 fn test_user_with_empty_name() {
     let users_empty_name = vec![User {
-        name: "".to_string(),
+        name: "",
         age: 25,
     }];
 
