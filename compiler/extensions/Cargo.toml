@@ -5,6 +5,10 @@ edition = "2024"
 
 [workspace]
 
+[features]
+standalone_extension = []
+# ⚠️ 🚨 DO NOT USE ANY CRATES when compiling rustc where this is a module, not a crate  ⚠️ 🚨
+
 # This crate contains Rust source code that gets injected into scripts.
 # It is NOT compiled as a library - the source files are read at compile time
 # by script_harness.rs and parsed into AST for injection.

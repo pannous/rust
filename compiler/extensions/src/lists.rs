@@ -5,7 +5,7 @@
 // Array accessor methods (head, tail, first, last, etc.)
 // Implemented specifically for arrays/slices to avoid conflict with StringExtensions
 // use crate::numbers::rand_index;
-
+#[cfg(feature = "standalone_extension")]
 use rand::RngExt;
 
 #[allow(dead_code)]

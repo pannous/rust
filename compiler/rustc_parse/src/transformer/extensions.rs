@@ -41,6 +41,10 @@ pub fn parse_extensions(
         NUMBERS_SOURCE,
         MACROS_SOURCE,
     ].join("\n");
+
+    // Extract external crate dependencies from extensions
+    let external_crates = extract_external_crates(&combined_source);
+
     let source_without_macros = filter_out_macros(&combined_source);
 
     let filename = FileName::Custom("script_extensions".into());
@@ -67,6 +71,13 @@ pub fn parse_extensions(
 
     // Parse all items
     let mut items = ThinVec::new();
+
+    // First, inject extern crate declarations for external dependencies
+    for crate_name in external_crates {
+        let extern_crate = create_extern_crate_item(crate_name, call_site);
+        items.push(extern_crate);
+    }
+
     loop {
         match parser.parse_item(ForceCollect::No) {
             Ok(Some(item)) => {
@@ -81,6 +92,57 @@ pub fn parse_extensions(
     }
 
     items
+}
+
+/// Extract external crate names from use statements in extension source.
+/// Returns a list of crate names that are not std/core/alloc.
+fn extract_external_crates(source: &str) -> Vec<&str> {
+    let mut crates = Vec::new();
+    let stdlib_crates = ["std", "core", "alloc"];
+
+    for line in source.lines() {
+        let trimmed = line.trim();
+        // Match: use crate_name::...;
+        if trimmed.starts_with("use ") {
+            if let Some(rest) = trimmed.strip_prefix("use ") {
+                // Extract the crate name (first segment before ::)
+                if let Some(crate_part) = rest.split("::").next() {
+                    let crate_name = crate_part.trim();
+                    // Skip stdlib crates and crate/self/super
+                    if !stdlib_crates.contains(&crate_name)
+                        && crate_name != "crate"
+                        && crate_name != "self"
+                        && crate_name != "super"
+                        && !crates.contains(&crate_name)
+                    {
+                        crates.push(crate_name);
+                    }
+                }
+            }
+        }
+    }
+
+    crates
+}
+
+/// Create an extern crate item: extern crate name;
+fn create_extern_crate_item(crate_name: &str, span: Span) -> Box<ast::Item> {
+    use rustc_span::{Ident, Symbol};
+
+    let ident = Ident::new(Symbol::intern(crate_name), span);
+
+    Box::new(ast::Item {
+        attrs: thin_vec::ThinVec::new(),
+        id: ast::DUMMY_NODE_ID,
+        kind: ast::ItemKind::ExternCrate(None, ident),
+        vis: ast::Visibility {
+            span,
+            kind: ast::VisibilityKind::Inherited,
+            tokens: None,
+        },
+        span,
+        tokens: None,
+    })
 }
 
 /// Filter out macro definitions from source code.

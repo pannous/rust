@@ -18,12 +18,12 @@ pub trait StringExtensions {
 	fn length(&self) -> usize;
 	fn upper(&self) -> String;
 	fn to_upper(&self) -> String;
-	#[allow(non_camel_case_types)]
+	#[allow(non_snake_case)]
 	fn toUpper(&self) -> String;
 	fn uppercase(&self) -> String;
 	fn lower(&self) -> String;
 	fn to_lower(&self) -> String;
-	#[allow(non_camel_case_types)]
+	#[allow(non_snake_case)]
 	fn toLower(&self) -> String;
 	fn lowercase(&self) -> String;
 	fn includes(&self, pat: &str) -> bool;

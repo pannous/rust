@@ -1,7 +1,8 @@
 // Truthy trait for script mode.
-//
 // Allows values to be used in boolean contexts like Python/JavaScript.
 
+// ⚠️ 🚨 DO NOT USE ANY CRATES when compiling rustc where this is a module, not a crate  ⚠️ 🚨
+#[cfg(feature = "standalone_extension")]
 use crate::val::Val;
 
 #[allow(dead_code)]

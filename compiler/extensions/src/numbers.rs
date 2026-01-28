@@ -10,11 +10,9 @@ pub const tau: f64 = std::f64::consts::TAU;
 #[allow(dead_code)]
 pub const pi: f64 = std::f64::consts::PI;
 
-#[allow(script_confusables)]
 #[allow(nonstandard_style)]
 #[allow(dead_code)]
 pub const τ: f64 = std::f64::consts::TAU;
-#[allow(script_confusables)]
 #[allow(nonstandard_style)]
 #[allow(dead_code)]
 pub const π: f64 = std::f64::consts::PI;
@@ -51,8 +49,8 @@ pub fn random() -> f64 {
 }
 
 #[allow(dead_code)]
-pub fn rand_index(to: usize) -> usize {
-	rand::rng().random_range(0..to)
+pub fn rand_index(bound: usize) -> usize {
+	rand::rng().random_range(0..bound)
 }
 
 #[allow(dead_code)]
