@@ -1,0 +1,156 @@
+#!/usr/bin/env rust
+
+// Workaround for Python-style or using truthy if expressions
+// Since `or` operator returning values is not yet implemented,
+// we can use: if a { a } else { b }
+
+#[test]
+fn test_integer_or_workaround() {
+    // Equivalent to: 34 or 3
+    let result = if 34 { 34 } else { 3 };
+    eq!(result, 34);
+
+    // Equivalent to: 0 or 5
+    let result2 = if 0 { 0 } else { 5 };
+    eq!(result2, 5);
+
+    // Both truthy, return first
+    let result3 = if 10 { 10 } else { 20 };
+    eq!(result3, 10);
+}
+
+#[test]
+fn test_negative_integers_or_workaround() {
+    // Negative numbers are truthy
+    let result = if -1 { -1 } else { 5 };
+    eq!(result, -1);
+
+    let result2 = if 0 { 0 } else { -5 };
+    eq!(result2, -5);
+}
+
+#[test]
+fn test_float_or_workaround() {
+    // First float is truthy, return it
+    let result = if 3.14 { 3.14 } else { 2.71 };
+    eq!(result, 3.14);
+
+    // First float is falsy (0.0), return second
+    let result2 = if 0.0 { 0.0 } else { 2.71 };
+    eq!(result2, 2.71);
+}
+
+#[test]
+fn test_string_or_workaround() {
+    // First string is truthy, return it
+    let result = if "hello" { "hello" } else { "world" };
+    eq!(result, "hello");
+
+    // First string is falsy (empty), return second
+    let result2 = if "" { "" } else { "world" };
+    eq!(result2, "world");
+}
+
+#[test]
+fn test_string_type_or_workaround() {
+    // First String is truthy, return it
+    let s1 = String::from("hello");
+    let s2 = String::from("world");
+    let result = if s1.clone() { s1 } else { s2 };
+    eq!(result, "hello");
+
+    // First String is falsy (empty), return second
+    let s3 = String::new();
+    let s4 = String::from("world");
+    let result2 = if s3.clone() { s3 } else { s4 };
+    eq!(result2, "world");
+}
+
+#[test]
+fn test_option_or_workaround() {
+    // First Some is truthy, return it
+    let result = if Some(42) { Some(42) } else { Some(99) };
+    eq!(result, Some(42));
+
+    // First None is falsy, return second
+    let opt_none: Option<i32> = None;
+    let result2 = if opt_none { opt_none } else { Some(99) };
+    eq!(result2, Some(99));
+
+    // Some(0) is truthy (Some wraps the value)
+    let result3 = if Some(0) { Some(0) } else { Some(99) };
+    eq!(result3, Some(0));
+}
+
+#[test]
+fn test_vec_or_workaround() {
+    // First Vec is truthy (non-empty), return it
+    let v1 = vec![1, 2, 3];
+    let v2 = vec![4, 5];
+    let result = if v1.clone() { v1 } else { v2 };
+    eq!(result, vec![1, 2, 3]);
+
+    // First Vec is falsy (empty), return second
+    let v3: Vec<i32> = vec![];
+    let v4 = vec![4, 5];
+    let result2 = if v3.clone() { v3 } else { v4 };
+    eq!(result2, vec![4, 5]);
+}
+
+#[test]
+fn test_chained_or_workaround() {
+    // Returns first truthy value
+    let result = if 0 { 0 } else if 0 { 0 } else if 5 { 5 } else { 10 };
+    eq!(result, 5);
+
+    // All falsy until last
+    let result2 = if 0 { 0 } else if 0 { 0 } else { 42 };
+    eq!(result2, 42);
+}
+
+#[test]
+fn test_or_with_default_pattern() {
+    // Common pattern: default value
+    let input = 0;
+    let value = if input { input } else { 100 };
+    eq!(value, 100);
+
+    let input2 = 42;
+    let value2 = if input2 { input2 } else { 100 };
+    eq!(value2, 42);
+}
+
+#[test]
+fn test_or_with_variables() {
+    let x = 0;
+    let y = 10;
+    let z = 20;
+
+    let result = if x { x } else { y };
+    eq!(result, 10);
+
+    let result2 = if y { y } else { z };
+    eq!(result2, 10);
+
+    let result3 = if x { x } else if y { y } else { z };
+    eq!(result3, 10);
+}
+
+#[test]
+fn test_mixed_types_or_workaround() {
+    // Can use generic approach with explicit types
+    let result: f64 = if 0 != 0 { 0 as f64 } else { 3.14 };
+    eq!(result, 3.14);
+
+    let result2: i32 = if 42 != 0 { 42 } else { 0 };
+    eq!(result2, 42);
+}
+
+#[test]
+fn test_bool_or_workaround() {
+    let result = if false { false } else { true };
+    eq!(result, true);
+
+    let result2 = if true { true } else { false };
+    eq!(result2, true);
+}
