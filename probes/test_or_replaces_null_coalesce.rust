@@ -1,0 +1,164 @@
+#!/usr/bin/env rust
+
+// Demonstrate that truthy 'or' can replace ?? for optional values
+// Both ?? and 'or' return the first Some value or the fallback
+
+#[test]
+fn test_or_replaces_double_question_mark_basic() {
+    let some_value: Option<i32> = Some(42);
+    let none_value: Option<i32> = None;
+    
+    // Traditional ?? syntax
+    let result1 = some_value ?? Some(99);
+    eq!(result1, Some(42));
+    
+    let result2 = none_value ?? Some(99);
+    eq!(result2, Some(99));
+    
+    // New 'or' syntax - equivalent behavior
+    let result3 = some_value or Some(99);
+    eq!(result3, Some(42));
+    
+    let result4 = none_value or Some(99);
+    eq!(result4, Some(99));
+}
+
+#[test]
+fn test_or_replaces_double_question_mark_chaining() {
+    let first: Option<i32> = None;
+    let second: Option<i32> = None;
+    let third: Option<i32> = Some(100);
+    
+    // Traditional ?? chaining
+    let result1 = first ?? second ?? third;
+    eq!(result1, Some(100));
+    
+    // New 'or' chaining - cleaner syntax
+    let result2 = first or second or third;
+    eq!(result2, Some(100));
+}
+
+#[test]
+fn test_or_replaces_double_question_mark_default_value() {
+    fn get_config() -> Option<i32> {
+        None
+    }
+    
+    // Traditional ?? for default values
+    let value1 = get_config() ?? Some(42);
+    eq!(value1, Some(42));
+    
+    // New 'or' syntax
+    let value2 = get_config() or Some(42);
+    eq!(value2, Some(42));
+}
+
+#[test]
+fn test_or_replaces_double_question_mark_strings() {
+    let username: Option<String> = None;
+    let default_name = Some(String::from("Anonymous"));
+    
+    // Traditional ??
+    let name1 = username.clone() ?? default_name.clone();
+    eq!(name1, Some("Anonymous".to_string()));
+    
+    // New 'or'
+    let name2 = username or default_name;
+    eq!(name2, Some("Anonymous".to_string()));
+}
+
+#[test]
+fn test_or_replaces_double_question_mark_nested_options() {
+    let primary: Option<i32> = Some(5);
+    let fallback: Option<i32> = Some(99);
+
+    // Both return the first Some value
+    let result1 = primary ?? fallback;
+    let result2 = primary or fallback;
+
+    eq!(result1, result2);
+    eq!(result1, Some(5));  // Note: Some(5) is truthy!
+}
+
+#[test]
+fn test_or_replaces_double_question_mark_function_calls() {
+    fn try_primary() -> Option<i32> { None }
+    fn try_secondary() -> Option<i32> { None }
+    fn try_tertiary() -> Option<i32> { Some(123) }
+    
+    // Traditional ?? - evaluates all (no short-circuit in this case)
+    let result1 = try_primary() ?? try_secondary() ?? try_tertiary();
+    eq!(result1, Some(123));
+    
+    // New 'or' - should also work
+    let result2 = try_primary() or try_secondary() or try_tertiary();
+    eq!(result2, Some(123));
+}
+
+#[test]
+fn test_or_replaces_double_question_mark_vec_options() {
+    let items: Vec<Option<i32>> = vec![None, None, Some(5), Some(10)];
+
+    // Find first Some value using ??
+    let mut result1: Option<i32> = None;
+    for item in &items {
+        result1 = result1 ?? *item;
+    }
+    eq!(result1, Some(5));
+
+    // Find first Some value using 'or'
+    let mut result2: Option<i32> = None;
+    for item in &items {
+        result2 = result2 or *item;
+    }
+    eq!(result2, Some(5));
+}
+
+#[test]
+fn test_or_more_readable_than_double_question() {
+    // 'or' is more intuitive than ?? for many developers
+    let cache: Option<i32> = None;
+    let database: Option<i32> = None;
+    let default: Option<i32> = Some(0);
+    
+    // Traditional ??
+    let value1 = cache ?? database ?? default;
+    
+    // New 'or' - reads like natural language: "cache or database or default"
+    let value2 = cache or database or default;
+    
+    eq!(value1, value2);
+    eq!(value2, Some(0));
+}
+
+#[test]
+fn test_or_works_beyond_options() {
+    // Unlike ??, 'or' works with any truthy type, not just Option
+    
+    // With integers (0 is falsy)
+    let value1 = 0 or 42;
+    eq!(value1, 42);
+    
+    // With strings ("" is falsy)
+    let value2 = "" or "default";
+    eq!(value2, "default");
+    
+    // With vectors (empty is falsy)
+    let value3 = Vec::<i32>::new() or vec![1, 2, 3];
+    eq!(value3, vec![1, 2, 3]);
+    
+    // ?? only works with Option types, so 'or' is more versatile
+}
+
+#[test]
+fn test_or_both_none() {
+    let first: Option<i32> = None;
+    let second: Option<i32> = None;
+    
+    // Both return None when all values are None
+    let result1 = first ?? second;
+    let result2 = first or second;
+    
+    eq!(result1, None);
+    eq!(result2, None);
+}
