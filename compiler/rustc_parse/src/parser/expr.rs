@@ -1152,7 +1152,18 @@ impl<'a> Parser<'a> {
             return false;
         }
         // Next token must be a non-reserved identifier
-        self.token.is_non_reserved_ident()
+        if !self.token.is_non_reserved_ident() {
+            return false;
+        }
+        // In script mode, exclude operator identifiers (or, and, xor) from implicit multiplication
+        if self.is_script_mode() {
+            if let Some((ident, token::IdentIsRaw::No)) = self.token.ident() {
+                if matches!(ident.name, sym::or | sym::and | sym::xor) {
+                    return false;
+                }
+            }
+        }
+        true
     }
 
     /// Parse implicit multiplication: 2π -> (2 as f64) * π
