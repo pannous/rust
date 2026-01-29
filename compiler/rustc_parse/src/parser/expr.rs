@@ -316,6 +316,13 @@ impl<'a> Parser<'a> {
                         && !cur_op_span.from_expansion()
                     {
                         self.mk_truthy_or_expr(lhs, rhs, span)
+                    } else if self.is_script_mode()
+                        && ast_op == BinOpKind::And
+                        && !cur_op_span.from_expansion()
+                    {
+                        // Transform `a and b` to `if (&a).is_truthy() { b } else { a }`
+                        // Python-style truthy and: returns first falsy value or last value
+                        self.mk_truthy_and_expr(lhs, rhs, span)
                     } else {
                         let binary = self.mk_binary(source_map::respan(cur_op_span, ast_op), lhs, rhs);
                         self.mk_expr(span, binary)
@@ -369,6 +376,10 @@ impl<'a> Parser<'a> {
             // An exhaustive check is done in the following block, but these are checked first
             // because they *are* ambiguous but also reasonable looking incorrect syntax, so we
             // want to keep their span info to improve diagnostics in these cases in a later stage.
+            // In script mode, BinOpKind::And returns values not booleans, so skip ambiguity check
+            (true, Some(AssocOp::Binary(BinOpKind::And))) if self.is_script_mode() => {
+                true // Continue parsing as value-returning and
+            }
             // In script mode, BinOpKind::Or returns values not booleans, so skip ambiguity check
             (true, Some(AssocOp::Binary(BinOpKind::Or))) if self.is_script_mode() => {
                 true // Continue parsing as value-returning or
@@ -3420,6 +3431,60 @@ impl<'a> Parser<'a> {
             id: ast::DUMMY_NODE_ID,
             kind: ExprKind::Block(else_block, None),
             span: rhs_span,
+            attrs: ast::AttrVec::new(),
+            tokens: None,
+        });
+
+        // Create if expression: If(cond, then_block, Some(else_expr))
+        Box::new(Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ExprKind::If(cond, then_block, Some(else_expr)),
+            span,
+            attrs: ast::AttrVec::new(),
+            tokens: None,
+        })
+    }
+
+    /// Create Python-style truthy and expression for script mode.
+    /// Transforms `a and b` into `if (&a).is_truthy() { b } else { a }`
+    /// This returns the first falsy value or the last value, not a boolean.
+    fn mk_truthy_and_expr(&mut self, lhs: Box<Expr>, rhs: Box<Expr>, span: Span) -> Box<Expr> {
+        // Create condition: (&lhs).is_truthy()
+        let lhs_span = lhs.span;
+        let cond = self.wrap_expr_with_is_truthy(lhs.clone());
+
+        // Create then block containing rhs as final expression (if lhs is truthy, return rhs)
+        let rhs_span = rhs.span;
+        let rhs_stmt = ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(rhs),
+            span: rhs_span,
+        };
+        let then_block = Box::new(ast::Block {
+            stmts: thin_vec![rhs_stmt],
+            id: ast::DUMMY_NODE_ID,
+            rules: ast::BlockCheckMode::Default,
+            span: rhs_span,
+            tokens: None,
+        });
+
+        // Create else block containing lhs (if lhs is falsy, return lhs)
+        let lhs_stmt = ast::Stmt {
+            id: ast::DUMMY_NODE_ID,
+            kind: ast::StmtKind::Expr(lhs),
+            span: lhs_span,
+        };
+        let else_block = Box::new(ast::Block {
+            stmts: thin_vec![lhs_stmt],
+            id: ast::DUMMY_NODE_ID,
+            rules: ast::BlockCheckMode::Default,
+            span: lhs_span,
+            tokens: None,
+        });
+        let else_expr = Box::new(Expr {
+            id: ast::DUMMY_NODE_ID,
+            kind: ExprKind::Block(else_block, None),
+            span: lhs_span,
             attrs: ast::AttrVec::new(),
             tokens: None,
         });
