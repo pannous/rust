@@ -47,15 +47,15 @@ Philosophy:
 • Approximate equality   .1 + .2 ≈ .3   (also ~ as synonym)  
 • Julia-style **implicit** multiplication: 2π → 2*π  
 • τ (**tau**) and π (**pi**) constants baked in  τ == 2π  
-• int-float coercion and leading dot floats: .5 instead of 0.5  
+• int-float **coercion** and leading dot floats: .5 instead of 0.5  
 
 ### Strings
 • "strings" auto-convert to String (no more .to_string())  
-• "year "+2026  string concatenation with + for various types  
+• "year "+2026  string **concatenation** with + for various types  
 • modulo strings and printf format specifiers "%d" % i  
-• curly quote strings "hello" work globally  
+• **curly** quote strings “hello” work globally  
 • string case conversion: .upper() .lower() .capitalize()  
-• 100+ convenience functions: "hello".reverse() = "olleh"  
+• 100+ convenience functions : "hello".reverse() = "olleh"  
 
 ### Optionals & Null Safety
 • Optionals via '?' as in other sane languages: i32?
