@@ -648,9 +648,6 @@ impl<'a> Parser<'a> {
             {
                 make_it!(this, attrs, |this, _| this.parse_expr_move(lo))
             }
-            token::Ident(..) if this.may_recover() && this.is_mistaken_not_ident_negation() => {
-                make_it!(this, attrs, |this, _| this.recover_not_expr(lo))
-            }
             _ => return this.parse_expr_dot_or_call(attrs),
         }
     }
@@ -750,42 +747,6 @@ impl<'a> Parser<'a> {
         self.expect(exp!(CloseParen))?;
         let span = move_kw.to(self.prev_token.span);
         Ok((span, ExprKind::Move(expr, move_kw)))
-    }
-
-    fn is_mistaken_not_ident_negation(&self) -> bool {
-        let token_cannot_continue_expr = |t: &Token| match t.uninterpolate().kind {
-            // These tokens can start an expression after `!`, but
-            // can't continue an expression after an ident
-            token::Ident(name, is_raw) => token::ident_can_begin_expr(name, t.span, is_raw),
-            token::Literal(..) | token::Pound => true,
-            _ => t.is_metavar_expr(),
-        };
-        self.token.is_ident_named(sym::not) && self.look_ahead(1, token_cannot_continue_expr)
-    }
-
-    /// Recover on `not expr` in favor of `!expr`.
-    fn recover_not_expr(&mut self, lo: Span) -> PResult<'a, (Span, ExprKind)> {
-        let negated_token = self.look_ahead(1, |t| *t);
-
-        let sub_diag = if negated_token.is_numeric_lit() {
-            errors::NotAsNegationOperatorSub::SuggestNotBitwise
-        } else if negated_token.is_bool_lit() {
-            errors::NotAsNegationOperatorSub::SuggestNotLogical
-        } else {
-            errors::NotAsNegationOperatorSub::SuggestNotDefault
-        };
-
-        self.dcx().emit_err(errors::NotAsNegationOperator {
-            negated: negated_token.span,
-            negated_desc: super::token_descr(&negated_token),
-            // Span the `not` plus trailing whitespace to avoid
-            // trailing whitespace after the `!` in our suggestion
-            sub: sub_diag(
-                self.psess.source_map().span_until_non_whitespace(lo.to(negated_token.span)),
-            ),
-        });
-
-        self.parse_expr_unary(lo, UnOp::Not)
     }
 
     /// Returns the span of expr if it was not interpolated, or the span of the interpolated token.

@@ -372,16 +372,17 @@ impl NoArgsAttributeParser for NoMangleParser {
 }
 
 pub(crate) struct DynExportParser;
-impl<S: Stage> NoArgsAttributeParser<S> for DynExportParser {
+impl NoArgsAttributeParser for DynExportParser {
     const PATH: &[Symbol] = &[sym::dynexport];
-    const ON_DUPLICATE: OnDuplicate<S> = OnDuplicate::Warn;
-    const ALLOWED_TARGETS: AllowedTargets = AllowedTargets::AllowListWarnRest(&[
+    const ON_DUPLICATE: OnDuplicate = OnDuplicate::Warn;
+    const ALLOWED_TARGETS: AllowedTargets<'_> = AllowedTargets::AllowListWarnRest(&[
         Allow(Target::Fn),
         Allow(Target::Static),
         Allow(Target::Method(MethodKind::Inherent)),
         Allow(Target::Method(MethodKind::TraitImpl)),
         Error(Target::Closure),
     ]);
+    const STABILITY: AttributeStability = AttributeStability::Stable;
     const CREATE: fn(Span) -> AttributeKind = AttributeKind::DynExport;
 }
 

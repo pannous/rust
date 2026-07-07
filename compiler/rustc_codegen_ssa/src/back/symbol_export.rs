@@ -742,7 +742,7 @@ pub(crate) fn extend_exported_symbols<'tcx>(
         if attrs.flags.contains(CodegenFnAttrFlags::DYNEXPORT) {
             let undecorated = symbol_name_for_instance_in_crate(tcx, symbol, instantiating_crate);
             // Add the dynexport metadata symbol (must match the name generated in codegen)
-            symbols.push((format!("dynexport_meta_{undecorated}"), SymbolExportKind::Data));
+            symbols.push(SymbolExport::new(format!("dynexport_meta_{undecorated}"), SymbolExportKind::Data));
         }
     }
 

@@ -31,6 +31,7 @@
 //! in the HIR, especially for multiple identifiers.
 
 // tidy-alphabetical-start
+#![feature(box_patterns)]
 #![feature(const_default)]
 #![feature(const_trait_impl)]
 #![feature(default_field_values)]

@@ -253,6 +253,7 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
             hir::BinOpKind::Add
             | hir::BinOpKind::Sub
             | hir::BinOpKind::Mul
+            | hir::BinOpKind::Pow
             | hir::BinOpKind::Div
             | hir::BinOpKind::Rem => {
                 self.can_eq(self.param_env, lhs_ty, rhs_ty)
@@ -275,6 +276,8 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
                     && rhs_ty.is_scalar()
             }
             hir::BinOpKind::And | hir::BinOpKind::Or => lhs_ty.is_bool() && rhs_ty.is_bool(),
+            // `in` desugars to a `contains` method call, never a builtin scalar op.
+            hir::BinOpKind::In => false,
         }
     }
 

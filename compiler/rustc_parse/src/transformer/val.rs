@@ -57,6 +57,11 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
                     id: ast::DUMMY_NODE_ID,
                     span: def_site,
                     vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+                    mut_restriction: ast::MutRestriction {
+                        kind: ast::RestrictionKind::Unrestricted,
+                        span: def_site,
+                        tokens: None,
+                    },
                     ident: None,
                     ty: Box::new(ast::Ty {
                         id: ast::DUMMY_NODE_ID,
@@ -1028,7 +1033,7 @@ fn build_partial_eq_char_str_arm(span: Span) -> ast::Arm {
     let body = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
         kind: ast::ExprKind::Binary(
-            rustc_span::source_map::Spanned { node: ast::BinOpKind::Eq, span },
+            rustc_span::Spanned { node: ast::BinOpKind::Eq, span },
             s_expr,
             ref_to_string,
         ),
@@ -1584,7 +1589,7 @@ fn build_truthy_int_arm(span: Span) -> ast::Arm {
     let body = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
         kind: ast::ExprKind::Binary(
-            rustc_span::source_map::Spanned { node: ast::BinOpKind::Ne, span },
+            rustc_span::Spanned { node: ast::BinOpKind::Ne, span },
             deref_n,
             zero,
         ),
@@ -1662,7 +1667,7 @@ fn build_truthy_float_arm(span: Span) -> ast::Arm {
     let body = Box::new(ast::Expr {
         id: ast::DUMMY_NODE_ID,
         kind: ast::ExprKind::Binary(
-            rustc_span::source_map::Spanned { node: ast::BinOpKind::Ne, span },
+            rustc_span::Spanned { node: ast::BinOpKind::Ne, span },
             deref_f,
             zero,
         ),

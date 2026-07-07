@@ -174,7 +174,7 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
 
         // Type-check the RHS (container) first
         let rhs_ty = self.check_expr(rhs_expr);
-        let rhs_ty = self.try_structurally_resolve_type(rhs_expr.span, rhs_ty);
+        let rhs_ty = self.structurally_resolve_type(rhs_expr.span, rhs_ty);
 
         // Look up the `contains` method on the RHS type
         // For `a in b`, we want to call `b.contains(a)` (or `b.contains(&a)`)
@@ -196,7 +196,7 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
 
                 // Type-check the LHS first to get its type
                 let lhs_ty = self.check_expr(lhs_expr);
-                let lhs_ty = self.try_structurally_resolve_type(lhs_expr.span, lhs_ty);
+                let lhs_ty = self.structurally_resolve_type(lhs_expr.span, lhs_ty);
 
                 // Auto-borrow: For `in` operator, add auto-ref for non-reference LHS when needed
                 // This enables `2 in [1,2,3]` instead of requiring `&2 in [1,2,3]`
@@ -269,8 +269,8 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
         let lhs_ty = self.check_expr(lhs_expr);
         let rhs_ty = self.check_expr(rhs_expr);
 
-        let lhs_ty = self.try_structurally_resolve_type(lhs_expr.span, lhs_ty);
-        let rhs_ty = self.try_structurally_resolve_type(rhs_expr.span, rhs_ty);
+        let lhs_ty = self.structurally_resolve_type(lhs_expr.span, lhs_ty);
+        let rhs_ty = self.structurally_resolve_type(rhs_expr.span, rhs_ty);
 
         // Determine the result type:
         // - int ** int -> int (lhs type)

@@ -261,9 +261,11 @@ impl<'tcx> CheckAttrVisitor<'tcx> {
             AttributeKind::DebuggerVisualizer(..) => (),
             AttributeKind::DefaultLibAllocator => (),
             AttributeKind::DoNotRecommend => (),
-            AttributeKind::DynExport(..) => (),
             // `#[doc]` is actually a lot more than just doc comments, so is checked below
             AttributeKind::DocComment { .. } => (),
+            AttributeKind::Dummy => (),
+            AttributeKind::DynExport(..) => (),
+            AttributeKind::DynIncompatibleTrait(..) => (),
             AttributeKind::EiiDeclaration { .. } => (),
             AttributeKind::ExportName { .. } => (),
             AttributeKind::ExportStable => (),

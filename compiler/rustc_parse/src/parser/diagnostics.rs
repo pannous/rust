@@ -36,7 +36,7 @@ use crate::errors::{
     GenericParamsWithoutAngleBrackets, GenericParamsWithoutAngleBracketsSugg,
     HelpIdentifierStartsWithNumber, HelpUseLatestEdition, InInTypo, IncorrectAwait,
     IncorrectSemicolon, IncorrectUseOfAwait, IncorrectUseOfUse, MisspelledKw,
-    PatternMethodParamWithoutBody, QuestionMarkInType, QuestionMarkInTypeSugg, SelfParamNotFirst,
+    PatternMethodParamWithoutBody, SelfParamNotFirst,
     StructLiteralBodyWithoutPath, StructLiteralBodyWithoutPathSugg, SuggAddMissingLetStmt,
     SuggEscapeIdentifier, SuggRemoveComma, SuggestBindTypeParameter, SuggestIntroduceTypeParameter,
     TernaryOperator, TernaryOperatorSuggestion, UnexpectedConstInGenericParam,
