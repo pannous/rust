@@ -92,7 +92,7 @@ impl<'tcx> LateLintPass<'tcx> for ManualNonExhaustive {
                         .then_some((v.def_id, v.span))
                 });
                 if let Ok((id, span)) = iter.exactly_one()
-                    && !find_attr!(cx.tcx.hir_attrs(item.hir_id()), NonExhaustive(..))
+                    && !find_attr!(cx.tcx, item.hir_id(), NonExhaustive(..))
                 {
                     self.potential_enums.push((item.owner_id.def_id, id, item.span, span));
                 }
@@ -113,7 +113,7 @@ impl<'tcx> LateLintPass<'tcx> for ManualNonExhaustive {
                         "this seems like a manual implementation of the non-exhaustive pattern",
                         |diag| {
                             if let Some(non_exhaustive_span) =
-                                find_attr!(cx.tcx.hir_attrs(item.hir_id()), NonExhaustive(span) => *span)
+                                find_attr!(cx.tcx, item.hir_id(), NonExhaustive(span) => *span)
                             {
                                 diag.span_note(non_exhaustive_span, "the struct is already non-exhaustive");
                             } else {
@@ -125,6 +125,21 @@ impl<'tcx> LateLintPass<'tcx> for ManualNonExhaustive {
                                     Applicability::MaybeIncorrect,
                                 );
                             }
+                            // FIXME: Ideally this would be a suggestion, but the span for that is annoying to get.
+                            // Consider cases like:
+                            // ```
+                            // _non_exhaustive: (),
+                            //
+                            // _non_exhaustive: ()
+                            // , pub another field: u32
+                            //
+                            // _non_exhaustive: () // some random comment
+                            // , pub another field: u32
+                            //
+                            // _non_exhaustive: (), // a comment that we wouldn't want to
+                            //                      // stick to the next field after the fix
+                            // pub another field: u32
+                            // ```
                             diag.span_help(field.span, "remove this field");
                         },
                     );
@@ -145,9 +160,8 @@ impl<'tcx> LateLintPass<'tcx> for ManualNonExhaustive {
     }
 
     fn check_crate_post(&mut self, cx: &LateContext<'tcx>) {
-        for &(enum_id, _, enum_span, variant_span) in self
-            .potential_enums
-            .iter()
+        for (enum_id, _, enum_span, variant_span) in std::mem::take(&mut self.potential_enums)
+            .into_iter()
             .filter(|(_, variant_id, _, _)| !self.constructed_enum_variants.contains(variant_id))
         {
             let hir_id = cx.tcx.local_def_id_to_hir_id(enum_id);
@@ -165,6 +179,8 @@ impl<'tcx> LateLintPass<'tcx> for ManualNonExhaustive {
                         format!("#[non_exhaustive]\n{indent}"),
                         Applicability::MaybeIncorrect,
                     );
+                    // FIXME: Ideally this would be a suggestion, but the span for that is annoying to get.
+                    // See the comment above for examples.
                     diag.span_help(variant_span, "remove this variant");
                 },
             );

@@ -21,7 +21,7 @@ use rustc_span::source_map::SourceMap;
 use rustc_span::{ByteSymbol, Pos, Span, Symbol};
 use smallvec::SmallVec;
 
-use crate::errors;
+use crate::diagnostics;
 use crate::util::{
     check_zero_tts, get_single_str_from_tts, get_single_str_spanned_from_tts, parse_expr,
 };
@@ -153,7 +153,7 @@ pub(crate) fn expand_include<'cx>(
                     INCOMPLETE_INCLUDE,
                     p.token.span,
                     self.node_id,
-                    errors::IncompleteInclude,
+                    diagnostics::IncompleteInclude,
                 );
             }
             Some(expr)
@@ -176,7 +176,7 @@ pub(crate) fn expand_include<'cx>(
                     Ok(Some(item)) => ret.push(item),
                     Ok(None) => {
                         if p.token != token::Eof {
-                            p.dcx().emit_err(errors::ExpectedItem {
+                            p.dcx().emit_err(diagnostics::ExpectedItem {
                                 span: p.token.span,
                                 token: &pprust::token_to_string(&p.token),
                             });
@@ -277,7 +277,6 @@ fn load_binary_file(
     match cx.source_map().load_binary_file(&resolved_path) {
         Ok(data) => {
             cx.sess
-                .psess
                 .file_depinfo
                 .borrow_mut()
                 .insert(Symbol::intern(&resolved_path.to_string_lossy()));

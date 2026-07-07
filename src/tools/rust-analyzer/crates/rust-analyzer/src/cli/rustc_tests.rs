@@ -64,6 +64,7 @@ impl Tester {
     fn new() -> Result<Self> {
         let mut path = AbsPathBuf::assert_utf8(std::env::temp_dir());
         path.push("ra-rustc-test");
+        std::fs::create_dir_all(&path)?;
         let tmp_file = path.join("ra-rustc-test.rs");
         std::fs::write(&tmp_file, "")?;
         let cargo_config = CargoConfig {
@@ -103,6 +104,7 @@ impl Tester {
             load_out_dirs_from_check: false,
             with_proc_macro_server: ProcMacroServerChoice::Sysroot,
             prefill_caches: false,
+            num_worker_threads: 1,
             proc_macro_processes: 1,
         };
         let (db, _vfs, _proc_macro) =

@@ -1,16 +1,19 @@
 use rustc_ast::{LitFloatType, LitIntType, LitKind};
 use rustc_hir;
-use rustc_macros::HashStable;
+use rustc_macros::StableHash;
 
 use crate::ty::{self, Ty, TyCtxt};
 
 /// Input argument for `tcx.lit_to_const`.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, HashStable)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, StableHash)]
 pub struct LitToConstInput<'tcx> {
     /// The absolute value of the resultant constant.
     pub lit: LitKind,
     /// The type of the constant.
-    pub ty: Ty<'tcx>,
+    ///
+    /// `None` is used by const generics when the type of the constant is unknown, e.g.
+    /// if there are inference variables
+    pub ty: Option<Ty<'tcx>>,
     /// If the constant is negative.
     pub neg: bool,
 }

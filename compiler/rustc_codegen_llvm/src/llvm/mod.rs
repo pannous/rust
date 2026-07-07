@@ -323,6 +323,14 @@ impl Intrinsic {
         NonZero::new(id).map(|id| Self { id })
     }
 
+    pub(crate) fn is_overloaded(self) -> bool {
+        unsafe { LLVMIntrinsicIsOverloaded(self.id).is_true() }
+    }
+
+    pub(crate) fn is_target_specific(self) -> bool {
+        unsafe { LLVMRustIsTargetIntrinsic(self.id) }
+    }
+
     pub(crate) fn get_declaration<'ll>(
         self,
         llmod: &'ll Module,
@@ -466,4 +474,20 @@ pub(crate) fn add_alias<'ll>(
     name: &CStr,
 ) -> &'ll Value {
     unsafe { LLVMAddAlias2(module, ty, address_space.0, aliasee, name.as_ptr()) }
+}
+
+/// Safe wrapper for `LLVMRustConstPtrAuth`.
+pub(crate) fn const_ptr_auth<'ll>(
+    ptr: &'ll Value,
+    key: u32,
+    disc: u64,
+    addr_diversity: Option<&'ll Value>,
+) -> &'ll Value {
+    unsafe {
+        let addr_div_ptr = addr_diversity.map_or(std::ptr::null(), |v| v as *const Value);
+        let deactivation_symbol = std::ptr::null();
+        let result =
+            LLVMRustConstPtrAuth(ptr as *const Value, key, disc, addr_div_ptr, deactivation_symbol);
+        &*result
+    }
 }

@@ -616,4 +616,24 @@ pub const CONFIG_CHANGE_HISTORY: &[ChangeInfo] = &[
         severity: ChangeSeverity::Warning,
         summary: "`x.py test --no-doc` is renamed to `--all-targets`. Additionally `--tests` is added which only executes unit and integration tests.",
     },
+    ChangeInfo {
+        change_id: 154508,
+        severity: ChangeSeverity::Info,
+        summary: "`x.py` stopped accepting partial argument names. Use full names to avoid errors.",
+    },
+    ChangeInfo {
+        change_id: 154586,
+        severity: ChangeSeverity::Info,
+        summary: "New option `build.record_failed_tests_path` to store failed tests when passing `--record`. These can be rerun with `--rerun`.",
+    },
+    ChangeInfo {
+        change_id: 154587,
+        severity: ChangeSeverity::Info,
+        summary: "New `--verbose-run-make-subprocess-output` flag for `x.py test` (defaults to true). Set `--verbose-run-make-subprocess-output=false` to suppress verbose subprocess output for passing run-make tests when using `--no-capture`.",
+    },
+    ChangeInfo {
+        change_id: 158169,
+        severity: ChangeSeverity::Info,
+        summary: "New option `rust.compress-debuginfo` allows configuring whether Rust and C/C++ debuginfo should be compressed.",
+    },
 ];

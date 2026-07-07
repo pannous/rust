@@ -27,17 +27,18 @@
 // tidy-alphabetical-start
 #![allow(internal_features)]
 #![allow(rustc::direct_use_of_rustc_type_ir)]
+#![cfg_attr(bootstrap, feature(box_as_ptr))]
 #![cfg_attr(doc, feature(intra_doc_pointers))]
 #![feature(allocator_api)]
 #![feature(associated_type_defaults)]
-#![feature(box_as_ptr)]
-#![feature(box_patterns)]
 #![feature(closure_track_caller)]
 #![feature(const_default)]
 #![feature(const_trait_impl)]
 #![feature(core_intrinsics)]
 #![feature(debug_closure_helpers)]
 #![feature(decl_macro)]
+#![feature(default_field_values)]
+#![feature(deref_patterns)]
 #![feature(discriminant_kind)]
 #![feature(extern_types)]
 #![feature(file_buffered)]
@@ -45,6 +46,7 @@
 #![feature(min_specialization)]
 #![feature(negative_impls)]
 #![feature(never_type)]
+#![feature(option_into_flat_iter)]
 #![feature(ptr_alignment_type)]
 #![feature(range_bounds_is_empty)]
 #![feature(rustc_attrs)]
@@ -67,6 +69,8 @@ mod macros;
 
 #[macro_use]
 pub mod arena;
+
+pub mod dep_graph;
 pub mod error;
 pub mod hir;
 pub mod hooks;
@@ -76,18 +80,14 @@ pub mod lint;
 pub mod metadata;
 pub mod middle;
 pub mod mir;
+pub mod mono;
+pub mod queries;
+pub mod query;
 pub mod thir;
 pub mod traits;
 pub mod ty;
 pub mod util;
 pub mod verify_ich;
-
-#[macro_use]
-pub mod query;
-#[macro_use]
-pub mod queries;
-#[macro_use]
-pub mod dep_graph;
 
 // Allows macros to refer to this crate as `::rustc_middle`
 extern crate self as rustc_middle;

@@ -17,11 +17,15 @@ impl CargoConfigFile {
         manifest: &ManifestPath,
         extra_env: &FxHashMap<String, Option<String>>,
         sysroot: &Sysroot,
+        config_path: Option<&AbsPath>,
     ) -> Option<Self> {
         let mut cargo_config = sysroot.tool(Tool::Cargo, manifest.parent(), extra_env);
         cargo_config
             .args(["-Z", "unstable-options", "config", "get", "--format", "toml", "--show-origin"])
             .env("RUSTC_BOOTSTRAP", "1");
+        if let Some(config_path) = config_path {
+            cargo_config.arg("--config").arg(config_path);
+        }
         if manifest.is_rust_manifest() {
             cargo_config.arg("-Zscript");
         }
@@ -158,15 +162,14 @@ pub(crate) fn make_lockfile_copy(
             build: semver::BuildMetadata::EMPTY,
         };
 
-    // TODO: turn this into a const and remove pre once 1.95 is stable
-    #[allow(non_snake_case)]
-    let MINIMUM_TOOLCHAIN_VERSION_SUPPORTING_LOCKFILE_PATH_ENV: semver::Version = semver::Version {
-        major: 1,
-        minor: 95,
-        patch: 0,
-        pre: semver::Prerelease::new("beta").unwrap(),
-        build: semver::BuildMetadata::EMPTY,
-    };
+    const MINIMUM_TOOLCHAIN_VERSION_SUPPORTING_LOCKFILE_PATH_ENV: semver::Version =
+        semver::Version {
+            major: 1,
+            minor: 95,
+            patch: 0,
+            pre: semver::Prerelease::EMPTY,
+            build: semver::BuildMetadata::EMPTY,
+        };
 
     let usage = if *toolchain_version >= MINIMUM_TOOLCHAIN_VERSION_SUPPORTING_LOCKFILE_PATH_ENV {
         LockfileUsage::WithEnvVar

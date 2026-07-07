@@ -9,10 +9,11 @@ use rustc_data_structures::unord::UnordSet;
 use rustc_hir::def_id::CRATE_DEF_ID;
 use rustc_infer::infer::DefineOpaqueTypes;
 use rustc_middle::ty::{Region, RegionVid};
+use rustc_span::DUMMY_SP;
 use tracing::debug;
 
 use super::*;
-use crate::errors::UnableToConstructConstantValue;
+use crate::diagnostics::UnableToConstructConstantValue;
 use crate::infer::TypeFreshener;
 use crate::infer::region_constraints::{ConstraintKind, RegionConstraintData};
 use crate::regions::OutlivesEnvironmentBuildExt;
@@ -32,6 +33,7 @@ pub struct RegionDeps<'tcx> {
 }
 
 pub enum AutoTraitResult<A> {
+    NoImpl,
     ExplicitImpl,
     PositiveImpl(A),
     NegativeImpl,
@@ -78,6 +80,15 @@ impl<'tcx> AutoTraitFinder<'tcx> {
         mut auto_trait_callback: impl FnMut(AutoTraitInfo<'tcx>) -> A,
     ) -> AutoTraitResult<A> {
         let tcx = self.tcx;
+
+        if tcx.next_trait_solver_globally() {
+            return self.find_auto_trait_generics_next_solver(
+                ty,
+                typing_env,
+                trait_did,
+                auto_trait_callback,
+            );
+        }
 
         let trait_ref = ty::TraitRef::new(tcx, trait_did, [ty]);
 
@@ -162,7 +173,8 @@ impl<'tcx> AutoTraitFinder<'tcx> {
         }
 
         let outlives_env = OutlivesEnvironment::new(&infcx, CRATE_DEF_ID, full_env, []);
-        let _ = infcx.process_registered_region_obligations(&outlives_env, |ty, _| Ok(ty));
+        let _ =
+            infcx.process_registered_region_obligations(&outlives_env, |ty, _| Ok(ty), DUMMY_SP);
 
         let region_data = infcx.inner.borrow_mut().unwrap_region_constraints().data().clone();
 
@@ -170,6 +182,79 @@ impl<'tcx> AutoTraitFinder<'tcx> {
 
         let info = AutoTraitInfo { full_user_env, region_data, vid_to_region };
 
+        AutoTraitResult::PositiveImpl(auto_trait_callback(info))
+    }
+
+    fn find_auto_trait_generics_next_solver<A>(
+        &self,
+        ty: Ty<'tcx>,
+        typing_env: ty::TypingEnv<'tcx>,
+        trait_did: DefId,
+        mut auto_trait_callback: impl FnMut(AutoTraitInfo<'tcx>) -> A,
+    ) -> AutoTraitResult<A> {
+        // When the new solver is enabled globally we keep things deliberately
+        // simple. The precise auto-trait synthesis depends on old-solver
+        // internals, so here we only synthesize a simple field-based auto-trait
+        // impl for ADTs.
+        //
+        // If the self type is not an ADT we return `NoImpl` instead of trying
+        // to do anything fancy. To decide whether to emit a negative impl, we
+        // replace the ADT's generic arguments with inference variables and
+        // check whether the auto trait can hold. A true error from that probe
+        // becomes a `NegativeImpl`, otherwise we continue on to emit the
+        // imprecise field-based impl.
+        //
+        // This keeps rustdoc from ICE-ing while `-Znext-solver=globally` is
+        // used for testing, even if the generated synthetic impls are less
+        // precise.
+        let tcx = self.tcx;
+        let ty::Adt(adt_def, args) = *ty.kind() else {
+            return AutoTraitResult::NoImpl;
+        };
+
+        let mut disqualifying_impl = None;
+        tcx.for_each_relevant_impl(trait_did, ty, |impl_def_id| {
+            disqualifying_impl = Some(impl_def_id);
+        });
+        if let Some(impl_def_id) = disqualifying_impl {
+            debug!(
+                "find_auto_trait_generics({:?}): possible manual impl {impl_def_id:?} found, bailing",
+                ty::TraitRef::new(tcx, trait_did, [ty]),
+            );
+            return AutoTraitResult::ExplicitImpl;
+        }
+
+        let (infcx, orig_env) = tcx.infer_ctxt().build_with_typing_env(typing_env);
+        let field_clauses = adt_def
+            .all_fields()
+            .map(|field| field.ty(tcx, args).skip_norm_wip())
+            .filter(|field_ty| field_ty.has_non_region_param())
+            .map(|field_ty| {
+                ty::TraitPredicate {
+                    trait_ref: ty::TraitRef::new(tcx, trait_did, [field_ty]),
+                    polarity: ty::PredicatePolarity::Positive,
+                }
+                .upcast(tcx)
+            })
+            .collect::<Vec<ty::Clause<'tcx>>>();
+        let full_user_env = ty::ParamEnv::new(
+            tcx.mk_clauses_from_iter(orig_env.caller_bounds().iter().chain(field_clauses)),
+        );
+
+        let fresh_args = infcx.fresh_args_for_item(DUMMY_SP, adt_def.did());
+        let fresh_ty = ty::EarlyBinder::bind(tcx, ty).instantiate(tcx, fresh_args).skip_norm_wip();
+        let ocx = ObligationCtxt::new(&infcx);
+        ocx.register_bound(ObligationCause::dummy(), orig_env, fresh_ty, trait_did);
+        let errors = ocx.try_evaluate_obligations();
+        if !errors.is_empty() {
+            return AutoTraitResult::NegativeImpl;
+        }
+
+        let info = AutoTraitInfo {
+            full_user_env,
+            region_data: RegionConstraintData::default(),
+            vid_to_region: FxIndexMap::default(),
+        };
         AutoTraitResult::PositiveImpl(auto_trait_callback(info))
     }
 
@@ -453,7 +538,7 @@ impl<'tcx> AutoTraitFinder<'tcx> {
         let mut vid_map = FxIndexMap::<RegionTarget<'cx>, RegionDeps<'cx>>::default();
         let mut finished_map = FxIndexMap::default();
 
-        for (c, _) in &regions.constraints {
+        for c in regions.constraints.iter().flat_map(|(c, _)| c.iter_outlives()) {
             match c.kind {
                 ConstraintKind::VarSubVar => {
                     let sub_vid = c.sub.as_var();
@@ -488,6 +573,10 @@ impl<'tcx> AutoTraitFinder<'tcx> {
 
                     let deps2 = vid_map.entry(RegionTarget::Region(c.sup)).or_default();
                     deps2.smaller.insert(RegionTarget::Region(c.sub));
+                }
+
+                ConstraintKind::VarEqVar | ConstraintKind::VarEqReg | ConstraintKind::RegEqReg => {
+                    unreachable!()
                 }
             }
         }
@@ -546,14 +635,16 @@ impl<'tcx> AutoTraitFinder<'tcx> {
     pub fn is_of_param(&self, ty: Ty<'tcx>) -> bool {
         match ty.kind() {
             ty::Param(_) => true,
-            ty::Alias(ty::Projection, p) => self.is_of_param(p.self_ty()),
+            ty::Alias(_, p @ ty::AliasTy { kind: ty::Projection { .. }, .. }) => {
+                self.is_of_param(p.self_ty())
+            }
             _ => false,
         }
     }
 
     fn is_self_referential_projection(&self, p: ty::PolyProjectionPredicate<'tcx>) -> bool {
         if let Some(ty) = p.term().skip_binder().as_type() {
-            matches!(ty.kind(), ty::Alias(ty::Projection, proj) if proj == &p.skip_binder().projection_term.expect_ty(self.tcx))
+            matches!(ty.kind(), ty::Alias(_, proj @ ty::AliasTy { kind: ty::Projection { .. }, .. }) if proj == &p.skip_binder().projection_term.expect_ty())
         } else {
             false
         }
@@ -598,6 +689,12 @@ impl<'tcx> AutoTraitFinder<'tcx> {
                     // then `evaluate_predicates` will handle adding it the `ParamEnv`
                     // if possible.
                     predicates.push_back(bound_predicate.rebind(p));
+                }
+                ty::PredicateKind::Clause(ty::ClauseKind::HostEffect(p)) => {
+                    let p = bound_predicate.rebind(p);
+                    if self.is_param_no_infer(p.skip_binder().trait_ref.args) && is_new_pred {
+                        self.add_user_pred(computed_preds, predicate);
+                    }
                 }
                 ty::PredicateKind::Clause(ty::ClauseKind::Projection(p)) => {
                     let p = bound_predicate.rebind(p);
@@ -732,7 +829,11 @@ impl<'tcx> AutoTraitFinder<'tcx> {
                 ty::PredicateKind::Clause(ty::ClauseKind::RegionOutlives(binder)) => {
                     let binder = bound_predicate.rebind(binder);
                     selcx.infcx.enter_forall(binder, |pred| {
-                        selcx.infcx.register_region_outlives_constraint(pred, &dummy_cause);
+                        selcx.infcx.register_region_outlives_constraint(
+                            pred,
+                            ty::VisibleForLeakCheck::Yes,
+                            &dummy_cause,
+                        );
                     });
                 }
                 ty::PredicateKind::Clause(ty::ClauseKind::TypeOutlives(binder)) => {
@@ -749,29 +850,22 @@ impl<'tcx> AutoTraitFinder<'tcx> {
                             );
                         }
                         (Some(ty::OutlivesPredicate(t_a, r_b)), _) => {
-                            selcx.infcx.register_type_outlives_constraint(
-                                t_a,
-                                r_b,
-                                &dummy_cause,
-                            );
+                            selcx.infcx.register_type_outlives_constraint(t_a, r_b, &dummy_cause);
                         }
                         _ => {}
                     };
                 }
                 ty::PredicateKind::ConstEquate(c1, c2) => {
                     let evaluate = |c: ty::Const<'tcx>| {
-                        if let ty::ConstKind::Unevaluated(unevaluated) = c.kind() {
-                            let ct = super::try_evaluate_const(
-                                selcx.infcx,
-                                c,
-                                obligation.param_env,
-                            );
+                        if let ty::ConstKind::Alias(_, alias_const) = c.kind() {
+                            let ct =
+                                super::try_evaluate_const(selcx.infcx, c, obligation.param_env);
 
                             if let Err(EvaluateConstErr::InvalidConstParamTy(_)) = ct {
-                                self.tcx.dcx().emit_err(UnableToConstructConstantValue {
-                                    span: self.tcx.def_span(unevaluated.def),
-                                    unevaluated,
-                                });
+                                let span = alias_const.kind.def_span(self.tcx);
+                                self.tcx
+                                    .dcx()
+                                    .emit_err(UnableToConstructConstantValue { span, alias_const });
                             }
 
                             ct
@@ -782,8 +876,11 @@ impl<'tcx> AutoTraitFinder<'tcx> {
 
                     match (evaluate(c1), evaluate(c2)) {
                         (Ok(c1), Ok(c2)) => {
-                            match selcx.infcx.at(&obligation.cause, obligation.param_env).eq(DefineOpaqueTypes::Yes,c1, c2)
-                            {
+                            match selcx.infcx.at(&obligation.cause, obligation.param_env).eq(
+                                DefineOpaqueTypes::Yes,
+                                c1,
+                                c2,
+                            ) {
                                 Ok(_) => (),
                                 Err(_) => return false,
                             }
@@ -799,15 +896,14 @@ impl<'tcx> AutoTraitFinder<'tcx> {
                 ty::PredicateKind::Clause(ty::ClauseKind::WellFormed(..))
                 | ty::PredicateKind::Clause(ty::ClauseKind::ConstArgHasType(..))
                 | ty::PredicateKind::NormalizesTo(..)
-                | ty::PredicateKind::AliasRelate(..)
                 | ty::PredicateKind::DynCompatible(..)
                 | ty::PredicateKind::Subtype(..)
-                // FIXME(generic_const_exprs): you can absolutely add this as a where clauses
-                | ty::PredicateKind::Clause(ty::ClauseKind::ConstEvaluatable(..))
                 | ty::PredicateKind::Coerce(..)
-                | ty::PredicateKind::Clause(ty::ClauseKind::UnstableFeature(_))
-                | ty::PredicateKind::Clause(ty::ClauseKind::HostEffect(..)) => {}
+                | ty::PredicateKind::Clause(ty::ClauseKind::UnstableFeature(_)) => {}
                 ty::PredicateKind::Ambiguous => return false,
+
+                // FIXME(generic_const_exprs): you can absolutely add this as a where clauses
+                ty::PredicateKind::Clause(ty::ClauseKind::ConstEvaluatable(..)) => return false,
             };
         }
         true

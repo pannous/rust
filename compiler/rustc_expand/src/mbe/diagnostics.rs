@@ -2,8 +2,10 @@ use std::borrow::Cow;
 
 use rustc_ast::token::{self, Token};
 use rustc_ast::tokenstream::TokenStream;
-use rustc_errors::{Applicability, Diag, DiagCtxtHandle, DiagMessage};
+use rustc_errors::{Applicability, Diag, DiagCtxtHandle, DiagMessage, pluralize};
+use rustc_hir::attrs::diagnostic::{CustomDiagnostic, Directive, FormatArgs};
 use rustc_macros::Subdiagnostic;
+use rustc_middle::bug;
 use rustc_parse::parser::{Parser, Recovery, token_descr};
 use rustc_session::parse::ParseSess;
 use rustc_span::source_map::SourceMap;
@@ -15,7 +17,7 @@ use crate::expand::{AstFragmentKind, parse_ast_fragment};
 use crate::mbe::macro_parser::ParseResult::*;
 use crate::mbe::macro_parser::{MatcherLoc, NamedParseResult, TtParser};
 use crate::mbe::macro_rules::{
-    Tracker, try_match_macro, try_match_macro_attr, try_match_macro_derive,
+    Tracker, WhichMatcher, try_match_macro, try_match_macro_attr, try_match_macro_derive,
 };
 
 pub(super) enum FailedMacro<'a> {
@@ -32,6 +34,7 @@ pub(super) fn failed_to_match_macro(
     args: FailedMacro<'_>,
     body: &TokenStream,
     rules: &[MacroRule],
+    on_unmatched_args: Option<&Directive>,
 ) -> (Span, ErrorGuaranteed) {
     debug!("failed to match macro");
     let def_head_span = if !def_span.is_dummy() && !psess.source_map().is_imported(def_span) {
@@ -42,7 +45,7 @@ pub(super) fn failed_to_match_macro(
 
     // An error occurred, try the expansion again, tracking the expansion closely for better
     // diagnostics.
-    let mut tracker = CollectTrackerAndEmitter::new(psess.dcx(), sp);
+    let mut tracker = CollectTrackerAndEmitter::new(name, psess.dcx(), sp);
 
     let try_success_result = match args {
         FailedMacro::Func => try_match_macro(psess, name, body, rules, &mut tracker),
@@ -72,9 +75,19 @@ pub(super) fn failed_to_match_macro(
     };
 
     let span = token.span.substitute_dummy(sp);
+    let CustomDiagnostic {
+        message: custom_message, label: custom_label, notes: custom_notes, ..
+    } = {
+        on_unmatched_args
+            .map(|directive| directive.eval(None, &FormatArgs { this: name.to_string(), .. }))
+            .unwrap_or_default()
+    };
 
-    let mut err = psess.dcx().struct_span_err(span, parse_failure_msg(&token, None));
-    err.span_label(span, label);
+    let mut err = match custom_message {
+        Some(message) => psess.dcx().struct_span_err(span, message),
+        None => psess.dcx().struct_span_err(span, parse_failure_msg(&token, None)),
+    };
+    err.span_label(span, custom_label.unwrap_or_else(|| label.to_string()));
     if !def_head_span.is_dummy() {
         err.span_label(def_head_span, "when calling this macro");
     }
@@ -85,6 +98,9 @@ pub(super) fn failed_to_match_macro(
         err.span_note(span, format!("while trying to match {remaining_matcher}"));
     } else {
         err.note(format!("while trying to match {remaining_matcher}"));
+    }
+    for note in custom_notes {
+        err.note(note);
     }
 
     if let MatcherLoc::Token { token: expected_token } = &remaining_matcher
@@ -106,7 +122,7 @@ pub(super) fn failed_to_match_macro(
         for rule in rules {
             let MacroRule::Func { lhs, .. } = rule else { continue };
             let parser = parser_from_cx(psess, body.clone(), Recovery::Allowed);
-            let mut tt_parser = TtParser::new(name);
+            let mut tt_parser = TtParser::new();
 
             if let Success(_) =
                 tt_parser.parse_tt(&mut Cow::Borrowed(&parser), lhs, &mut NoopTracker)
@@ -130,6 +146,7 @@ pub(super) fn failed_to_match_macro(
 
 /// The tracker used for the slow error path that collects useful info for diagnostics.
 struct CollectTrackerAndEmitter<'dcx, 'matcher> {
+    macro_name: Ident,
     dcx: DiagCtxtHandle<'dcx>,
     remaining_matcher: Option<&'matcher MatcherLoc>,
     /// Which arm's failure should we report? (the one furthest along)
@@ -140,14 +157,22 @@ struct CollectTrackerAndEmitter<'dcx, 'matcher> {
 
 struct BestFailure {
     token: Token,
-    position_in_tokenstream: (bool, u32),
+
+    /// The matcher in which the failure occurred.
+    matcher: WhichMatcher,
+
+    /// The approximate (parser) position of the failure.
+    ///
+    /// This is relative to [`Self::matcher`].
+    position: u32,
+
     msg: &'static str,
     remaining_matcher: MatcherLoc,
 }
 
 impl BestFailure {
-    fn is_better_position(&self, position: (bool, u32)) -> bool {
-        position > self.position_in_tokenstream
+    fn is_better_position(&self, matcher: WhichMatcher, position: u32) -> bool {
+        (matcher, position) > (self.matcher, self.position)
     }
 }
 
@@ -166,8 +191,8 @@ impl<'dcx, 'matcher> Tracker<'matcher> for CollectTrackerAndEmitter<'dcx, 'match
         }
     }
 
-    fn after_arm(&mut self, in_body: bool, result: &NamedParseResult<Self::Failure>) {
-        match result {
+    fn after_arm(&mut self, which_matcher: WhichMatcher, result: &NamedParseResult<Self::Failure>) {
+        match *result {
             Success(_) => {
                 // Nonterminal parser recovery might turn failed matches into successful ones,
                 // but for that it must have emitted an error already
@@ -179,15 +204,13 @@ impl<'dcx, 'matcher> Tracker<'matcher> for CollectTrackerAndEmitter<'dcx, 'match
             Failure((token, approx_position, msg)) => {
                 debug!(?token, ?msg, "a new failure of an arm");
 
-                let position_in_tokenstream = (in_body, *approx_position);
-                if self
-                    .best_failure
-                    .as_ref()
-                    .is_none_or(|failure| failure.is_better_position(position_in_tokenstream))
-                {
+                if self.best_failure.as_ref().is_none_or(|failure| {
+                    failure.is_better_position(which_matcher, approx_position)
+                }) {
                     self.best_failure = Some(BestFailure {
-                        token: *token,
-                        position_in_tokenstream,
+                        token,
+                        matcher: which_matcher,
+                        position: approx_position,
                         msg,
                         remaining_matcher: self
                             .remaining_matcher
@@ -196,13 +219,52 @@ impl<'dcx, 'matcher> Tracker<'matcher> for CollectTrackerAndEmitter<'dcx, 'match
                     })
                 }
             }
-            Error(err_sp, msg) => {
-                let span = err_sp.substitute_dummy(self.root_span);
-                let guar = self.dcx.span_err(span, msg.clone());
-                self.result = Some((span, guar));
+            Ambiguity => {
+                if self.result.is_none() {
+                    bug!("`Error(..)` is only constructed through `Self::ambiguity()`");
+                }
             }
-            ErrorReported(guar) => self.result = Some((self.root_span, *guar)),
+            ErrorReported(guar) => self.result = Some((self.root_span, guar)),
         }
+    }
+
+    fn ambiguity(
+        &mut self,
+        parser: &Parser<'_>,
+        bb_locs: impl IntoIterator<Item = &'matcher MatcherLoc>,
+        next_locs: impl IntoIterator<Item = &'matcher MatcherLoc>,
+    ) {
+        let span = parser.token.span.substitute_dummy(self.root_span);
+
+        if parser.token == token::Eof {
+            let msg = "ambiguity: multiple successful parses".to_string();
+            let guar = self.dcx.span_err(span, msg);
+            self.result = Some((span, guar));
+            return;
+        }
+
+        let nts = bb_locs
+            .into_iter()
+            .map(|loc| match loc {
+                MatcherLoc::MetaVarDecl { bind, kind, .. } => {
+                    format!("{kind} ('{bind}')")
+                }
+                _ => unreachable!(),
+            })
+            .collect::<Vec<String>>()
+            .join(" or ");
+
+        let msg = format!(
+            "local ambiguity when calling macro `{}`: multiple parsing options: {}",
+            self.macro_name,
+            match next_locs.into_iter().count() {
+                0 => format!("built-in NTs {nts}."),
+                n => format!("built-in NTs {nts} or {n} other option{s}.", s = pluralize!(n)),
+            }
+        );
+
+        let guar = self.dcx.span_err(span, msg);
+        self.result = Some((span, guar));
     }
 
     fn description() -> &'static str {
@@ -215,18 +277,27 @@ impl<'dcx, 'matcher> Tracker<'matcher> for CollectTrackerAndEmitter<'dcx, 'match
 }
 
 impl<'dcx> CollectTrackerAndEmitter<'dcx, '_> {
-    fn new(dcx: DiagCtxtHandle<'dcx>, root_span: Span) -> Self {
-        Self { dcx, remaining_matcher: None, best_failure: None, root_span, result: None }
+    fn new(macro_name: Ident, dcx: DiagCtxtHandle<'dcx>, root_span: Span) -> Self {
+        Self {
+            macro_name,
+            dcx,
+            remaining_matcher: None,
+            best_failure: None,
+            root_span,
+            result: None,
+        }
     }
 }
 
 pub(super) fn emit_frag_parse_err(
     mut e: Diag<'_>,
-    parser: &Parser<'_>,
+    parser: &mut Parser<'_>,
     orig_parser: &mut Parser<'_>,
     site_span: Span,
     arm_span: Span,
     kind: AstFragmentKind,
+    bindings: &[MacroRule],
+    matched_rule_bindings: &[MatcherLoc],
 ) -> ErrorGuaranteed {
     // FIXME(davidtwco): avoid depending on the error message text
     if parser.token == token::Eof
@@ -285,6 +356,71 @@ pub(super) fn emit_frag_parse_err(
         },
         _ => annotate_err_with_kind(&mut e, kind, site_span),
     };
+
+    if parser.token.kind == token::Dollar {
+        let dollar_span = parser.token.span;
+        parser.bump();
+        if let token::Ident(name, _) = parser.token.kind {
+            let metavar_span = dollar_span.to(parser.token.span);
+            let mut bindings_names = vec![];
+            for rule in bindings {
+                let MacroRule::Func { lhs, .. } = rule else { continue };
+                for param in lhs {
+                    let MatcherLoc::MetaVarDecl { bind, .. } = param else { continue };
+                    bindings_names.push(bind.name);
+                }
+            }
+
+            let mut matched_rule_bindings_names = vec![];
+            for param in matched_rule_bindings {
+                let MatcherLoc::MetaVarDecl { bind, .. } = param else { continue };
+                matched_rule_bindings_names.push(bind.name);
+            }
+
+            // Report the unbound metavariable as the primary error up front, so every
+            // case is consistent regardless of which suggestion (if any) we attach below.
+            e.primary_message(format!("cannot find macro parameter `${name}` in this scope"));
+            e.span(metavar_span);
+            e.span_label(metavar_span, "not found in this scope");
+            if parser.psess.source_map().is_imported(metavar_span) {
+                e.span_label(site_span, "in this macro invocation");
+            }
+
+            if let Some(matched_name) = rustc_span::edit_distance::find_best_match_for_name(
+                &matched_rule_bindings_names[..],
+                name,
+                None,
+            ) {
+                e.span_suggestion_verbose(
+                    parser.token.span,
+                    "there is a macro metavariable with a similar name",
+                    matched_name,
+                    Applicability::MaybeIncorrect,
+                );
+            } else if bindings_names.contains(&name) {
+                e.span_label(
+                    parser.token.span,
+                    "there is an macro metavariable with this name in another macro matcher",
+                );
+            } else if let Some(matched_name) =
+                rustc_span::edit_distance::find_best_match_for_name(&bindings_names[..], name, None)
+            {
+                e.span_suggestion_verbose(
+                    parser.token.span,
+                    "there is a macro metavariable with a similar name in another macro matcher",
+                    matched_name,
+                    Applicability::MaybeIncorrect,
+                );
+            } else if !matched_rule_bindings_names.is_empty() {
+                let msg = matched_rule_bindings_names
+                    .iter()
+                    .map(|sym| format!("${}", sym))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                e.note(format!("available metavariable names are: {msg}"));
+            }
+        }
+    }
     e.emit()
 }
 

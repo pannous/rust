@@ -1,6 +1,7 @@
 use rustc_ast::token::NtExprKind::*;
 use rustc_ast::token::NtPatKind::*;
 use rustc_ast::token::{self, InvisibleOrigin, MetaVarKind, NonterminalKind, Token};
+use rustc_ast_pretty::pprust;
 use rustc_errors::PResult;
 use rustc_span::{Ident, kw};
 
@@ -25,17 +26,16 @@ impl<'a> Parser<'a> {
                 | MetaVarKind::Pat(_)
                 | MetaVarKind::Expr { .. }
                 | MetaVarKind::Ty { .. }
-                | MetaVarKind::Literal // `true`, `false`
                 | MetaVarKind::Meta { .. }
                 | MetaVarKind::Path => true,
+                // `true`, `false`
+                MetaVarKind::Literal => true,
 
-                MetaVarKind::Item
-                | MetaVarKind::Block
-                | MetaVarKind::Vis => false,
+                MetaVarKind::Item | MetaVarKind::Block | MetaVarKind::Vis | MetaVarKind::Guard => {
+                    false
+                }
 
-                MetaVarKind::Ident
-                | MetaVarKind::Lifetime
-                | MetaVarKind::TT => unreachable!(),
+                MetaVarKind::Ident | MetaVarKind::Lifetime | MetaVarKind::TT => unreachable!(),
             }
         }
 
@@ -86,7 +86,8 @@ impl<'a> Parser<'a> {
                     | MetaVarKind::Ty { .. }
                     | MetaVarKind::Meta { .. }
                     | MetaVarKind::Path
-                    | MetaVarKind::Vis => false,
+                    | MetaVarKind::Vis
+                    | MetaVarKind::Guard => false,
                     MetaVarKind::Lifetime | MetaVarKind::Ident | MetaVarKind::TT => {
                         unreachable!()
                     }
@@ -102,6 +103,10 @@ impl<'a> Parser<'a> {
             NonterminalKind::Lifetime => match &token.kind {
                 token::Lifetime(..) | token::NtLifetime(..) => true,
                 _ => false,
+            },
+            NonterminalKind::Guard => match token.kind {
+                token::OpenInvisible(InvisibleOrigin::MetaVar(MetaVarKind::Guard)) => true,
+                _ => token.is_keyword(kw::If),
             },
             NonterminalKind::TT | NonterminalKind::Item | NonterminalKind::Stmt => {
                 token.kind.close_delim().is_none()
@@ -197,7 +202,7 @@ impl<'a> Parser<'a> {
                 } else {
                     Err(self.dcx().create_err(UnexpectedNonterminal::Ident {
                         span: self.token.span,
-                        token: self.token,
+                        token: pprust::token_to_string(&self.token),
                     }))
                 }
             }
@@ -219,9 +224,12 @@ impl<'a> Parser<'a> {
                 } else {
                     Err(self.dcx().create_err(UnexpectedNonterminal::Lifetime {
                         span: self.token.span,
-                        token: self.token,
+                        token: pprust::token_to_string(&self.token),
                     }))
                 }
+            }
+            NonterminalKind::Guard => {
+                Ok(ParseNtResult::Guard(self.expect_match_arm_guard(ForceCollect::Yes)?))
             }
         }
     }

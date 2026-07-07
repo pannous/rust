@@ -691,7 +691,7 @@ declare_clippy_lint! {
     /// const SIZE: usize = 15;
     /// let arr: [u8; SIZE] = [0; SIZE];
     /// ```
-    #[clippy::version = "1.93.0"]
+    #[clippy::version = "1.94.0"]
     pub NEEDLESS_TYPE_CAST,
     nursery,
     "binding defined with one type but always cast to another"
@@ -911,10 +911,7 @@ impl<'tcx> LateLintPass<'tcx> for Casts {
             ptr_cast_constness::check(cx, expr, cast_from_expr, cast_from, cast_to, self.msrv);
             ptr_as_ptr::check(cx, expr, cast_from_expr, cast_from, cast_to_hir, cast_to, self.msrv);
             as_ptr_cast_mut::check(cx, expr, cast_from_expr, cast_to);
-            fn_to_numeric_cast_any::check(cx, expr, cast_from_expr, cast_from, cast_to);
             confusing_method_to_numeric_cast::check(cx, expr, cast_from_expr, cast_from, cast_to);
-            fn_to_numeric_cast::check(cx, expr, cast_from_expr, cast_from, cast_to);
-            fn_to_numeric_cast_with_truncation::check(cx, expr, cast_from_expr, cast_from, cast_to);
             zero_ptr::check(cx, expr, cast_from_expr, cast_to_hir, self.msrv);
 
             if self.msrv.meets(cx, msrvs::MANUAL_DANGLING_PTR) {
@@ -932,6 +929,9 @@ impl<'tcx> LateLintPass<'tcx> for Casts {
                 }
                 cast_lossless::check(cx, expr, cast_from_expr, cast_from, cast_to, cast_to_hir, self.msrv);
                 cast_enum_constructor::check(cx, expr, cast_from_expr, cast_from);
+                fn_to_numeric_cast_any::check(cx, expr, cast_from_expr, cast_from, cast_to);
+                fn_to_numeric_cast::check(cx, expr, cast_from_expr, cast_from, cast_to);
+                fn_to_numeric_cast_with_truncation::check(cx, expr, cast_from_expr, cast_from, cast_to);
             }
 
             as_underscore::check(cx, expr, cast_to_hir);

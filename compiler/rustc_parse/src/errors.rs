@@ -5,8 +5,7 @@ use std::borrow::Cow;
 use std::path::PathBuf;
 
 use rustc_ast::token::{self, InvisibleOrigin, MetaVarKind, Token};
-use rustc_ast::util::parser::ExprPrecedence;
-use rustc_ast::{Path, Visibility};
+use rustc_ast_pretty::pprust;
 use rustc_errors::codes::*;
 use rustc_errors::{
     Applicability, Diag, DiagArgValue, DiagCtxtHandle, Diagnostic, EmissionGuarantee, IntoDiagArg,
@@ -593,7 +592,7 @@ pub(crate) struct ExpectedStructField {
     #[primary_span]
     #[label("expected one of `,`, `:`, or `{\"}\"}`")]
     pub span: Span,
-    pub token: Token,
+    pub token: Cow<'static, str>,
     #[label("while parsing this struct field")]
     pub ident_span: Span,
 }
@@ -626,7 +625,7 @@ pub(crate) struct MissingInInForLoop {
     #[primary_span]
     pub span: Span,
     #[subdiagnostic]
-    pub sub: MissingInInForLoopSub,
+    pub sub: Option<MissingInInForLoopSub>,
 }
 
 #[derive(Subdiagnostic)]
@@ -812,7 +811,7 @@ pub(crate) struct ComparisonInterpretedAsGeneric {
     #[primary_span]
     #[label("not interpreted as comparison")]
     pub comparison: Span,
-    pub r#type: Path,
+    pub r#type: String,
     #[label("interpreted as generic arguments")]
     pub args: Span,
     #[subdiagnostic]
@@ -834,7 +833,7 @@ pub(crate) struct ShiftInterpretedAsGeneric {
     #[primary_span]
     #[label("not interpreted as shift")]
     pub shift: Span,
-    pub r#type: Path,
+    pub r#type: String,
     #[label("interpreted as generic arguments")]
     pub args: Span,
     #[subdiagnostic]
@@ -856,7 +855,7 @@ pub(crate) struct FoundExprWouldBeStmt {
     #[primary_span]
     #[label("expected expression")]
     pub span: Span,
-    pub token: Token,
+    pub token: Cow<'static, str>,
     #[subdiagnostic]
     pub suggestion: ExprParenthesesNeeded,
 }
@@ -965,7 +964,7 @@ pub(crate) struct ParenthesesWithStructFields {
     applicability = "maybe-incorrect"
 )]
 pub(crate) struct BracesForStructLiteral {
-    pub r#type: Path,
+    pub r#type: String,
     #[suggestion_part(code = " {{ ")]
     pub first: Span,
     #[suggestion_part(code = " }}")]
@@ -978,7 +977,7 @@ pub(crate) struct BracesForStructLiteral {
     applicability = "maybe-incorrect"
 )]
 pub(crate) struct NoFieldsForFnCall {
-    pub r#type: Path,
+    pub r#type: String,
     #[suggestion_part(code = "")]
     pub fields: Vec<Span>,
 }
@@ -1077,14 +1076,13 @@ pub(crate) struct InclusiveRangeMatchArrow {
     #[primary_span]
     pub arrow: Span,
     #[label("this is parsed as an inclusive range `..=`")]
-    pub span: Span,
     #[suggestion(
         "add a space between the pattern and `=>`",
         style = "verbose",
-        code = " ",
+        code = ".. =",
         applicability = "machine-applicable"
     )]
-    pub after_pat: Span,
+    pub span: Span,
 }
 
 #[derive(Diagnostic)]
@@ -1092,14 +1090,13 @@ pub(crate) struct InclusiveRangeMatchArrow {
 #[note("inclusive ranges must be bounded at the end (`..=b` or `a..=b`)")]
 pub(crate) struct InclusiveRangeNoEnd {
     #[primary_span]
-    pub span: Span,
     #[suggestion(
         "use `..` instead",
-        code = "",
+        code = "..",
         applicability = "machine-applicable",
         style = "verbose"
     )]
-    pub suggestion: Span,
+    pub span: Span,
 }
 
 #[derive(Subdiagnostic)]
@@ -1228,6 +1225,26 @@ pub(crate) struct IncorrectImplRestriction {
 }
 
 #[derive(Diagnostic)]
+#[diag("incorrect `mut` restriction")]
+#[help(
+    "some possible `mut` restrictions are:
+    `mut(crate)`: can only be mutated in the current crate
+    `mut(super)`: can only be mutated in the parent module
+    `mut(self)`: can only be mutated in current module
+    `mut(in path::to::module)`: can only be mutated in the specified path"
+)]
+pub(crate) struct IncorrectMutRestriction {
+    #[primary_span]
+    #[suggestion(
+        "help: use `in` to restrict mutations to the path `{$inner_str}`",
+        code = "in {inner_str}",
+        applicability = "machine-applicable"
+    )]
+    pub span: Span,
+    pub inner_str: String,
+}
+
+#[derive(Diagnostic)]
 #[diag("<assignment> ... else {\"{\"} ... {\"}\"} is not allowed")]
 pub(crate) struct AssignmentElseNotAllowed {
     #[primary_span]
@@ -1238,6 +1255,14 @@ pub(crate) struct AssignmentElseNotAllowed {
 #[diag("expected statement after outer attribute")]
 pub(crate) struct ExpectedStatementAfterOuterAttr {
     #[primary_span]
+    pub span: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag("attribute without where predicates")]
+pub(crate) struct AttrWithoutWherePredicates {
+    #[primary_span]
+    #[label("attributes are only permitted when preceding predicates")]
     pub span: Span,
 }
 
@@ -1442,7 +1467,7 @@ impl<'a, G: EmissionGuarantee> Diagnostic<'a, G> for ExpectedIdentifier {
         );
         diag.span(self.span);
         if add_token {
-            diag.arg("token", self.token);
+            diag.arg("token", pprust::token_to_string(&self.token));
         }
 
         if let Some(sugg) = self.suggest_raw {
@@ -1508,7 +1533,7 @@ impl<'a, G: EmissionGuarantee> Diagnostic<'a, G> for ExpectedSemi {
         );
         diag.span(self.span);
         if add_token {
-            diag.arg("token", self.token);
+            diag.arg("token", pprust::token_to_string(&self.token));
         }
 
         if let Some(unexpected_token_label) = self.unexpected_token_label {
@@ -2127,7 +2152,7 @@ pub(crate) struct VisibilityNotFollowedByItem {
     #[primary_span]
     #[label("the visibility")]
     pub span: Span,
-    pub vis: Visibility,
+    pub vis: String,
 }
 
 #[derive(Diagnostic)]
@@ -2442,14 +2467,14 @@ pub(crate) enum UnexpectedTokenAfterStructName {
         #[primary_span]
         #[label("expected `where`, `{\"{\"}`, `(`, or `;` after struct name")]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
     #[diag("expected `where`, `{\"{\"}`, `(`, or `;` after struct name, found keyword `{$token}`")]
     Keyword {
         #[primary_span]
         #[label("expected `where`, `{\"{\"}`, `(`, or `;` after struct name")]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
     #[diag(
         "expected `where`, `{\"{\"}`, `(`, or `;` after struct name, found reserved keyword `{$token}`"
@@ -2458,7 +2483,7 @@ pub(crate) enum UnexpectedTokenAfterStructName {
         #[primary_span]
         #[label("expected `where`, `{\"{\"}`, `(`, or `;` after struct name")]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
     #[diag(
         "expected `where`, `{\"{\"}`, `(`, or `;` after struct name, found doc comment `{$token}`"
@@ -2467,7 +2492,7 @@ pub(crate) enum UnexpectedTokenAfterStructName {
         #[primary_span]
         #[label("expected `where`, `{\"{\"}`, `(`, or `;` after struct name")]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
     #[diag("expected `where`, `{\"{\"}`, `(`, or `;` after struct name, found metavar")]
     MetaVar {
@@ -2480,13 +2505,14 @@ pub(crate) enum UnexpectedTokenAfterStructName {
         #[primary_span]
         #[label("expected `where`, `{\"{\"}`, `(`, or `;` after struct name")]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
 }
 
 impl UnexpectedTokenAfterStructName {
-    pub(crate) fn new(span: Span, token: Token) -> Self {
-        match TokenDescription::from_token(&token) {
+    pub(crate) fn new(span: Span, orig_token: Token) -> Self {
+        let token = pprust::token_to_string(&orig_token);
+        match TokenDescription::from_token(&orig_token) {
             Some(TokenDescription::ReservedIdentifier) => Self::ReservedIdentifier { span, token },
             Some(TokenDescription::Keyword) => Self::Keyword { span, token },
             Some(TokenDescription::ReservedKeyword) => Self::ReservedKeyword { span, token },
@@ -2539,13 +2565,13 @@ pub(crate) enum UnexpectedNonterminal {
     Ident {
         #[primary_span]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
     #[diag("expected a lifetime, found `{$token}`")]
     Lifetime {
         #[primary_span]
         span: Span,
-        token: Token,
+        token: Cow<'static, str>,
     },
 }
 
@@ -3121,7 +3147,7 @@ pub(crate) struct UnexpectedVertVertInPattern {
 pub(crate) struct TrailingVertSuggestion {
     #[primary_span]
     pub span: Span,
-    pub token: Token,
+    pub token: Cow<'static, str>,
 }
 
 #[derive(Diagnostic)]
@@ -3133,7 +3159,7 @@ pub(crate) struct TrailingVertNotAllowed {
     pub suggestion: TrailingVertSuggestion,
     #[label("while parsing this or-pattern starting here")]
     pub start: Option<Span>,
-    pub token: Token,
+    pub token: Cow<'static, str>,
     #[note("alternatives in or-patterns are separated with `|`, not `||`")]
     pub note_double_vert: bool,
 }
@@ -3147,7 +3173,7 @@ pub(crate) struct DotDotDotRestPattern {
     #[suggestion(
         "for a rest pattern, use `..` instead of `...`",
         style = "verbose",
-        code = "",
+        code = "..",
         applicability = "machine-applicable"
     )]
     pub suggestion: Option<Span>,
@@ -3350,8 +3376,6 @@ pub(crate) struct UnexpectedExpressionInPattern {
     pub span: Span,
     /// Was a `RangePatternBound` expected?
     pub is_bound: bool,
-    /// The unexpected expr's precedence (used in match arm guard suggestions).
-    pub expr_precedence: ExprPrecedence,
 }
 
 #[derive(Subdiagnostic)]
@@ -4237,7 +4261,7 @@ impl Subdiagnostic for HiddenUnicodeCodepointsDiagLabels {
 
 pub(crate) enum HiddenUnicodeCodepointsDiagSub {
     Escape { spans: Vec<(char, Span)> },
-    NoEscape { spans: Vec<(char, Span)> },
+    NoEscape { spans: Vec<(char, Span)>, is_doc_comment: bool },
 }
 
 // Used because of multiple multipart_suggestion and note
@@ -4263,7 +4287,7 @@ impl Subdiagnostic for HiddenUnicodeCodepointsDiagSub {
                     Applicability::MachineApplicable,
                 );
             }
-            HiddenUnicodeCodepointsDiagSub::NoEscape { spans } => {
+            HiddenUnicodeCodepointsDiagSub::NoEscape { spans, is_doc_comment } => {
                 // FIXME: in other suggestions we've reversed the inner spans of doc comments. We
                 // should do the same here to provide the same good suggestions as we do for
                 // literals above.
@@ -4276,7 +4300,11 @@ impl Subdiagnostic for HiddenUnicodeCodepointsDiagSub {
                         .join(", "),
                 );
                 diag.note(msg!("if their presence wasn't intentional, you can remove them"));
-                diag.note(msg!("if you want to keep them but make them visible in your source code, you can escape them: {$escaped}"));
+                if is_doc_comment {
+                    diag.note(msg!(r#"if you need to keep them and make them explicit in source, rewrite this doc comment as a `#[doc = "..."]` attribute and use Unicode escapes such as {$escaped}"#));
+                } else {
+                    diag.note(msg!("if you want to keep them but make them visible in your source code, you can escape them: {$escaped}"));
+                }
             }
         }
     }
@@ -4413,4 +4441,167 @@ pub(crate) struct QuestionMarkInTypeSugg {
     pub left: Span,
     #[suggestion_part(code = ">")]
     pub right: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag(
+    "this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression"
+)]
+pub(crate) struct BreakWithLabelAndLoop {
+    #[subdiagnostic]
+    pub sub: BreakWithLabelAndLoopSub,
+}
+
+#[derive(Subdiagnostic)]
+#[multipart_suggestion("wrap this expression in parentheses", applicability = "machine-applicable")]
+pub(crate) struct BreakWithLabelAndLoopSub {
+    #[suggestion_part(code = "(")]
+    pub left: Span,
+    #[suggestion_part(code = ")")]
+    pub right: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag("prefix `'r` is reserved")]
+pub(crate) struct RawPrefix {
+    #[label("reserved prefix")]
+    pub label: Span,
+    #[suggestion(
+        "insert whitespace here to avoid this being parsed as a prefix in Rust 2021",
+        code = " ",
+        applicability = "machine-applicable"
+    )]
+    pub suggestion: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag("unicode codepoint changing visible direction of text present in comment")]
+#[note(
+    "these kind of unicode codepoints change the way text flows on applications that support them, but can cause confusion because they change the order of characters on the screen"
+)]
+pub(crate) struct UnicodeTextFlow {
+    #[label(
+        "{$num_codepoints ->
+            [1] this comment contains an invisible unicode text flow control codepoint
+            *[other] this comment contains invisible unicode text flow control codepoints
+        }"
+    )]
+    pub comment_span: Span,
+    #[subdiagnostic]
+    pub characters: Vec<UnicodeCharNoteSub>,
+    #[subdiagnostic]
+    pub suggestions: Option<UnicodeTextFlowSuggestion>,
+
+    pub num_codepoints: usize,
+}
+
+#[derive(Subdiagnostic)]
+#[label("{$c_debug}")]
+pub(crate) struct UnicodeCharNoteSub {
+    #[primary_span]
+    pub span: Span,
+    pub c_debug: String,
+}
+
+#[derive(Subdiagnostic)]
+#[multipart_suggestion(
+    "if their presence wasn't intentional, you can remove them",
+    applicability = "machine-applicable",
+    style = "hidden"
+)]
+pub(crate) struct UnicodeTextFlowSuggestion {
+    #[suggestion_part(code = "")]
+    pub spans: Vec<Span>,
+}
+
+#[derive(Diagnostic)]
+#[diag("prefix `{$prefix}` is unknown")]
+pub(crate) struct ReservedPrefix {
+    #[label("unknown prefix")]
+    pub label: Span,
+    #[suggestion(
+        "insert whitespace here to avoid this being parsed as a prefix in Rust 2021",
+        code = " ",
+        applicability = "machine-applicable"
+    )]
+    pub suggestion: Span,
+
+    pub prefix: String,
+}
+
+#[derive(Diagnostic)]
+#[diag("will be parsed as a guarded string in Rust 2024")]
+pub(crate) struct ReservedStringLint {
+    #[suggestion(
+        "insert whitespace here to avoid this being parsed as a guarded string in Rust 2024",
+        code = " ",
+        applicability = "machine-applicable"
+    )]
+    pub suggestion: Span,
+}
+
+#[derive(Diagnostic)]
+#[diag("reserved token in Rust 2024")]
+pub(crate) struct ReservedMultihashLint {
+    #[suggestion(
+        "insert whitespace here to avoid this being parsed as a forbidden token in Rust 2024",
+        code = " ",
+        applicability = "machine-applicable"
+    )]
+    pub suggestion: Span,
+}
+
+#[derive(Subdiagnostic)]
+#[suggestion(
+    "if you meant to write a path, use a double colon",
+    code = "::",
+    applicability = "maybe-incorrect"
+)]
+pub(crate) struct UseDoubleColonSuggestion {
+    #[primary_span]
+    pub colon: Span,
+}
+
+#[derive(Subdiagnostic)]
+#[multipart_suggestion(
+    "if you meant to create a regular struct, use curly braces",
+    applicability = "maybe-incorrect"
+)]
+pub(crate) struct UseRegularStructSuggestion {
+    #[suggestion_part(code = " {{ ")]
+    pub open: Span,
+    #[suggestion_part(code = " }}")]
+    pub close: Span,
+    #[suggestion_part(code = "")]
+    pub semicolon: Option<Span>,
+}
+#[derive(Diagnostic)]
+#[diag("expected type parameter, found path `{$path}`")]
+pub(crate) struct FoundPathInGenerics {
+    #[primary_span]
+    pub span: Span,
+    pub path: String,
+}
+#[derive(Subdiagnostic)]
+#[suggestion(
+    "you might have meant to bind a type parameter to a trait",
+    applicability = "maybe-incorrect",
+    code = "T: "
+)]
+
+pub(crate) struct SuggestBindTypeParameter {
+    #[primary_span]
+    pub span: Span,
+}
+
+#[derive(Subdiagnostic)]
+#[suggestion(
+    "alternatively, you might have meant to introduce type parameter",
+    applicability = "maybe-incorrect",
+    code = "{parameters}"
+)]
+pub(crate) struct SuggestIntroduceTypeParameter {
+    #[primary_span]
+    pub span: Span,
+    pub parameters: String,
 }

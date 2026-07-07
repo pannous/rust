@@ -1,3 +1,8 @@
+//! Parsing of attribute arguments.
+//!
+//! Depending on the attribute parser, an [`ArgParser`] can be used to parse the arguments given to
+//! an attribute. See its documentation for more information.
+//!
 //! This is in essence an (improved) duplicate of `rustc_ast/attr/mod.rs`.
 //! That module is intended to be deleted in its entirety.
 //!
@@ -5,6 +10,8 @@
 
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display};
+#[cfg(debug_assertions)]
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use rustc_ast::token::{self, Delimiter, MetaVarKind};
 use rustc_ast::tokenstream::TokenStream;
@@ -12,7 +19,7 @@ use rustc_ast::{
     AttrArgs, Expr, ExprKind, LitKind, MetaItemLit, Path, PathSegment, StmtKind, UnOp,
 };
 use rustc_ast_pretty::pprust;
-use rustc_errors::{Diag, PResult};
+use rustc_errors::{Applicability, Diag, PResult};
 use rustc_hir::{self as hir, AttrPath};
 use rustc_parse::exp;
 use rustc_parse::parser::{ForceCollect, Parser, PathStyle, Recovery, token_descr};
@@ -23,8 +30,8 @@ use thin_vec::ThinVec;
 
 use crate::ShouldEmit;
 use crate::session_diagnostics::{
-    InvalidMetaItem, InvalidMetaItemQuoteIdentSugg, InvalidMetaItemRemoveNegSugg, MetaBadDelim,
-    MetaBadDelimSugg, SuffixedLiteralInAttribute,
+    AdditionalCommaSuggestion, ExpectedComma, InvalidMetaItem, InvalidMetaItemQuoteIdentSugg,
+    InvalidMetaItemRemoveNegSugg, MetaBadDelim, MetaBadDelimSugg, SuffixedLiteralInAttribute,
 };
 
 #[derive(Clone, Debug)]
@@ -87,7 +94,13 @@ impl<P: Borrow<Path>> Display for PathParser<P> {
     }
 }
 
-#[derive(Clone, Debug)]
+/// Used for parsing attribute arguments.
+///
+/// See also [`AttributeDiagnosticContext`], which is the preferred interface for issuing argument
+/// parsing related diagnostics.
+///
+/// [`AttributeDiagnosticContext`]: crate::context::AttributeDiagnosticContext
+#[derive(Debug)]
 #[must_use]
 pub enum ArgParser {
     NoArgs,
@@ -109,6 +122,7 @@ impl ArgParser {
         parts: &[Symbol],
         psess: &'sess ParseSess,
         should_emit: ShouldEmit,
+        allow_expr_metavar: AllowExprMetavar,
     ) -> Option<Self> {
         Some(match value {
             AttrArgs::Empty => Self::NoArgs,
@@ -122,6 +136,7 @@ impl ArgParser {
                         args.dspan.entire(),
                         psess,
                         ShouldEmit::ErrorsAndLints { recovery: Recovery::Forbidden },
+                        allow_expr_metavar,
                     ) {
                         Ok(p) => return Some(ArgParser::List(p)),
                         Err(e) => {
@@ -147,9 +162,15 @@ impl ArgParser {
                 }
 
                 Self::List(
-                    MetaItemListParser::new(&args.tokens, args.dspan.entire(), psess, should_emit)
-                        .map_err(|e| should_emit.emit_err(e))
-                        .ok()?,
+                    MetaItemListParser::new(
+                        &args.tokens,
+                        args.dspan.entire(),
+                        psess,
+                        should_emit,
+                        allow_expr_metavar,
+                    )
+                    .map_err(|e| should_emit.emit_err(e))
+                    .ok()?,
                 )
             }
             AttrArgs::Eq { eq_span, expr } => Self::NameValue(NameValueParser {
@@ -168,7 +189,7 @@ impl ArgParser {
     ///
     /// - `#[allow(clippy::complexity)]`: `(clippy::complexity)` is a list
     /// - `#[rustfmt::skip::macros(target_macro_name)]`: `(target_macro_name)` is a list
-    pub fn list(&self) -> Option<&MetaItemListParser> {
+    pub fn as_list(&self) -> Option<&MetaItemListParser> {
         match self {
             Self::List(l) => Some(l),
             Self::NameValue(_) | Self::NoArgs => None,
@@ -184,7 +205,7 @@ impl ArgParser {
     ///   to get an `ArgParser`, so this method will effectively only assert that the `= "100"` is
     ///   there
     /// - `#[doc = "hello"]`: `doc = "hello`  is also a name value pair
-    pub fn name_value(&self) -> Option<&NameValueParser> {
+    pub fn as_name_value(&self) -> Option<&NameValueParser> {
         match self {
             Self::NameValue(n) => Some(n),
             Self::List(_) | Self::NoArgs => None,
@@ -193,12 +214,25 @@ impl ArgParser {
 
     /// Assert that there were no args.
     /// If there were, get a span to the arguments
-    /// (to pass to [`AcceptContext::expected_no_args`](crate::context::AcceptContext::expected_no_args)).
-    pub fn no_args(&self) -> Result<(), Span> {
+    /// (to pass to [`AttributeDiagnosticContext::expected_no_args`](crate::context::AttributeDiagnosticContext::expected_no_args)).
+    pub fn as_no_args(&self) -> Result<(), Span> {
         match self {
             Self::NoArgs => Ok(()),
             Self::List(args) => Err(args.span),
             Self::NameValue(args) => Err(args.args_span()),
+        }
+    }
+
+    /// Explicitly ignore the arguments, disarming the arguments-used check
+    pub fn ignore_args(&self) {
+        #[cfg(debug_assertions)]
+        match self {
+            ArgParser::List(list) => {
+                for item in list.mixed() {
+                    item.ignore_args();
+                }
+            }
+            _ => {}
         }
     }
 }
@@ -207,7 +241,7 @@ impl ArgParser {
 /// This enum represents that.
 ///
 /// Choose which one you want using the provided methods.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum MetaItemOrLitParser {
     MetaItemParser(MetaItemParser),
     Lit(MetaItemLit),
@@ -217,8 +251,9 @@ impl MetaItemOrLitParser {
     pub fn parse_single<'sess>(
         parser: &mut Parser<'sess>,
         should_emit: ShouldEmit,
+        allow_expr_metavar: AllowExprMetavar,
     ) -> PResult<'sess, MetaItemOrLitParser> {
-        let mut this = MetaItemListParserContext { parser, should_emit };
+        let mut this = MetaItemListParserContext { parser, should_emit, allow_expr_metavar };
         this.parse_meta_item_inner()
     }
 
@@ -231,7 +266,7 @@ impl MetaItemOrLitParser {
         }
     }
 
-    pub fn lit(&self) -> Option<&MetaItemLit> {
+    pub fn as_lit(&self) -> Option<&MetaItemLit> {
         match self {
             MetaItemOrLitParser::Lit(meta_item_lit) => Some(meta_item_lit),
             MetaItemOrLitParser::MetaItemParser(_) => None,
@@ -244,8 +279,29 @@ impl MetaItemOrLitParser {
             MetaItemOrLitParser::Lit(_) => None,
         }
     }
+
+    /// Returns some if this `MetaItemOrLitParser` is a `MetaItem` with no arguments
+    pub fn meta_item_no_args(&self) -> Option<&MetaItemParser> {
+        let meta_item = self.meta_item()?;
+        match meta_item.args().as_no_args() {
+            Ok(_) => Some(meta_item),
+            Err(_) => None,
+        }
+    }
+
+    /// Explicitly ignore the arguments, disarming the arguments-used check
+    pub fn ignore_args(&self) {
+        #[cfg(debug_assertions)]
+        match self {
+            MetaItemOrLitParser::MetaItemParser(meta_item) => {
+                meta_item.ignore_args();
+            }
+            MetaItemOrLitParser::Lit(_) => {}
+        }
+    }
 }
 
+// FIXME(scrabsha): once #155696 is merged, update this and mention the higher-level APIs.
 /// Utility that deconstructs a MetaItem into usable parts.
 ///
 /// MetaItems are syntactically extremely flexible, but specific attributes want to parse
@@ -254,15 +310,20 @@ impl MetaItemOrLitParser {
 /// MetaItems consist of some path, and some args. The args could be empty. In other words:
 ///
 /// - `name` -> args are empty
-/// - `name(...)` -> args are a [`list`](ArgParser::list), which is the bit between the parentheses
-/// - `name = value`-> arg is [`name_value`](ArgParser::name_value), where the argument is the
+/// - `name(...)` -> args are a [`list`](ArgParser::as_list), which is the bit between the
+///   parentheses
+/// - `name = value`-> arg is [`name_value`](ArgParser::as_name_value), where the argument is the
 ///   `= value` part
 ///
 /// The syntax of MetaItems can be found at <https://doc.rust-lang.org/reference/attributes.html>
-#[derive(Clone)]
 pub struct MetaItemParser {
     path: OwnedPathParser,
     args: ArgParser,
+
+    /// Whether the `args` of this meta item have been looked at.
+    /// This is tracked because if the arguments of a `MetaItemParser` are ignored, this is probably a mistake
+    #[cfg(debug_assertions)]
+    args_checked: AtomicBool,
 }
 
 impl Debug for MetaItemParser {
@@ -299,6 +360,8 @@ impl MetaItemParser {
 
     /// Gets just the args parser, without caring about the path.
     pub fn args(&self) -> &ArgParser {
+        #[cfg(debug_assertions)]
+        self.args_checked.store(true, Ordering::Relaxed);
         &self.args
     }
 
@@ -310,6 +373,16 @@ impl MetaItemParser {
     ///   and not a word and should instead be parsed using [`path`](Self::path)
     pub fn word_is(&self, sym: Symbol) -> Option<&ArgParser> {
         self.path().word_is(sym).then(|| self.args())
+    }
+
+    /// Explicitly ignore the arguments, disarming the arguments-used check
+    pub fn ignore_args(&self) {
+        self.args().ignore_args();
+    }
+
+    #[cfg(debug_assertions)]
+    pub fn are_args_checked(&self) -> bool {
+        self.args_checked.load(Ordering::Relaxed)
     }
 }
 
@@ -390,7 +463,7 @@ fn expr_to_lit<'sess>(
             }
         }
     } else {
-        if matches!(should_emit, ShouldEmit::Nothing) {
+        if matches!(should_emit, ShouldEmit::Nothing) || matches!(expr.kind, ExprKind::Err(_)) {
             return Ok(None);
         }
 
@@ -399,14 +472,37 @@ fn expr_to_lit<'sess>(
         // - `#[foo = include_str!("nonexistent-file.rs")]`:
         //   results in `ast::ExprKind::Err`.
         let msg = "attribute value must be a literal";
-        let err = psess.dcx().struct_span_err(span, msg);
+        let mut err = psess.dcx().struct_span_err(span, msg);
+
+        // Suggest adding quotation marks to turn an identifier into a string literal
+        if let ExprKind::Path(None, ref path) = expr.kind
+            && let [segment] = path.segments.as_slice()
+        {
+            err.span_suggestion(
+                expr.span,
+                "try adding quotation marks",
+                &format!("\"{}\"", segment.ident),
+                Applicability::MaybeIncorrect,
+            );
+        }
+
         Err(err)
     }
+}
+
+/// Whether expansions of `expr` metavariables from decrarative macros
+/// are permitted. Used when parsing meta items; currently, only `cfg` predicates
+/// enable this option
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum AllowExprMetavar {
+    No,
+    Yes,
 }
 
 struct MetaItemListParserContext<'a, 'sess> {
     parser: &'a mut Parser<'sess>,
     should_emit: ShouldEmit,
+    allow_expr_metavar: AllowExprMetavar,
 }
 
 impl<'a, 'sess> MetaItemListParserContext<'a, 'sess> {
@@ -447,20 +543,44 @@ impl<'a, 'sess> MetaItemListParserContext<'a, 'sess> {
         Ok(lit)
     }
 
-    fn parse_attr_item(&mut self) -> PResult<'sess, MetaItemParser> {
-        if let Some(MetaVarKind::Meta { has_meta_form }) = self.parser.token.is_metavar_seq() {
-            return if has_meta_form {
-                let attr_item = self
-                    .parser
-                    .eat_metavar_seq(MetaVarKind::Meta { has_meta_form: true }, |this| {
-                        MetaItemListParserContext { parser: this, should_emit: self.should_emit }
-                            .parse_attr_item()
-                    })
-                    .unwrap();
-                Ok(attr_item)
-            } else {
-                self.parser.unexpected_any()
-            };
+    fn parse_meta_item(&mut self) -> PResult<'sess, MetaItemParser> {
+        if let Some(metavar) = self.parser.token.is_metavar_seq() {
+            match (metavar, self.allow_expr_metavar) {
+                (kind @ MetaVarKind::Expr { .. }, AllowExprMetavar::Yes) => {
+                    return self
+                        .parser
+                        .eat_metavar_seq(kind, |this| {
+                            MetaItemListParserContext {
+                                parser: this,
+                                should_emit: self.should_emit,
+                                allow_expr_metavar: AllowExprMetavar::Yes,
+                            }
+                            .parse_meta_item()
+                        })
+                        .ok_or_else(|| {
+                            self.parser.unexpected_any::<core::convert::Infallible>().unwrap_err()
+                        });
+                }
+                (MetaVarKind::Meta { has_meta_form }, _) => {
+                    return if has_meta_form {
+                        let attr_item = self
+                            .parser
+                            .eat_metavar_seq(MetaVarKind::Meta { has_meta_form: true }, |this| {
+                                MetaItemListParserContext {
+                                    parser: this,
+                                    should_emit: self.should_emit,
+                                    allow_expr_metavar: self.allow_expr_metavar,
+                                }
+                                .parse_meta_item()
+                            })
+                            .unwrap();
+                        Ok(attr_item)
+                    } else {
+                        self.parser.unexpected_any()
+                    };
+                }
+                _ => {}
+            }
         }
 
         let path = self.parser.parse_path(PathStyle::Mod)?;
@@ -469,8 +589,12 @@ impl<'a, 'sess> MetaItemListParserContext<'a, 'sess> {
         let args = if self.parser.check(exp!(OpenParen)) {
             let start = self.parser.token.span;
             let (sub_parsers, _) = self.parser.parse_paren_comma_seq(|parser| {
-                MetaItemListParserContext { parser, should_emit: self.should_emit }
-                    .parse_meta_item_inner()
+                MetaItemListParserContext {
+                    parser,
+                    should_emit: self.should_emit,
+                    allow_expr_metavar: self.allow_expr_metavar,
+                }
+                .parse_meta_item_inner()
             })?;
             let end = self.parser.prev_token.span;
             ArgParser::List(MetaItemListParser { sub_parsers, span: start.with_hi(end.hi()) })
@@ -483,7 +607,12 @@ impl<'a, 'sess> MetaItemListParserContext<'a, 'sess> {
             ArgParser::NoArgs
         };
 
-        Ok(MetaItemParser { path: PathParser(path), args })
+        Ok(MetaItemParser {
+            path: PathParser(path),
+            args,
+            #[cfg(debug_assertions)]
+            args_checked: AtomicBool::new(false),
+        })
     }
 
     fn parse_meta_item_inner(&mut self) -> PResult<'sess, MetaItemOrLitParser> {
@@ -492,7 +621,7 @@ impl<'a, 'sess> MetaItemListParserContext<'a, 'sess> {
             Ok(MetaItemOrLitParser::Lit(self.unsuffixed_meta_item_from_lit(token_lit)?))
         } else {
             let prev_pros = self.parser.approx_token_stream_pos();
-            match self.parse_attr_item() {
+            match self.parse_meta_item() {
                 Ok(item) => Ok(MetaItemOrLitParser::MetaItemParser(item)),
                 Err(err) => {
                     // If `parse_attr_item` made any progress, it likely has a more precise error we should prefer
@@ -575,38 +704,74 @@ impl<'a, 'sess> MetaItemListParserContext<'a, 'sess> {
         self.parser.dcx().create_err(err)
     }
 
+    fn should_continue_parsing_meta_items(&mut self) -> Result<bool, Diag<'sess>> {
+        if self.parser.eat(exp!(Comma)) {
+            return Ok(true);
+        } else if self.parser.token == token::Eof {
+            return Ok(false);
+        }
+
+        let mut snapshot = self.parser.create_snapshot_for_diagnostic();
+        if matches!(self.should_emit, ShouldEmit::ErrorsAndLints { recovery: Recovery::Allowed }) {
+            let mut missing_commas = ThinVec::new();
+            let mut found_comma = false;
+            while self.parser.token != token::Eof {
+                let span = self.parser.prev_token.span.shrink_to_hi();
+                self.should_emit = ShouldEmit::Nothing;
+                match self.parse_meta_item_inner() {
+                    Ok(_) => {
+                        if !found_comma {
+                            missing_commas.push(span);
+                        }
+                    }
+                    Err(e) => {
+                        e.cancel();
+                        break;
+                    }
+                }
+                found_comma = self.parser.eat(exp!(Comma));
+            }
+
+            let mut missing_commas = missing_commas.into_iter();
+            if let Some(span) = missing_commas.next() {
+                let additional =
+                    missing_commas.map(|span| AdditionalCommaSuggestion { span }).collect();
+                return Err(self.parser.dcx().create_err(ExpectedComma { span, additional }));
+            }
+        }
+        snapshot.unexpected_any()
+    }
+
     fn parse(
         tokens: TokenStream,
         psess: &'sess ParseSess,
         span: Span,
         should_emit: ShouldEmit,
+        allow_expr_metavar: AllowExprMetavar,
     ) -> PResult<'sess, MetaItemListParser> {
         let mut parser = Parser::new(psess, tokens, None);
         if let ShouldEmit::ErrorsAndLints { recovery } = should_emit {
             parser = parser.recovery(recovery);
         }
 
-        let mut this = MetaItemListParserContext { parser: &mut parser, should_emit };
+        let mut this =
+            MetaItemListParserContext { parser: &mut parser, should_emit, allow_expr_metavar };
 
         // Presumably, the majority of the time there will only be one attr.
         let mut sub_parsers = ThinVec::with_capacity(1);
         while this.parser.token != token::Eof {
             sub_parsers.push(this.parse_meta_item_inner()?);
 
-            if !this.parser.eat(exp!(Comma)) {
+            if !this.should_continue_parsing_meta_items()? {
                 break;
             }
-        }
-
-        if parser.token != token::Eof {
-            parser.unexpected()?;
         }
 
         Ok(MetaItemListParser { sub_parsers, span })
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MetaItemListParser {
     sub_parsers: ThinVec<MetaItemOrLitParser>,
     pub span: Span,
@@ -618,8 +783,15 @@ impl MetaItemListParser {
         span: Span,
         psess: &'sess ParseSess,
         should_emit: ShouldEmit,
+        allow_expr_metavar: AllowExprMetavar,
     ) -> Result<Self, Diag<'sess>> {
-        MetaItemListParserContext::parse(tokens.clone(), psess, span, should_emit)
+        MetaItemListParserContext::parse(
+            tokens.clone(),
+            psess,
+            span,
+            should_emit,
+            allow_expr_metavar,
+        )
     }
 
     /// Lets you pick and choose as what you want to parse each element in the list
@@ -638,7 +810,7 @@ impl MetaItemListParser {
     /// Returns Some if the list contains only a single element.
     ///
     /// Inside the Some is the parser to parse this single element.
-    pub fn single(&self) -> Option<&MetaItemOrLitParser> {
+    pub fn as_single(&self) -> Option<&MetaItemOrLitParser> {
         let mut iter = self.mixed();
         iter.next().filter(|_| iter.next().is_none())
     }

@@ -52,9 +52,6 @@ use crate::pin::UnsafePinned;
 ///         u32,
 /// }
 /// ```
-#[unstable(feature = "internal_impls_macro", issue = "none")]
-// Allow implementations of `UnsizedConstParamTy` even though std cannot use that feature.
-#[allow_internal_unstable(unsized_const_params)]
 macro marker_impls {
     ( $(#[$($meta:tt)*])* $Trait:ident for $({$($bounds:tt)*})? $T:ty $(, $($rest:tt)*)? ) => {
         $(#[$($meta)*])* impl< $($($bounds)*)? > $Trait for $T {}
@@ -849,7 +846,7 @@ impl<T: PointeeSized> Copy for PhantomData<T> {}
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<T: PointeeSized> Clone for PhantomData<T> {
     fn clone(&self) -> Self {
-        Self
+        *self
     }
 }
 
@@ -859,7 +856,7 @@ unsafe impl<T: PointeeSized> TrivialClone for PhantomData<T> {}
 
 #[stable(feature = "rust1", since = "1.0.0")]
 #[rustc_const_unstable(feature = "const_default", issue = "143894")]
-impl<T: PointeeSized> const Default for PhantomData<T> {
+const impl<T: PointeeSized> Default for PhantomData<T> {
     fn default() -> Self {
         Self
     }
@@ -940,6 +937,8 @@ marker_impls! {
         {T: PointeeSized} *mut T,
         {T: PointeeSized} &T,
         {T: PointeeSized} &mut T,
+        {T: PointeeSized} pattern_type!(*const T is !null),
+        {T: PointeeSized} pattern_type!(*mut T is !null),
 }
 
 /// Types that do not require any pinning guarantees.
@@ -1024,6 +1023,7 @@ pub auto trait Unpin {}
 // will likely eventually be deprecated, and all new code should be using `UnsafePinned` instead.
 #[stable(feature = "pin", since = "1.33.0")]
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[rustc_diagnostic_item = "PhantomPinned"]
 pub struct PhantomPinned;
 
 #[stable(feature = "pin", since = "1.33.0")]
@@ -1057,7 +1057,7 @@ marker_impls! {
 #[unstable(feature = "const_destruct", issue = "133214")]
 #[rustc_const_unstable(feature = "const_destruct", issue = "133214")]
 #[lang = "destruct"]
-#[rustc_on_unimplemented(message = "can't drop `{Self}`", append_const_msg)]
+#[diagnostic::on_unimplemented(message = "can't drop `{Self}`")]
 #[rustc_deny_explicit_impl]
 #[rustc_dyn_incompatible_trait]
 pub const trait Destruct: PointeeSized {}
@@ -1066,7 +1066,7 @@ pub const trait Destruct: PointeeSized {}
 ///
 /// The implementation of this trait is built-in and cannot be implemented
 /// for any user type.
-#[unstable(feature = "tuple_trait", issue = "none")]
+#[unstable(feature = "tuple_trait", issue = "157987")]
 #[lang = "tuple_trait"]
 #[diagnostic::on_unimplemented(message = "`{Self}` is not a tuple")]
 #[rustc_deny_explicit_impl]
@@ -1080,7 +1080,7 @@ pub trait Tuple {}
 /// that all fields are also `ConstParamTy`, which implies that recursively, all fields
 /// are `StructuralPartialEq`.
 #[lang = "const_param_ty"]
-#[unstable(feature = "unsized_const_params", issue = "95174")]
+#[unstable(feature = "const_param_ty_trait", issue = "95174", implied_by = "unsized_const_params")]
 #[diagnostic::on_unimplemented(message = "`{Self}` can't be used as a const parameter type")]
 #[allow(multiple_supertrait_upcastable)]
 // We name this differently than the derive macro so that the `adt_const_params` can
@@ -1090,15 +1090,19 @@ pub trait ConstParamTy_: StructuralPartialEq + Eq {}
 
 /// Derive macro generating an impl of the trait `ConstParamTy`.
 #[rustc_builtin_macro]
-#[allow_internal_unstable(unsized_const_params)]
-#[unstable(feature = "adt_const_params", issue = "95174")]
+#[allow_internal_unstable(const_param_ty_trait)]
+#[unstable(feature = "min_adt_const_params", issue = "154042", implied_by = "adt_const_params")]
 pub macro ConstParamTy($item:item) {
     /* compiler built-in */
 }
 
+// For `adt_const_params` to be recognized as a feature
+#[unstable(feature = "adt_const_params", issue = "95174")]
+const _: () = ();
+
 // FIXME(adt_const_params): handle `ty::FnDef`/`ty::Closure`
 marker_impls! {
-    #[unstable(feature = "adt_const_params", issue = "95174")]
+    #[unstable(feature = "min_adt_const_params", issue = "154042")]
     ConstParamTy_ for
         usize, u8, u16, u32, u64, u128,
         isize, i8, i16, i32, i64, i128,
@@ -1342,5 +1346,21 @@ pub macro CoercePointee($item:item) {
 #[unstable(feature = "coerce_pointee_validated", issue = "none")]
 #[doc(hidden)]
 pub trait CoercePointeeValidated {
+    /* compiler built-in */
+}
+
+/// Allows value to be reborrowed as exclusive, creating a copy of the value
+/// that disables the source for reads and writes for the lifetime of the copy.
+#[lang = "reborrow"]
+#[unstable(feature = "reborrow", issue = "145612")]
+pub trait Reborrow {
+    /* compiler built-in */
+}
+
+/// Allows reborrowable value to be reborrowed as shared, creating a copy
+/// that disables the source for writes for the lifetime of the copy.
+#[lang = "coerce_shared"]
+#[unstable(feature = "reborrow", issue = "145612")]
+pub trait CoerceShared<Target: Copy>: Reborrow {
     /* compiler built-in */
 }

@@ -21,6 +21,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use stdarch_gen_common::{run_generator, Mode, GENERATED_MARKER};
 
 /// Mappings from HVX intrinsics to architecture-independent SIMD intrinsics.
 /// These intrinsics have equivalent semantics and can be lowered to the generic form.
@@ -515,12 +516,6 @@ fn parse_header(content: &str) -> Vec<IntrinsicInfo> {
     intrinsics
 }
 
-/// Convert Q6 name to Rust function name (lowercase with underscores)
-fn q6_to_rust_name(q6_name: &str) -> String {
-    // Q6_V_hi_W -> q6_v_hi_w
-    q6_name.to_lowercase()
-}
-
 /// Generate the module documentation
 fn generate_module_doc(mode: VectorMode) -> String {
     format!(
@@ -540,6 +535,18 @@ fn generate_module_doc(mode: VectorMode) -> String {
 //! - `HvxVectorPred` is {bits} bits ({bytes} bytes) for predicate operations
 //!
 //! To use this module, compile with `-C target-feature=+{target_feature}`.
+//!
+//! ## Naming Convention
+//!
+//! Function names preserve the original Q6 naming case because the convention
+//! uses case to distinguish register types:
+//! - `W` (uppercase) = vector pair (`HvxVectorPair`)
+//! - `V` (uppercase) = vector (`HvxVector`)
+//! - `Q` (uppercase) = predicate (`HvxVectorPred`)
+//! - `R` = scalar register (`i32`)
+//!
+//! For example, `Q6_W_vcombine_VV` operates on a vector pair while
+//! `Q6_V_hi_W` extracts a vector from a pair.
 //!
 //! ## Architecture Versions
 //!
@@ -577,6 +584,7 @@ fn generate_types(mode: VectorMode) -> String {
     format!(
         r#"
 #![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
 
 #[cfg(test)]
 use stdarch_test::assert_instr;
@@ -1433,7 +1441,7 @@ fn generate_functions(intrinsics: &[IntrinsicInfo]) -> String {
 
     // Generate simple intrinsics
     for info in intrinsics.iter().filter(|i| !i.is_compound) {
-        let rust_name = q6_to_rust_name(&info.q6_name);
+        let rust_name = &info.q6_name;
 
         // Generate doc comment
         output.push_str(&format!("/// `{}`\n", info.asm_syntax));
@@ -1442,7 +1450,7 @@ fn generate_functions(intrinsics: &[IntrinsicInfo]) -> String {
         output.push_str(&format!("/// Execution Slots: {}\n", info.exec_slots));
 
         // Generate attributes
-        output.push_str("#[inline(always)]\n");
+        output.push_str("#[inline]\n");
         output.push_str(&format!(
             "#[cfg_attr(target_arch = \"hexagon\", target_feature(enable = \"hvxv{}\"))]\n",
             info.min_arch
@@ -1505,7 +1513,7 @@ fn generate_functions(intrinsics: &[IntrinsicInfo]) -> String {
     let overrides = get_compound_overrides();
     for info in intrinsics.iter().filter(|i| i.is_compound) {
         if let Some(ref compound_expr) = info.compound_expr {
-            let rust_name = q6_to_rust_name(&info.q6_name);
+            let rust_name = &info.q6_name;
 
             // Get the primary instruction for assert_instr
             let _primary_instr = get_compound_primary_instr(compound_expr)
@@ -1525,7 +1533,7 @@ fn generate_functions(intrinsics: &[IntrinsicInfo]) -> String {
             }
 
             // Generate attributes
-            output.push_str("#[inline(always)]\n");
+            output.push_str("#[inline]\n");
             output.push_str(&format!(
                 "#[cfg_attr(target_arch = \"hexagon\", target_feature(enable = \"hvxv{}\"))]\n",
                 info.min_arch
@@ -1602,6 +1610,7 @@ fn generate_module_file(
     let mut output =
         File::create(output_path).map_err(|e| format!("Failed to create output: {}", e))?;
 
+    writeln!(output, "{}", GENERATED_MARKER).map_err(|e| e.to_string())?;
     writeln!(output, "{}", generate_module_doc(mode)).map_err(|e| e.to_string())?;
     writeln!(output, "{}", generate_types(mode)).map_err(|e| e.to_string())?;
     writeln!(output, "{}", generate_extern_block(intrinsics, mode)).map_err(|e| e.to_string())?;
@@ -1686,17 +1695,19 @@ fn main() -> Result<(), String> {
     // Generate output files
     let hexagon_dir = crate_dir.join("../core_arch/src/hexagon");
 
-    // Generate v64.rs (64-byte vector mode)
-    let v64_path = hexagon_dir.join("v64.rs");
-    println!("\nStep 3: Generating v64.rs (64-byte mode)...");
-    generate_module_file(&intrinsics, &v64_path, VectorMode::V64)?;
-    println!("  Output: {}", v64_path.display());
-
-    // Generate v128.rs (128-byte vector mode)
-    let v128_path = hexagon_dir.join("v128.rs");
-    println!("\nStep 4: Generating v128.rs (128-byte mode)...");
-    generate_module_file(&intrinsics, &v128_path, VectorMode::V128)?;
-    println!("  Output: {}", v128_path.display());
+    // Either "check" to check the output versus the committed output, or "bless"
+    // to update the output.
+    let mode = Mode::from_env();
+    println!("\nStep 3: Generating v64.rs and v128.rs (mode: {mode:?})...");
+    run_generator(&hexagon_dir, mode, |out_dir| -> Result<(), String> {
+        for (filename, vmode) in [("v64.rs", VectorMode::V64), ("v128.rs", VectorMode::V128)] {
+            let path = out_dir.join(filename);
+            generate_module_file(&intrinsics, &path, vmode)?;
+            println!("  Output: {}", hexagon_dir.join(filename).display());
+        }
+        Ok(())
+    })
+    .map_err(|e| e.to_string())?;
 
     println!("\n=== Results ===");
     println!(

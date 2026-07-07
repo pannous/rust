@@ -2,18 +2,21 @@ use rustc_ast::token::Token;
 use rustc_ast::tokenstream::TokenStream;
 use rustc_ast::{AttrStyle, NodeId, token};
 use rustc_data_structures::fx::FxHashMap;
-use rustc_feature::{AttributeTemplate, Features};
+use rustc_errors::{Diagnostic, MultiSpan};
+use rustc_feature::Features;
 use rustc_hir::attrs::CfgEntry;
 use rustc_hir::{AttrPath, Target};
 use rustc_parse::exp;
 use rustc_parse::parser::{Parser, Recovery};
 use rustc_session::Session;
-use rustc_session::lint::BuiltinLintDiag;
 use rustc_session::lint::builtin::UNREACHABLE_CFG_SELECT_PREDICATES;
 use rustc_span::{ErrorGuaranteed, Span, Symbol, sym};
 
-use crate::parser::MetaItemOrLitParser;
-use crate::{AttributeParser, ParsedDescription, ShouldEmit, parse_cfg_entry};
+use crate::attributes::AttributeSafety;
+use crate::parser::{AllowExprMetavar, MetaItemOrLitParser};
+use crate::{
+    AttributeParser, AttributeTemplate, ParsedDescription, ShouldEmit, diagnostics, parse_cfg_entry,
+};
 
 #[derive(Clone)]
 pub enum CfgSelectPredicate {
@@ -75,8 +78,11 @@ pub fn parse_cfg_select(
     lint_node_id: NodeId,
 ) -> Result<CfgSelectBranches, ErrorGuaranteed> {
     let mut branches = CfgSelectBranches::default();
+    let mut branch_attr_error: Option<ErrorGuaranteed> = None;
 
     while p.token != token::Eof {
+        reject_branch_outer_attrs(p, &mut branch_attr_error)?;
+
         if p.eat_keyword(exp!(Underscore)) {
             let underscore = p.prev_token;
             p.expect(exp!(FatArrow)).map_err(|e| e.emit())?;
@@ -94,6 +100,7 @@ pub fn parse_cfg_select(
             let meta = MetaItemOrLitParser::parse_single(
                 p,
                 ShouldEmit::ErrorsAndLints { recovery: Recovery::Allowed },
+                AllowExprMetavar::Yes,
             )
             .map_err(|diag| diag.emit())?;
             let cfg_span = meta.span();
@@ -104,6 +111,7 @@ pub fn parse_cfg_select(
                 AttrStyle::Inner,
                 AttrPath { segments: vec![sym::cfg_select].into_boxed_slice(), span: cfg_span },
                 None,
+                AttributeSafety::Normal,
                 ParsedDescription::Macro,
                 cfg_span,
                 lint_node_id,
@@ -128,6 +136,10 @@ pub fn parse_cfg_select(
         }
     }
 
+    if let Some(guar) = branch_attr_error {
+        return Err(guar);
+    }
+
     let it = branches
         .reachable
         .iter()
@@ -138,6 +150,27 @@ pub fn parse_cfg_select(
     lint_unreachable(p, it, lint_node_id);
 
     Ok(branches)
+}
+
+fn reject_branch_outer_attrs(
+    p: &mut Parser<'_>,
+    branch_attr_error: &mut Option<ErrorGuaranteed>,
+) -> Result<(), ErrorGuaranteed> {
+    let Some(spans) = p.parse_cfg_select_branch_outer_attrs().map_err(|e| e.emit())? else {
+        return Ok(());
+    };
+
+    for (spans, msg) in [
+        (spans.doc_comments, "doc comments are not allowed on `cfg_select` branches"),
+        (spans.attrs, "attributes are not allowed on `cfg_select` branches"),
+    ] {
+        if !spans.is_empty() {
+            branch_attr_error
+                .get_or_insert(p.dcx().struct_span_err(MultiSpan::from_spans(spans), msg).emit());
+        }
+    }
+
+    Ok(())
 }
 
 fn lint_unreachable(
@@ -152,11 +185,17 @@ fn lint_unreachable(
 
     let branch_is_unreachable = |predicate: CfgSelectPredicate, wildcard_span| {
         let span = predicate.span();
-        p.psess.buffer_lint(
+        p.psess.dyn_buffer_lint(
             UNREACHABLE_CFG_SELECT_PREDICATES,
             span,
             lint_node_id,
-            BuiltinLintDiag::UnreachableCfg { span, wildcard_span },
+            move |dcx, level| match wildcard_span {
+                Some(wildcard_span) => {
+                    diagnostics::UnreachableCfgSelectPredicateWildcard { span, wildcard_span }
+                        .into_diag(dcx, level)
+                }
+                None => diagnostics::UnreachableCfgSelectPredicate { span }.into_diag(dcx, level),
+            },
         );
     };
 

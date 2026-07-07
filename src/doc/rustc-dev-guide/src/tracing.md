@@ -14,8 +14,8 @@ of `tracing-subscriber`](https://docs.rs/tracing-subscriber/0.2.24/tracing_subsc
 
 ## Environment variables
 
-This is an overview of the environment variables rustc accepts to customize
-its tracing output. The definition of these can mostly be found in `compiler/rustc_log/src/lib.rs`.
+This is an overview of the environment variables rustc accepts to customize its tracing output.
+The definition of these can mostly be found in `compiler/rustc_log/src/lib.rs`.
 
 |  Name                     | Usage                                                                                                                   |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -101,7 +101,7 @@ RUSTC_LOG=[typeck{key=.*name_of_item.*}]
 
 Different queries have different arguments.
 You can find a list of queries and their arguments in
-[`rustc_middle/src/query/mod.rs`](https://github.com/rust-lang/rust/blob/HEAD/compiler/rustc_middle/src/query/mod.rs#L18).
+[`rustc_middle/src/queries.rs`](https://github.com/rust-lang/rust/blob/HEAD/compiler/rustc_middle/src/queries.rs).
 
 ## Broad module level filters
 

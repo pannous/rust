@@ -631,11 +631,11 @@ fn check_llvm_version(builder: &Builder<'_>, llvm_config: &Path) {
     let version = get_llvm_version(builder, llvm_config);
     let mut parts = version.split('.').take(2).filter_map(|s| s.parse::<u32>().ok());
     if let (Some(major), Some(_minor)) = (parts.next(), parts.next())
-        && major >= 20
+        && major >= 21
     {
         return;
     }
-    panic!("\n\nbad LLVM version: {version}, need >=20\n\n")
+    panic!("\n\nbad LLVM version: {version}, need >=21\n\n")
 }
 
 fn configure_cmake(
@@ -650,6 +650,18 @@ fn configure_cmake(
     // Do not print installation messages for up-to-date files.
     // LLVM and LLD builds can produce a lot of those and hit CI limits on log size.
     cfg.define("CMAKE_INSTALL_MESSAGE", "LAZY");
+
+    if builder.config.quiet {
+        // Only log errors and warnings from `cmake`.
+        cfg.define("CMAKE_MESSAGE_LOG_LEVEL", "WARNING");
+
+        // If we're configuring llvm to build with `ninja`, we can suppress output from it with
+        // `--quiet`. Otherwise don't add anything since we don't know which build system is going
+        // to use.
+        if builder.ninja() {
+            cfg.build_arg("--quiet");
+        }
+    }
 
     // Do not allow the user's value of DESTDIR to influence where
     // LLVM will install itself. LLVM must always be installed in our
@@ -788,7 +800,7 @@ fn configure_cmake(
     // Needs `suppressed_compiler_flag_prefixes` to be gone, and hence
     // https://github.com/llvm/llvm-project/issues/88780 to be fixed.
     for flag in builder
-        .cc_handled_clags(target, CLang::C)
+        .cc_handled_cflags(target, CLang::C)
         .into_iter()
         .chain(builder.cc_unhandled_cflags(target, GitRepo::Llvm, CLang::C))
         .filter(|flag| !suppressed_compiler_flag_prefixes.iter().any(|p| flag.starts_with(p)))
@@ -809,7 +821,7 @@ fn configure_cmake(
     cfg.define("CMAKE_C_FLAGS", cflags);
     let mut cxxflags = ccflags.cxxflags.clone();
     for flag in builder
-        .cc_handled_clags(target, CLang::Cxx)
+        .cc_handled_cflags(target, CLang::Cxx)
         .into_iter()
         .chain(builder.cc_unhandled_cflags(target, GitRepo::Llvm, CLang::Cxx))
         .filter(|flag| {
@@ -1558,6 +1570,8 @@ fn supported_sanitizers(
             &["asan", "dfsan", "lsan", "msan", "safestack", "tsan", "rtsan"],
         ),
         "x86_64-unknown-linux-gnuasan" => common_libs("linux", "x86_64", &["asan"]),
+        "x86_64-unknown-linux-gnumsan" => common_libs("linux", "x86_64", &["msan"]),
+        "x86_64-unknown-linux-gnutsan" => common_libs("linux", "x86_64", &["tsan"]),
         "x86_64-unknown-linux-musl" => {
             common_libs("linux", "x86_64", &["asan", "lsan", "msan", "tsan"])
         }

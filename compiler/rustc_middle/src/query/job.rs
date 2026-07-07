@@ -6,23 +6,8 @@ use std::sync::Arc;
 use parking_lot::{Condvar, Mutex};
 use rustc_span::Span;
 
-use crate::query::plumbing::CycleError;
-use crate::query::stack::{QueryStackDeferred, QueryStackFrame, QueryStackFrameExtra};
+use crate::query::Cycle;
 use crate::ty::TyCtxt;
-
-/// Represents a span and a query key.
-#[derive(Clone, Debug)]
-pub struct QueryInfo<I> {
-    /// The span corresponding to the reason for which this query was required.
-    pub span: Span,
-    pub frame: QueryStackFrame<I>,
-}
-
-impl<'tcx> QueryInfo<QueryStackDeferred<'tcx>> {
-    pub(crate) fn lift(&self) -> QueryInfo<QueryStackFrameExtra> {
-        QueryInfo { span: self.span, frame: self.frame.lift() }
-    }
-}
 
 /// A value uniquely identifying an active query job.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -51,10 +36,7 @@ impl<'tcx> QueryJob<'tcx> {
     }
 
     pub fn latch(&mut self) -> QueryLatch<'tcx> {
-        if self.latch.is_none() {
-            self.latch = Some(QueryLatch::new());
-        }
-        self.latch.as_ref().unwrap().clone()
+        self.latch.get_or_insert_with(QueryLatch::new).clone()
     }
 
     /// Signals to waiters that the query is complete.
@@ -71,10 +53,10 @@ impl<'tcx> QueryJob<'tcx> {
 
 #[derive(Debug)]
 pub struct QueryWaiter<'tcx> {
-    pub query: Option<QueryJobId>,
+    pub parent: Option<QueryJobId>,
     pub condvar: Condvar,
     pub span: Span,
-    pub cycle: Mutex<Option<CycleError<QueryStackDeferred<'tcx>>>>,
+    pub cycle: Mutex<Option<Cycle<'tcx>>>,
 }
 
 #[derive(Clone, Debug)]
@@ -94,14 +76,18 @@ impl<'tcx> QueryLatch<'tcx> {
         tcx: TyCtxt<'tcx>,
         query: Option<QueryJobId>,
         span: Span,
-    ) -> Result<(), CycleError<QueryStackDeferred<'tcx>>> {
+    ) -> Result<(), Cycle<'tcx>> {
         let mut waiters_guard = self.waiters.lock();
         let Some(waiters) = &mut *waiters_guard else {
             return Ok(()); // already complete
         };
 
-        let waiter =
-            Arc::new(QueryWaiter { query, span, cycle: Mutex::new(None), condvar: Condvar::new() });
+        let waiter = Arc::new(QueryWaiter {
+            parent: query,
+            span,
+            cycle: Mutex::new(None),
+            condvar: Condvar::new(),
+        });
 
         // We push the waiter on to the `waiters` list. It can be accessed inside
         // the `wait` call below, by 1) the `set` method or 2) by deadlock detection.

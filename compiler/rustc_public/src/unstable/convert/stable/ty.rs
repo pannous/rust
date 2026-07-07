@@ -12,14 +12,14 @@ use crate::ty::{
 };
 use crate::unstable::Stable;
 
-impl<'tcx> Stable<'tcx> for ty::AliasTyKind {
+impl<'tcx> Stable<'tcx> for ty::AliasTyKind<'tcx> {
     type T = crate::ty::AliasKind;
     fn stable(&self, _: &mut Tables<'_, BridgeTys>, _: &CompilerCtxt<'_, BridgeTys>) -> Self::T {
         match self {
-            ty::Projection => crate::ty::AliasKind::Projection,
-            ty::Inherent => crate::ty::AliasKind::Inherent,
-            ty::Opaque => crate::ty::AliasKind::Opaque,
-            ty::Free => crate::ty::AliasKind::Free,
+            ty::Projection { .. } => crate::ty::AliasKind::Projection,
+            ty::Inherent { .. } => crate::ty::AliasKind::Inherent,
+            ty::Opaque { .. } => crate::ty::AliasKind::Opaque,
+            ty::Free { .. } => crate::ty::AliasKind::Free,
         }
     }
 }
@@ -31,8 +31,15 @@ impl<'tcx> Stable<'tcx> for ty::AliasTy<'tcx> {
         tables: &mut Tables<'cx, BridgeTys>,
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
-        let ty::AliasTy { args, def_id, .. } = self;
-        crate::ty::AliasTy { def_id: tables.alias_def(*def_id), args: args.stable(tables, cx) }
+        let ty::AliasTy { args, kind, .. } = self;
+        // rustc_public must change its API once we introduce a variant without a def_id.
+        let def_id = match *kind {
+            ty::AliasTyKind::Projection { def_id }
+            | ty::AliasTyKind::Inherent { def_id }
+            | ty::AliasTyKind::Opaque { def_id }
+            | ty::AliasTyKind::Free { def_id } => def_id,
+        };
+        crate::ty::AliasTy { def_id: tables.alias_def(def_id), args: args.stable(tables, cx) }
     }
 }
 
@@ -43,8 +50,19 @@ impl<'tcx> Stable<'tcx> for ty::AliasTerm<'tcx> {
         tables: &mut Tables<'cx, BridgeTys>,
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
-        let ty::AliasTerm { args, def_id, .. } = self;
-        crate::ty::AliasTerm { def_id: tables.alias_def(*def_id), args: args.stable(tables, cx) }
+        let ty::AliasTerm { args, kind, .. } = self;
+        // rustc_public must change its API once we introduce a variant without a def_id.
+        let def_id = match *kind {
+            ty::AliasTermKind::ProjectionTy { def_id }
+            | ty::AliasTermKind::InherentTy { def_id }
+            | ty::AliasTermKind::OpaqueTy { def_id }
+            | ty::AliasTermKind::FreeTy { def_id }
+            | ty::AliasTermKind::AnonConst { def_id }
+            | ty::AliasTermKind::ProjectionConst { def_id }
+            | ty::AliasTermKind::FreeConst { def_id }
+            | ty::AliasTermKind::InherentConst { def_id } => def_id,
+        };
+        crate::ty::AliasTerm { def_id: tables.alias_def(def_id), args: args.stable(tables, cx) }
     }
 }
 
@@ -249,6 +267,23 @@ where
     }
 }
 
+// This internal type isn't publicly exposed, because it is an implementation detail.
+// But it's a public field of FnSig (which has a public mirror type), so allow conversions.
+impl<'tcx> Stable<'tcx> for ty::FnSigKind<'tcx> {
+    type T = (bool /*c_variadic*/, crate::mir::Safety, crate::ty::Abi);
+    fn stable<'cx>(
+        &self,
+        tables: &mut Tables<'cx, BridgeTys>,
+        cx: &CompilerCtxt<'cx, BridgeTys>,
+    ) -> Self::T {
+        (
+            self.c_variadic(),
+            if self.is_safe() { crate::mir::Safety::Safe } else { crate::mir::Safety::Unsafe },
+            self.abi().stable(tables, cx),
+        )
+    }
+}
+
 impl<'tcx> Stable<'tcx> for ty::FnSig<'tcx> {
     type T = crate::ty::FnSig;
     fn stable<'cx>(
@@ -257,6 +292,7 @@ impl<'tcx> Stable<'tcx> for ty::FnSig<'tcx> {
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
         use crate::ty::FnSig;
+        let (c_variadic, safety, abi) = self.fn_sig_kind.stable(tables, cx);
 
         FnSig {
             inputs_and_output: self
@@ -264,9 +300,9 @@ impl<'tcx> Stable<'tcx> for ty::FnSig<'tcx> {
                 .iter()
                 .map(|ty| ty.stable(tables, cx))
                 .collect(),
-            c_variadic: self.c_variadic,
-            safety: self.safety.stable(tables, cx),
-            abi: self.abi.stable(tables, cx),
+            c_variadic,
+            safety,
+            abi,
         }
     }
 }
@@ -384,7 +420,7 @@ impl<'tcx> Stable<'tcx> for Ty<'tcx> {
         tables: &mut Tables<'cx, BridgeTys>,
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
-        tables.intern_ty(cx.lift(*self).unwrap())
+        tables.intern_ty(cx.lift(*self))
     }
 }
 
@@ -451,8 +487,8 @@ impl<'tcx> Stable<'tcx> for ty::TyKind<'tcx> {
             ty::Tuple(fields) => TyKind::RigidTy(RigidTy::Tuple(
                 fields.iter().map(|ty| ty.stable(tables, cx)).collect(),
             )),
-            ty::Alias(alias_kind, alias_ty) => {
-                TyKind::Alias(alias_kind.stable(tables, cx), alias_ty.stable(tables, cx))
+            ty::Alias(_, alias_ty) => {
+                TyKind::Alias(alias_ty.kind.stable(tables, cx), alias_ty.stable(tables, cx))
             }
             ty::Param(param_ty) => TyKind::Param(param_ty.stable(tables, cx)),
             ty::Bound(ty::BoundVarIndexKind::Canonical, _) => {
@@ -482,13 +518,14 @@ impl<'tcx> Stable<'tcx> for ty::Pattern<'tcx> {
     ) -> Self::T {
         match **self {
             ty::PatternKind::Range { start, end } => crate::ty::Pattern::Range {
-                // FIXME(SMIR): update data structures to not have an Option here anymore
-                start: Some(start.stable(tables, cx)),
-                end: Some(end.stable(tables, cx)),
+                start: start.stable(tables, cx),
+                end: end.stable(tables, cx),
                 include_end: true,
             },
-            ty::PatternKind::NotNull => todo!(),
-            ty::PatternKind::Or(_) => todo!(),
+            ty::PatternKind::NotNull => crate::ty::Pattern::NotNull,
+            ty::PatternKind::Or(pats) => {
+                crate::ty::Pattern::Or(pats.iter().map(|pat| pat.stable(tables, cx)).collect())
+            }
         }
     }
 }
@@ -501,7 +538,7 @@ impl<'tcx> Stable<'tcx> for ty::Const<'tcx> {
         tables: &mut Tables<'cx, BridgeTys>,
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
-        let ct = cx.lift(*self).unwrap();
+        let ct = cx.lift(*self);
         let kind = match ct.kind() {
             ty::ConstKind::Value(cv) => {
                 let const_val = cx.valtree_to_const_val(cv);
@@ -515,10 +552,16 @@ impl<'tcx> Stable<'tcx> for ty::Const<'tcx> {
                 }
             }
             ty::ConstKind::Param(param) => crate::ty::TyConstKind::Param(param.stable(tables, cx)),
-            ty::ConstKind::Unevaluated(uv) => crate::ty::TyConstKind::Unevaluated(
-                tables.const_def(uv.def),
-                uv.args.stable(tables, cx),
-            ),
+            ty::ConstKind::Alias(_, alias_const) => {
+                let Some(def_id) = alias_const.kind.opt_def_id() else {
+                    // FIXME: implement (both AliasTy and AliasConst will be needing this soon)
+                    panic!("non-defid alias consts are not supported by rustc_public at the moment")
+                };
+                crate::ty::TyConstKind::Unevaluated(
+                    tables.const_def(def_id),
+                    alias_const.args.stable(tables, cx),
+                )
+            }
             ty::ConstKind::Error(_) => unreachable!(),
             ty::ConstKind::Infer(_) => unreachable!(),
             ty::ConstKind::Bound(_, _) => unimplemented!(),
@@ -706,13 +749,6 @@ impl<'tcx> Stable<'tcx> for ty::PredicateKind<'tcx> {
             }
             PredicateKind::Ambiguous => crate::ty::PredicateKind::Ambiguous,
             PredicateKind::NormalizesTo(_pred) => unimplemented!(),
-            PredicateKind::AliasRelate(a, b, alias_relation_direction) => {
-                crate::ty::PredicateKind::AliasRelate(
-                    a.kind().stable(tables, cx),
-                    b.kind().stable(tables, cx),
-                    alias_relation_direction.stable(tables, cx),
-                )
-            }
         }
     }
 }
@@ -799,18 +835,6 @@ impl<'tcx> Stable<'tcx> for ty::CoercePredicate<'tcx> {
     ) -> Self::T {
         let ty::CoercePredicate { a, b } = self;
         crate::ty::CoercePredicate { a: a.stable(tables, cx), b: b.stable(tables, cx) }
-    }
-}
-
-impl<'tcx> Stable<'tcx> for ty::AliasRelationDirection {
-    type T = crate::ty::AliasRelationDirection;
-
-    fn stable(&self, _: &mut Tables<'_, BridgeTys>, _: &CompilerCtxt<'_, BridgeTys>) -> Self::T {
-        use rustc_middle::ty::AliasRelationDirection::*;
-        match self {
-            Equate => crate::ty::AliasRelationDirection::Equate,
-            Subtype => crate::ty::AliasRelationDirection::Subtype,
-        }
     }
 }
 
@@ -942,25 +966,14 @@ impl<'tcx> Stable<'tcx> for ty::Instance<'tcx> {
         tables: &mut Tables<'cx, BridgeTys>,
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
-        let def = tables.instance_def(cx.lift(*self).unwrap());
+        let def = tables.instance_def(cx.lift(*self));
         let kind = match self.def {
             ty::InstanceKind::Item(..) => crate::mir::mono::InstanceKind::Item,
             ty::InstanceKind::Intrinsic(..) => crate::mir::mono::InstanceKind::Intrinsic,
             ty::InstanceKind::Virtual(_def_id, idx) => {
                 crate::mir::mono::InstanceKind::Virtual { idx }
             }
-            ty::InstanceKind::VTableShim(..)
-            | ty::InstanceKind::ReifyShim(..)
-            | ty::InstanceKind::FnPtrAddrShim(..)
-            | ty::InstanceKind::ClosureOnceShim { .. }
-            | ty::InstanceKind::ConstructCoroutineInClosureShim { .. }
-            | ty::InstanceKind::ThreadLocalShim(..)
-            | ty::InstanceKind::DropGlue(..)
-            | ty::InstanceKind::CloneShim(..)
-            | ty::InstanceKind::FnPtrShim(..)
-            | ty::InstanceKind::FutureDropPollShim(..)
-            | ty::InstanceKind::AsyncDropGlue(..)
-            | ty::InstanceKind::AsyncDropGlueCtorShim(..) => crate::mir::mono::InstanceKind::Shim,
+            ty::InstanceKind::Shim(..) => crate::mir::mono::InstanceKind::Shim,
         };
         crate::mir::mono::Instance { def, kind }
     }
@@ -1021,10 +1034,12 @@ impl<'tcx> Stable<'tcx> for rustc_abi::ExternAbi {
             ExternAbi::Unadjusted => Abi::Unadjusted,
             ExternAbi::RustCold => Abi::RustCold,
             ExternAbi::RustPreserveNone => Abi::RustPreserveNone,
+            ExternAbi::RustTail => Abi::RustTail,
             ExternAbi::RustInvalid => Abi::RustInvalid,
             ExternAbi::RiscvInterruptM => Abi::RiscvInterruptM,
             ExternAbi::RiscvInterruptS => Abi::RiscvInterruptS,
             ExternAbi::Custom => Abi::Custom,
+            ExternAbi::Swift => Abi::Swift,
         }
     }
 }
@@ -1137,5 +1152,27 @@ impl<'tcx> Stable<'tcx> for rustc_middle::ty::util::Discr<'tcx> {
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
         crate::ty::Discr { val: self.val, ty: self.ty.stable(tables, cx) }
+    }
+}
+
+impl<'tcx> Stable<'tcx> for rustc_middle::ty::VtblEntry<'tcx> {
+    type T = crate::ty::VtblEntry;
+
+    fn stable<'cx>(
+        &self,
+        tables: &mut Tables<'cx, BridgeTys>,
+        cx: &CompilerCtxt<'cx, BridgeTys>,
+    ) -> Self::T {
+        use crate::ty::VtblEntry;
+        match self {
+            ty::VtblEntry::MetadataDropInPlace => VtblEntry::MetadataDropInPlace,
+            ty::VtblEntry::MetadataSize => VtblEntry::MetadataSize,
+            ty::VtblEntry::MetadataAlign => VtblEntry::MetadataAlign,
+            ty::VtblEntry::Vacant => VtblEntry::Vacant,
+            ty::VtblEntry::Method(instance) => VtblEntry::Method(instance.stable(tables, cx)),
+            ty::VtblEntry::TraitVPtr(trait_ref) => {
+                VtblEntry::TraitVPtr(trait_ref.stable(tables, cx))
+            }
+        }
     }
 }

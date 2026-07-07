@@ -50,7 +50,8 @@ pub(crate) fn as_constant_inner<'tcx>(
 
     match *kind {
         ExprKind::Literal { lit, neg } => {
-            let const_ = lit_to_mir_constant(tcx, LitToConstInput { lit: lit.node, ty, neg });
+            let const_ =
+                lit_to_mir_constant(tcx, LitToConstInput { lit: lit.node, ty: Some(ty), neg });
 
             ConstOperand { span, user_ty: None, const_ }
         }
@@ -71,8 +72,12 @@ pub(crate) fn as_constant_inner<'tcx>(
         ExprKind::NamedConst { def_id, args, ref user_ty } => {
             let user_ty = user_ty.as_ref().and_then(push_cuta);
             if tcx.is_type_const(def_id) {
-                let uneval = ty::UnevaluatedConst::new(def_id, args);
-                let ct = ty::Const::new_unevaluated(tcx, uneval);
+                let uneval = ty::AliasConst::new(
+                    tcx,
+                    ty::AliasConstKind::new_from_def_id(tcx, def_id),
+                    args,
+                );
+                let ct = ty::Const::new_alias(tcx, ty::IsRigid::No, uneval);
 
                 let const_ = Const::Ty(ty, ct);
                 return ConstOperand { span, user_ty, const_ };
@@ -108,6 +113,8 @@ pub(crate) fn as_constant_inner<'tcx>(
 #[instrument(skip(tcx, lit_input))]
 fn lit_to_mir_constant<'tcx>(tcx: TyCtxt<'tcx>, lit_input: LitToConstInput<'tcx>) -> Const<'tcx> {
     let LitToConstInput { lit, ty, neg } = lit_input;
+
+    let ty = ty.expect("type of literal must be known at this point");
 
     if let Err(guar) = ty.error_reported() {
         return Const::Ty(Ty::new_error(tcx, guar), ty::Const::new_error(tcx, guar));

@@ -5,8 +5,7 @@ use std::ops;
 
 use rustc_hir as hir;
 use rustc_lint::builtin::MISSING_DOCS;
-use rustc_middle::lint::{LevelAndSource, LintLevelSource};
-use rustc_session::lint;
+use rustc_middle::lint::LintLevelSource;
 use rustc_span::{FileName, RemapPathScopeComponents};
 use serde::Serialize;
 use tracing::debug;
@@ -203,6 +202,10 @@ impl DocVisitor<'_> for CoverageCalculator<'_, '_> {
                 // don't count items in stripped modules
                 return;
             }
+            clean::PlaceholderImplItem => {
+                // The "real" impl items are handled below.
+                return;
+            }
             // docs on `use` and `extern crate` statements are not displayed, so they're not
             // worth counting
             clean::ImportItem(..) | clean::ExternCrateItem { .. } => {}
@@ -218,8 +221,7 @@ impl DocVisitor<'_> for CoverageCalculator<'_, '_> {
 
                 let has_doc_example = tests.found_tests != 0;
                 let hir_id = DocContext::as_local_hir_id(self.ctx.tcx, i.item_id).unwrap();
-                let LevelAndSource { level, src, .. } =
-                    self.ctx.tcx.lint_level_at_node(MISSING_DOCS, hir_id);
+                let level_spec = self.ctx.tcx.lint_level_spec_at_node(MISSING_DOCS, hir_id);
 
                 // In case we have:
                 //
@@ -254,7 +256,8 @@ impl DocVisitor<'_> for CoverageCalculator<'_, '_> {
                 // unless the user had an explicit `allow`.
                 //
                 let should_have_docs = !should_be_ignored
-                    && (level != lint::Level::Allow || matches!(src, LintLevelSource::Default));
+                    && (!level_spec.is_allow()
+                        || matches!(level_spec.src, LintLevelSource::Default));
 
                 if let Some(span) = i.span(self.ctx.tcx) {
                     let filename = span.filename(self.ctx.sess());

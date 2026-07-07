@@ -179,7 +179,7 @@ impl<'tcx> LateLintPass<'tcx> for Shadow {
 }
 
 fn is_shadow(cx: &LateContext<'_>, owner: LocalDefId, first: ItemLocalId, second: ItemLocalId) -> bool {
-    let scope_tree = cx.tcx.region_scope_tree(owner.to_def_id());
+    let scope_tree = cx.tcx.region_scope_tree(owner);
     if let Some(first_scope) = scope_tree.var_scope(first)
         && let Some(second_scope) = scope_tree.var_scope(second)
     {
@@ -199,7 +199,7 @@ pub fn is_local_used_except<'tcx>(
     id: HirId,
     except: Option<HirId>,
 ) -> bool {
-    for_each_expr(cx, visitable, |e| {
+    for_each_expr(cx.tcx, visitable, |e| {
         if except.is_some_and(|it| it == e.hir_id) {
             ControlFlow::Continue(Descend::No)
         } else if e.res_local_id() == Some(id) {

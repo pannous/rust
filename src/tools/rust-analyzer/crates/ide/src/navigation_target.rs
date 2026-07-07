@@ -6,12 +6,11 @@ use arrayvec::ArrayVec;
 use either::Either;
 use hir::{
     AssocItem, Crate, FieldSource, HasContainer, HasCrate, HasSource, HirDisplay, HirFileId,
-    InFile, LocalSource, ModuleSource, Name, Semantics, Symbol, db::ExpandDatabase, sym,
-    symbols::FileSymbol,
+    InFile, LocalSource, ModuleSource, Name, Semantics, Symbol, sym, symbols::FileSymbol,
 };
 use ide_db::{
     FileId, FileRange, RootDatabase, SymbolKind,
-    base_db::{CrateOrigin, LangCrateOrigin, RootQueryDb},
+    base_db::{CrateOrigin, LangCrateOrigin, all_crates},
     defs::{Definition, find_std_module},
     documentation::{Documentation, HasDocs},
     famous_defs::FamousDefs,
@@ -51,7 +50,6 @@ pub struct NavigationTarget {
     pub kind: Option<SymbolKind>,
     pub container_name: Option<Symbol>,
     pub description: Option<String>,
-    // FIXME: Use the database lifetime here.
     pub docs: Option<Documentation<'static>>,
     /// In addition to a `name` field, a `NavigationTarget` may also be aliased
     /// In such cases we want a `NavigationTarget` to be accessible by its alias
@@ -276,7 +274,7 @@ impl<'db> TryToNav for FileSymbol<'db> {
                             Some(it.display(db, display_target).to_string())
                         }
                         hir::ModuleDef::Adt(it) => Some(it.display(db, display_target).to_string()),
-                        hir::ModuleDef::Variant(it) => {
+                        hir::ModuleDef::EnumVariant(it) => {
                             Some(it.display(db, display_target).to_string())
                         }
                         hir::ModuleDef::Const(it) => {
@@ -319,7 +317,7 @@ impl TryToNav for Definition {
             Definition::GenericParam(it) => it.try_to_nav(sema),
             Definition::Function(it) => it.try_to_nav(sema),
             Definition::Adt(it) => it.try_to_nav(sema),
-            Definition::Variant(it) => it.try_to_nav(sema),
+            Definition::EnumVariant(it) => it.try_to_nav(sema),
             Definition::Const(it) => it.try_to_nav(sema),
             Definition::Static(it) => it.try_to_nav(sema),
             Definition::Trait(it) => it.try_to_nav(sema),
@@ -347,7 +345,7 @@ impl TryToNav for hir::ModuleDef {
             hir::ModuleDef::Module(it) => Some(it.to_nav(sema.db)),
             hir::ModuleDef::Function(it) => it.try_to_nav(sema),
             hir::ModuleDef::Adt(it) => it.try_to_nav(sema),
-            hir::ModuleDef::Variant(it) => it.try_to_nav(sema),
+            hir::ModuleDef::EnumVariant(it) => it.try_to_nav(sema),
             hir::ModuleDef::Const(it) => it.try_to_nav(sema),
             hir::ModuleDef::Static(it) => it.try_to_nav(sema),
             hir::ModuleDef::Trait(it) => it.try_to_nav(sema),
@@ -406,7 +404,7 @@ impl ToNavFromAst for hir::Enum {
         container_name(db, self)
     }
 }
-impl ToNavFromAst for hir::Variant {
+impl ToNavFromAst for hir::EnumVariant {
     const KIND: SymbolKind = SymbolKind::Variant;
 }
 impl ToNavFromAst for hir::Union {
@@ -580,7 +578,7 @@ impl TryToNav for hir::Field {
                 |(FileRange { file_id, range: full_range }, focus_range)| {
                     NavigationTarget::from_syntax(
                         file_id,
-                        Symbol::integer(self.index()),
+                        sym::Integer::get(self.index()),
                         focus_range,
                         full_range,
                         SymbolKind::Field,
@@ -861,8 +859,7 @@ impl TryToNav for hir::BuiltinType {
         sema: &Semantics<'_, RootDatabase>,
     ) -> Option<UpmappingResult<NavigationTarget>> {
         let db = sema.db;
-        let krate = db
-            .all_crates()
+        let krate = all_crates(db)
             .iter()
             .copied()
             .find(|&krate| matches!(krate.data(db).origin, CrateOrigin::Lang(LangCrateOrigin::Std)))
@@ -940,10 +937,9 @@ pub(crate) fn orig_range_with_focus_r(
 ) -> UpmappingResult<(FileRange, Option<TextRange>)> {
     let Some(name) = focus_range else { return orig_range_r(db, hir_file, value) };
 
-    let call = || db.lookup_intern_macro_call(hir_file.macro_file().unwrap());
+    let call = || hir_file.macro_file().unwrap().loc(db);
 
-    let def_range =
-        || db.lookup_intern_macro_call(hir_file.macro_file().unwrap()).def.definition_range(db);
+    let def_range = || hir_file.macro_file().unwrap().loc(db).def.definition_range(db);
 
     // FIXME: Also make use of the syntax context to determine which site we are at?
     let value_range = InFile::new(hir_file, value).original_node_file_range_opt(db);
@@ -967,7 +963,7 @@ pub(crate) fn orig_range_with_focus_r(
                             // *should* contain the name
                             _ => {
                                 let call = call();
-                                let kind = call.kind;
+                                let kind = &call.kind;
                                 let range = kind.clone().original_call_range_with_input(db);
                                 //If the focus range is in the attribute/derive body, we
                                 // need to point the call site to the entire body, if not, fall back

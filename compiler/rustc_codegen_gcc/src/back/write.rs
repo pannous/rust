@@ -29,22 +29,14 @@ pub(crate) fn codegen(
         let lto_mode = module.module_llvm.lto_mode;
         let lto_supported = module.module_llvm.lto_supported;
 
-        let bc_out = cgcx.output_filenames.temp_path_for_cgu(
-            OutputType::Bitcode,
-            &module.name,
-            cgcx.invocation_temp.as_deref(),
-        );
-        let obj_out = cgcx.output_filenames.temp_path_for_cgu(
-            OutputType::Object,
-            &module.name,
-            cgcx.invocation_temp.as_deref(),
-        );
+        let bc_out = cgcx.output_filenames.temp_path_for_cgu(OutputType::Bitcode, &module.name);
+        let obj_out = cgcx.output_filenames.temp_path_for_cgu(OutputType::Object, &module.name);
 
         if config.bitcode_needed() {
             let _timer =
                 prof.generic_activity_with_arg("GCC_module_codegen_make_bitcode", &*module.name);
 
-            // TODO(antoyo)
+            // FIXME(antoyo)
             /*if let Some(bitcode_filename) = bc_out.file_name() {
                 cgcx.prof.artifact_size(
                     "llvm_bitcode",
@@ -68,36 +60,29 @@ pub(crate) fn codegen(
                 let _timer = prof
                     .generic_activity_with_arg("GCC_module_codegen_embed_bitcode", &*module.name);
                 if lto_supported {
-                    // TODO(antoyo): maybe we should call embed_bitcode to have the proper iOS fixes?
+                    // FIXME(antoyo): maybe we should call embed_bitcode to have the proper iOS fixes?
                     //embed_bitcode(cgcx, llcx, llmod, &config.bc_cmdline, data);
 
                     context.add_command_line_option("-flto=auto");
                     context.add_command_line_option("-flto-partition=one");
                     context.add_command_line_option("-ffat-lto-objects");
                 }
-                // TODO(antoyo): Send -plugin/usr/lib/gcc/x86_64-pc-linux-gnu/11.1.0/liblto_plugin.so to linker (this should be done when specifying the appropriate rustc cli argument).
+                // FIXME(antoyo): Send -plugin/usr/lib/gcc/x86_64-pc-linux-gnu/11.1.0/liblto_plugin.so to linker (this should be done when specifying the appropriate rustc cli argument).
                 context
                     .compile_to_file(OutputKind::ObjectFile, bc_out.to_str().expect("path to str"));
             }
         }
 
         if config.emit_ir {
-            let out = cgcx.output_filenames.temp_path_for_cgu(
-                OutputType::LlvmAssembly,
-                &module.name,
-                cgcx.invocation_temp.as_deref(),
-            );
+            let out =
+                cgcx.output_filenames.temp_path_for_cgu(OutputType::LlvmAssembly, &module.name);
             std::fs::write(out, "").expect("write file");
         }
 
         if config.emit_asm {
             let _timer =
                 prof.generic_activity_with_arg("GCC_module_codegen_emit_asm", &*module.name);
-            let path = cgcx.output_filenames.temp_path_for_cgu(
-                OutputType::Assembly,
-                &module.name,
-                cgcx.invocation_temp.as_deref(),
-            );
+            let path = cgcx.output_filenames.temp_path_for_cgu(OutputType::Assembly, &module.name);
             context.compile_to_file(OutputKind::Assembler, path.to_str().expect("path to str"));
         }
 
@@ -135,7 +120,7 @@ pub(crate) fn codegen(
 
                         // NOTE: without -fuse-linker-plugin, we get the following error:
                         // lto1: internal compiler error: decompressed stream: Destination buffer is too small
-                        // TODO(antoyo): since we do not do LTO when the linker is invoked anymore, perhaps
+                        // FIXME(antoyo): since we do not do LTO when the linker is invoked anymore, perhaps
                         // the following flag is not necessary anymore.
                         context.add_driver_option("-fuse-linker-plugin");
                     }
@@ -215,7 +200,6 @@ pub(crate) fn codegen(
         config.emit_asm,
         config.emit_ir,
         &cgcx.output_filenames,
-        cgcx.invocation_temp.as_deref(),
     )
 }
 

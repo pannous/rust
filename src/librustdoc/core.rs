@@ -56,9 +56,18 @@ pub(crate) struct DocContext<'tcx> {
     pub(crate) current_type_aliases: DefIdMap<usize>,
     /// Table synthetic type parameter for `impl Trait` in argument position -> bounds
     pub(crate) impl_trait_bounds: FxHashMap<ImplTraitParam, Vec<clean::GenericBound>>,
-    /// Auto-trait or blanket impls processed so far, as `(self_ty, trait_def_id)`.
-    // FIXME(eddyb) make this a `ty::TraitRef<'tcx>` set.
-    pub(crate) generated_synthetics: FxHashSet<(Ty<'tcx>, DefId)>,
+
+    // FIXME: I'm pretty that the only reason we "need" these caches is because we also invoke
+    //        `synthesize_auto_trait_and_blanket_impls` on all impls(!) for primitive types
+    //        instead of calling it only once per primitive type (see also #97129).
+    //        Get rid of that jank and remove both caches!
+    //
+    /// The set of auto-trait impls generated so far; identified by `(self_ty, trait_def_id)`.
+    pub(crate) synthetic_auto_trait_impls: FxHashSet<(Ty<'tcx>, DefId)>,
+    /// The set of blanket impls generated so far; identified by `(self_ty, trait_def_id)`.
+    pub(crate) synthetic_blanket_impls: FxHashSet<(Ty<'tcx>, DefId)>,
+
+    /// All auto traits in the (visible) crate graph.
     pub(crate) auto_traits: Vec<DefId>,
     /// This same cache is used throughout rustdoc, including in [`crate::html::render`].
     pub(crate) cache: Cache,
@@ -87,10 +96,7 @@ impl<'tcx> DocContext<'tcx> {
     }
 
     pub(crate) fn typing_env(&self) -> ty::TypingEnv<'tcx> {
-        ty::TypingEnv {
-            typing_mode: ty::TypingMode::non_body_analysis(),
-            param_env: self.param_env,
-        }
+        ty::TypingEnv::new(self.param_env, ty::TypingMode::non_body_analysis())
     }
 
     /// Call the closure with the given parameters set as
@@ -214,6 +220,7 @@ pub(crate) fn create_config(
         lint_cap,
         scrape_examples_options,
         remap_path_prefix,
+        remap_path_scope,
         target_modifiers,
         ..
     }: RustdocOptions,
@@ -228,6 +235,7 @@ pub(crate) fn create_config(
         // it's unclear whether these should be part of rustdoc directly (#77364)
         rustc_lint::builtin::MISSING_DOCS.name.to_string(),
         rustc_lint::builtin::INVALID_DOC_ATTRIBUTES.name.to_string(),
+        rustc_lint::builtin::UNUSED_DOC_COMMENTS.name.to_string(),
         // these are definitely not part of rustdoc, but we want to warn on them anyway.
         rustc_lint::builtin::RENAMED_AND_REMOVED_LINTS.name.to_string(),
         rustc_lint::builtin::UNKNOWN_LINTS.name.to_string(),
@@ -273,6 +281,7 @@ pub(crate) fn create_config(
         crate_name,
         test,
         remap_path_prefix,
+        remap_path_scope,
         output_types: if let Some(file) = render_options.dep_info() {
             OutputTypes::new(&[(OutputType::DepInfo, file.cloned())])
         } else {
@@ -296,7 +305,7 @@ pub(crate) fn create_config(
         file_loader: None,
         lint_caps,
         psess_created: None,
-        hash_untracked_state: None,
+        track_state: None,
         register_lints: Some(Box::new(crate::lint::register_lints)),
         override_queries: Some(|_sess, providers| {
             // We do not register late module lints, so this only runs `MissingDoc`.
@@ -309,19 +318,14 @@ pub(crate) fn create_config(
                 &EMPTY_SET
             };
             // In case typeck does end up being called, don't ICE in case there were name resolution errors
-            providers.queries.typeck = move |tcx, def_id| {
-                // Closures' tables come from their outermost function,
-                // as they are part of the same "inference environment".
-                // This avoids emitting errors for the parent twice (see similar code in `typeck_with_fallback`)
-                let typeck_root_def_id = tcx.typeck_root_def_id(def_id.to_def_id()).expect_local();
-                if typeck_root_def_id != def_id {
-                    return tcx.typeck(typeck_root_def_id);
-                }
+            providers.queries.typeck_root = move |tcx, def_id| {
+                // Panic before code below breaks in case of someone calls typeck_root directly
+                assert!(!tcx.is_typeck_child(def_id.to_def_id()));
 
                 let body = tcx.hir_body_owned_by(def_id);
                 debug!("visiting body for {def_id:?}");
                 EmitIgnoredResolutionErrors::new(tcx).visit_body(body);
-                (rustc_interface::DEFAULT_QUERY_PROVIDERS.queries.typeck)(tcx, def_id)
+                (rustc_interface::DEFAULT_QUERY_PROVIDERS.queries.typeck_root)(tcx, def_id)
             };
         }),
         extra_symbols: Vec::new(),
@@ -344,7 +348,7 @@ pub(crate) fn run_global_ctxt(
     let expanded_macros = {
         // We need for these variables to be removed to ensure that the `Crate` won't be "stolen"
         // anymore.
-        let (_resolver, krate) = &*tcx.resolver_for_lowering().borrow();
+        let krate = &*tcx.resolver_for_lowering().1.borrow();
 
         source_macro_expansion(&krate, &render_options, output_format, tcx.sess.source_map())
     };
@@ -375,7 +379,8 @@ pub(crate) fn run_global_ctxt(
         args: Default::default(),
         current_type_aliases: Default::default(),
         impl_trait_bounds: Default::default(),
-        generated_synthetics: Default::default(),
+        synthetic_auto_trait_impls: Default::default(),
+        synthetic_blanket_impls: Default::default(),
         auto_traits,
         cache: Cache::new(render_options.document_private, render_options.document_hidden),
         inlined: FxHashSet::default(),

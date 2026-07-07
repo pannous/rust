@@ -5,12 +5,12 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::{env, io};
 
-use rand::{RngCore, rng};
-use rustc_data_structures::base_n::{CASE_INSENSITIVE, ToBaseN};
 use rustc_data_structures::flock;
 use rustc_data_structures::fx::{FxHashMap, FxHashSet, FxIndexSet};
 use rustc_data_structures::profiling::{SelfProfiler, SelfProfilerRef};
-use rustc_data_structures::sync::{DynSend, DynSync, Lock, MappedReadGuard, ReadGuard, RwLock};
+use rustc_data_structures::sync::{
+    AppendOnlyVec, DynSend, DynSync, Lock, MappedReadGuard, ReadGuard, RwLock,
+};
 use rustc_errors::annotate_snippet_emitter_writer::AnnotateSnippetEmitter;
 use rustc_errors::codes::*;
 use rustc_errors::emitter::{DynEmitter, HumanReadableErrorType, OutputTheme, stderr_destination};
@@ -20,28 +20,30 @@ use rustc_errors::{
     Diag, DiagCtxt, DiagCtxtHandle, DiagMessage, Diagnostic, ErrorGuaranteed, FatalAbort,
     TerminalUrl,
 };
+use rustc_feature::UnstableFeatures;
 use rustc_hir::limit::Limit;
-use rustc_macros::HashStable_Generic;
+use rustc_macros::StableHash;
 pub use rustc_span::def_id::StableCrateId;
 use rustc_span::edition::Edition;
 use rustc_span::source_map::{FilePathMapping, SourceMap};
 use rustc_span::{RealFileName, Span, Symbol};
 use rustc_target::asm::InlineAsmArch;
 use rustc_target::spec::{
-    Arch, CodeModel, DebuginfoKind, Os, PanicStrategy, RelocModel, RelroLevel, SanitizerSet,
-    SmallDataThresholdSupport, SplitDebuginfo, StackProtector, SymbolVisibility, Target,
-    TargetTuple, TlsModel, apple,
+    Arch, CfgAbi, CodeModel, DebuginfoKind, Os, PanicStrategy, RelocModel, RelroLevel,
+    SanitizerSet, SmallDataThresholdSupport, SplitDebuginfo, StackProtector, SymbolVisibility,
+    Target, TargetTuple, TlsModel, apple,
 };
 
 use crate::code_stats::CodeStats;
 pub use crate::code_stats::{DataTypeKind, FieldInfo, FieldKind, SizeKind, VariantInfo};
 use crate::config::{
-    self, CoverageLevel, CoverageOptions, CrateType, DebugInfo, ErrorOutputType, FunctionReturn,
-    Input, InstrumentCoverage, OptLevel, OutFileName, OutputType, SwitchWithOptPath,
+    self, Cfg, CheckCfg, CoverageLevel, CoverageOptions, CrateType, DebugInfo, ErrorOutputType,
+    FunctionReturn, Input, InstrumentCoverage, InstrumentMcount, OptLevel, OutFileName, OutputType,
+    SwitchWithOptPath,
 };
 use crate::filesearch::FileSearch;
 use crate::lint::LintId;
-use crate::parse::{ParseSess, add_feature_diagnostics};
+use crate::parse::ParseSess;
 use crate::search_paths::SearchPath;
 use crate::{errors, filesearch, lint};
 
@@ -57,7 +59,7 @@ pub enum CtfeBacktrace {
     Immediate,
 }
 
-#[derive(Clone, Copy, Debug, HashStable_Generic)]
+#[derive(Clone, Copy, Debug, StableHash)]
 pub struct Limits {
     /// The maximum recursion limit for potentially infinitely recursive
     /// operations such as auto-dereference and monomorphization.
@@ -91,6 +93,13 @@ pub struct Session {
     pub opts: config::Options,
     pub target_tlib_path: Arc<SearchPath>,
     pub psess: ParseSess,
+    pub unstable_features: UnstableFeatures,
+    pub config: Cfg,
+    pub check_config: CheckCfg,
+    /// Spans passed to `proc_macro::quote_span`. Each span has a numerical
+    /// identifier represented by its position in the vector.
+    proc_macro_quoted_spans: AppendOnlyVec<Span>,
+
     /// Input, input file path and output file path to this compilation process.
     pub io: CompilerIO,
 
@@ -143,20 +152,21 @@ pub struct Session {
     /// None signifies that this is not tracked.
     pub using_internal_features: &'static AtomicBool,
 
+    /// Environment variables accessed during the build and their values when they exist.
+    pub env_depinfo: Lock<FxIndexSet<(Symbol, Option<Symbol>)>>,
+
+    /// File paths accessed during the build.
+    pub file_depinfo: Lock<FxIndexSet<Symbol>>,
+
     target_filesearch: FileSearch,
     host_filesearch: FileSearch,
-
-    /// A random string generated per invocation of rustc.
-    ///
-    /// This is prepended to all temporary files so that they do not collide
-    /// during concurrent invocations of rustc, or past invocations that were
-    /// preserved with a flag like `-C save-temps`, since these files may be
-    /// hard linked.
-    pub invocation_temp: Option<String>,
 
     /// The names of intrinsics that the current codegen backend replaces
     /// with its own implementations.
     pub replaced_intrinsics: FxHashSet<Symbol>,
+    /// The names of intrinsics that the current codegen backend does *not* replace
+    /// with its own implementations.
+    pub fallback_intrinsics: FxHashSet<Symbol>,
 
     /// Does the codegen backend support ThinLTO?
     pub thin_lto_supported: bool,
@@ -171,6 +181,10 @@ pub struct Session {
     ///
     /// The value is the `DepNodeIndex` of the node encodes the used feature.
     pub used_features: Lock<FxHashMap<Symbol, u32>>,
+
+    /// Whether the test harness removed a user-written `#[rustc_main]` attribute
+    /// while generating the synthetic test entry point.
+    pub removed_rustc_main_attr: AtomicBool,
 }
 
 #[derive(Clone, Copy)]
@@ -293,7 +307,7 @@ impl Session {
         if err.code.is_none() {
             err.code(E0658);
         }
-        add_feature_diagnostics(&mut err, self, feature);
+        errors::add_feature_diagnostics(&mut err, self, feature);
         err
     }
 
@@ -322,6 +336,16 @@ impl Session {
     #[inline]
     pub fn source_map(&self) -> &SourceMap {
         self.psess.source_map()
+    }
+
+    pub fn proc_macro_quoted_spans(&self) -> impl Iterator<Item = (usize, Span)> {
+        // This is equivalent to `.iter().copied().enumerate()`, but that isn't possible for
+        // AppendOnlyVec, so we resort to this scheme.
+        self.proc_macro_quoted_spans.iter_enumerated()
+    }
+
+    pub fn save_proc_macro_span(&self, span: Span) -> usize {
+        self.proc_macro_quoted_spans.push(span)
     }
 
     /// Returns `true` if internal lints should be added to the lint store - i.e. if
@@ -422,10 +446,6 @@ impl Session {
     /// Returns `true` if the target can use the current split debuginfo configuration.
     pub fn target_can_use_split_dwarf(&self) -> bool {
         self.target.debuginfo_kind == DebuginfoKind::Dwarf
-    }
-
-    pub fn generate_proc_macro_decls_symbol(&self, stable_crate_id: StableCrateId) -> String {
-        format!("__rustc_proc_macro_decls_{:08x}__", stable_crate_id.as_u64())
     }
 
     pub fn target_filesearch(&self) -> &filesearch::FileSearch {
@@ -555,9 +575,14 @@ impl Session {
     pub fn emit_lifetime_markers(&self) -> bool {
         self.opts.optimize != config::OptLevel::No
         // AddressSanitizer and KernelAddressSanitizer uses lifetimes to detect use after scope bugs.
+        //
         // MemorySanitizer uses lifetimes to detect use of uninitialized stack variables.
-        // HWAddressSanitizer will use lifetimes to detect use after scope bugs in the future.
-        || self.sanitizers().intersects(SanitizerSet::ADDRESS | SanitizerSet::KERNELADDRESS | SanitizerSet::MEMORY | SanitizerSet::HWADDRESS)
+        //
+        // HWAddressSanitizer and KernelHWAddressSanitizer will use lifetimes to detect use after
+        // scope bugs in the future.
+        || self.sanitizers().intersects(SanitizerSet::ADDRESS | SanitizerSet::KERNELADDRESS | SanitizerSet::MEMORY | SanitizerSet::HWADDRESS | SanitizerSet::KERNELHWADDRESS)
+        // Lifetimes are necessary for retagging semantics.
+        || self.opts.unstable_opts.codegen_emit_retag.is_some()
     }
 
     pub fn diagnostic_width(&self) -> usize {
@@ -605,6 +630,10 @@ impl Session {
 
     pub fn print_llvm_stats(&self) -> bool {
         self.opts.unstable_opts.print_codegen_stats
+    }
+
+    pub fn print_llvm_stats_json(&self) -> Option<&String> {
+        self.opts.unstable_opts.print_codegen_stats_json.as_ref()
     }
 
     pub fn verify_llvm_ir(&self) -> bool {
@@ -811,10 +840,12 @@ impl Session {
                 .unwrap_or(self.panic_strategy().unwinds() || self.target.default_uwtable)
     }
 
-    /// Returns the number of query threads that should be used for this
-    /// compilation
+    /// Returns the number of threads used for the thread pool.
+    ///
+    /// `None` means thread pool is not used and synchronization is disabled.
+    /// `Some(n)` means synchronization is enabled with `n` worker threads.
     #[inline]
-    pub fn threads(&self) -> usize {
+    pub fn threads(&self) -> Option<usize> {
         self.opts.unstable_opts.threads
     }
 
@@ -1033,6 +1064,10 @@ pub fn build_session(
         dcx = dcx.with_ice_file(ice_file);
     }
 
+    if let Some(msrv) = sopts.unstable_opts.hint_msrv {
+        dcx = dcx.with_msrv(msrv);
+    }
+
     let host_triple = TargetTuple::from_tuple(config::host_tuple());
     let (host, target_warnings) =
         Target::search(&host_triple, sopts.sysroot.path(), sopts.unstable_opts.unstable_options)
@@ -1064,8 +1099,7 @@ pub fn build_session(
         None
     };
 
-    let mut psess = ParseSess::with_dcx(dcx, source_map);
-    psess.assume_incomplete_release = sopts.unstable_opts.assume_incomplete_release;
+    let psess = ParseSess::with_dcx(dcx, source_map);
 
     let host_triple = config::host_tuple();
     let target_triple = sopts.target_triple.tuple();
@@ -1096,11 +1130,6 @@ pub fn build_session(
         filesearch::FileSearch::new(&sopts.search_paths, &target_tlib_path, &target);
     let host_filesearch = filesearch::FileSearch::new(&sopts.search_paths, &host_tlib_path, &host);
 
-    let invocation_temp = sopts
-        .incremental
-        .as_ref()
-        .map(|_| rng().next_u32().to_base_fixed_len(CASE_INSENSITIVE).to_string());
-
     let timings = TimingSectionHandler::new(sopts.json_timings);
 
     let sess = Session {
@@ -1109,6 +1138,10 @@ pub fn build_session(
         opts: sopts,
         target_tlib_path,
         psess,
+        unstable_features: UnstableFeatures::from_environment(None),
+        config: Cfg::default(),
+        check_config: CheckCfg::default(),
+        proc_macro_quoted_spans: Default::default(),
         io,
         incr_comp_session: RwLock::new(IncrCompSession::NotInitialized),
         prof,
@@ -1123,18 +1156,25 @@ pub fn build_session(
         unstable_target_features: Default::default(),
         cfg_version,
         using_internal_features,
+        env_depinfo: Default::default(),
+        file_depinfo: Default::default(),
         target_filesearch,
         host_filesearch,
-        invocation_temp,
         replaced_intrinsics: FxHashSet::default(), // filled by `run_compiler`
+        fallback_intrinsics: FxHashSet::default(), // filled by `run_compiler`
         thin_lto_supported: true,                  // filled by `run_compiler`
         mir_opt_bisect_eval_count: AtomicUsize::new(0),
         used_features: Lock::default(),
+        removed_rustc_main_attr: AtomicBool::new(false),
     };
 
     validate_commandline_args_with_session_available(&sess);
 
     sess
+}
+
+pub fn generate_proc_macro_decls_symbol(stable_crate_id: StableCrateId) -> String {
+    format!("__rustc_proc_macro_decls_{:08x}__", stable_crate_id.as_u64())
 }
 
 /// Validate command line arguments with a `Session`.
@@ -1215,6 +1255,13 @@ fn validate_commandline_args_with_session_available(sess: &Session) {
         && !sess.target.is_like_msvc
     {
         sess.dcx().emit_err(errors::CannotEnableCrtStaticLinux);
+    }
+
+    // FIXME(jchlanda) Pauthtest does not support static linking. It must be dynamically linked,
+    // with a dynamic linker acting as the ELF interpreter that can resolve pauth relocations and
+    // enforce pointer authentication constraints.
+    if sess.crt_static(None) && sess.target.cfg_abi == CfgAbi::Pauthtest {
+        sess.dcx().emit_err(errors::CannotEnableCrtStaticPointerAuth);
     }
 
     // LLVM CFI requires LTO.
@@ -1328,6 +1375,12 @@ fn validate_commandline_args_with_session_available(sess: &Session) {
         }
     }
 
+    if sess.opts.unstable_opts.instrument_mcount == InstrumentMcount::Fentry
+        && !sess.target.options.supports_fentry
+    {
+        sess.dcx().emit_err(errors::InstrumentationNotSupported { us: "fentry".to_string() });
+    }
+
     if sess.opts.unstable_opts.instrument_xray.is_some() && !sess.target.options.supports_xray {
         sess.dcx().emit_err(errors::InstrumentationNotSupported { us: "XRay".to_string() });
     }
@@ -1381,13 +1434,9 @@ fn validate_commandline_args_with_session_available(sess: &Session) {
         }
     }
 
-    if sess.opts.cg.soft_float {
-        if sess.target.arch == Arch::Arm {
-            sess.dcx().emit_warn(errors::SoftFloatDeprecated);
-        } else {
-            // All `use_softfp` does is the equivalent of `-mfloat-abi` in GCC/clang, which only exists on ARM targets.
-            // We document this flag to only affect `*eabihf` targets, so let's show a warning for all other targets.
-            sess.dcx().emit_warn(errors::SoftFloatIgnored);
+    if sess.opts.unstable_opts.packed_stack {
+        if sess.target.arch != Arch::S390x {
+            sess.dcx().emit_err(errors::UnsupportedPackedStack);
         }
     }
 }

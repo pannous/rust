@@ -74,10 +74,18 @@ pub mod ext {
         expr_from_text("_")
     }
     pub fn expr_ty_default(ty: &ast::Type) -> ast::Expr {
-        expr_from_text(&format!("{ty}::default()"))
+        if !ty.needs_angles_in_path() {
+            expr_from_text(&format!("{ty}::default()"))
+        } else {
+            expr_from_text(&format!("<{ty}>::default()"))
+        }
     }
     pub fn expr_ty_new(ty: &ast::Type) -> ast::Expr {
-        expr_from_text(&format!("{ty}::new()"))
+        if !ty.needs_angles_in_path() {
+            expr_from_text(&format!("{ty}::new()"))
+        } else {
+            expr_from_text(&format!("<{ty}>::new()"))
+        }
     }
     pub fn expr_self() -> ast::Expr {
         expr_from_text("self")
@@ -286,12 +294,7 @@ fn merge_where_clause(
         (None, None) => None,
         (None, Some(bs)) => Some(bs),
         (Some(ps), None) => Some(ps),
-        (Some(ps), Some(bs)) => {
-            let preds = where_clause(std::iter::empty()).clone_for_update();
-            ps.predicates().for_each(|p| preds.add_predicate(p));
-            bs.predicates().for_each(|p| preds.add_predicate(p));
-            Some(preds)
-        }
+        (Some(ps), Some(bs)) => Some(where_clause(ps.predicates().chain(bs.predicates()))),
     }
 }
 
@@ -533,9 +536,10 @@ pub fn block_expr(
     quote! {
         BlockExpr {
             StmtList {
-                ['{'] "\n"
-                #("    " #stmts "\n")*
-                #("    " #tail_expr "\n")*
+                ['{']
+                #("\n    " #stmts)*
+                #("\n    " #tail_expr)*
+                "\n"
                 ['}']
             }
         }
@@ -867,6 +871,10 @@ pub fn or_pat(pats: impl IntoIterator<Item = ast::Pat>, leading_pipe: bool) -> a
 
 pub fn box_pat(pat: ast::Pat) -> ast::BoxPat {
     ast_from_text(&format!("fn f(box {pat}: ())"))
+}
+
+pub fn deref_pat(pat: ast::Pat) -> ast::Pat {
+    ast_from_text(&format!("fn f(deref!({pat}): ())"))
 }
 
 pub fn paren_pat(pat: ast::Pat) -> ast::ParenPat {
@@ -1312,6 +1320,18 @@ pub fn meta_token_tree(path: ast::Path, tt: ast::TokenTree) -> ast::Meta {
 
 pub fn meta_path(path: ast::Path) -> ast::Meta {
     ast_from_text(&format!("#[{path}]"))
+}
+
+pub fn cfg_attr_meta(
+    predicate: ast::CfgPredicate,
+    inner: impl IntoIterator<Item = ast::Meta>,
+) -> ast::CfgAttrMeta {
+    let inner = inner.into_iter().join(", ");
+    ast_from_text(&format!("#![cfg_attr({predicate}, {inner})]"))
+}
+
+pub fn cfg_flag(flag: &str) -> ast::CfgPredicate {
+    ast_from_text(&format!("#![cfg({flag})]"))
 }
 
 pub fn token_tree(

@@ -193,10 +193,11 @@ impl IncompatibleMsrv {
             }
         }
 
-        if (self.check_in_tests || !is_in_test(cx.tcx, node))
-            && let Some(current) = self.msrv.current(cx)
+        // Check `is_in_test` last as it walks the HIR parent chain.
+        if let Some(current) = self.msrv.current(cx)
             && let Availability::Since(version) = self.get_def_id_availability(cx.tcx, def_id, needs_const)
             && version > current
+            && (self.check_in_tests || !is_in_test(cx.tcx, node))
         {
             span_lint_and_then(
                 cx,
@@ -269,5 +270,5 @@ impl<'tcx> LateLintPass<'tcx> for IncompatibleMsrv {
 fn is_under_cfg_attribute(cx: &LateContext<'_>, hir_id: HirId) -> bool {
     cx.tcx
         .hir_parent_id_iter(hir_id)
-        .any(|id| find_attr!(cx.tcx.hir_attrs(id), CfgTrace(..) | CfgAttrTrace))
+        .any(|id| find_attr!(cx.tcx, id, CfgTrace(..) | CfgAttrTrace))
 }

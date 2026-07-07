@@ -6,13 +6,15 @@ use std::io::Error;
 use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 
+use rustc_abi::NumScalableVectors;
 use rustc_errors::codes::*;
 use rustc_errors::{
-    Diag, DiagArgValue, DiagCtxtHandle, Diagnostic, EmissionGuarantee, IntoDiagArg, Level, msg,
+    Diag, DiagArgValue, DiagCtxtHandle, DiagSymbolList, Diagnostic, EmissionGuarantee, IntoDiagArg,
+    Level, msg,
 };
 use rustc_macros::{Diagnostic, Subdiagnostic};
+use rustc_middle::ty::Ty;
 use rustc_middle::ty::layout::LayoutError;
-use rustc_middle::ty::{FloatTy, Ty};
 use rustc_span::{Span, Symbol};
 
 use crate::assert_module_sources::CguReuse;
@@ -109,13 +111,6 @@ pub(crate) struct NoNatvisDirectory {
 #[diag("cached cgu {$cgu_name} should have an object file, but doesn't")]
 pub(crate) struct NoSavedObjectFile<'a> {
     pub cgu_name: &'a str,
-}
-
-#[derive(Diagnostic)]
-#[diag("`#[track_caller]` requires Rust ABI", code = E0737)]
-pub(crate) struct RequiresRustAbi {
-    #[primary_span]
-    pub span: Span,
 }
 
 #[derive(Diagnostic)]
@@ -546,6 +541,12 @@ pub(crate) struct InsufficientVSCodeProduct;
 pub(crate) struct CpuRequired;
 
 #[derive(Diagnostic)]
+#[diag("target cpu `{$target_cpu}` is known but unsupported")]
+pub(crate) struct CpuUnsupported {
+    pub target_cpu: String,
+}
+
+#[derive(Diagnostic)]
 #[diag("processing debug info with `dsymutil` failed: {$status}")]
 #[note("{$output}")]
 pub(crate) struct ProcessingDymutilFailed {
@@ -677,8 +678,36 @@ pub(crate) struct UnknownArchiveKind<'a> {
 }
 
 #[derive(Diagnostic)]
+#[diag("archive `{$path}` was built as {$actual} format, but the target expects {$expected}")]
+#[help(
+    "this often occurs when using BSD-format archive tools on a Linux target; \
+    rebuild the archive with the correct format for the target platform"
+)]
+pub(crate) struct IncompatibleArchiveFormat {
+    pub path: PathBuf,
+    pub actual: String,
+    pub expected: String,
+}
+
+#[derive(Diagnostic)]
 #[diag("linking static libraries is not supported for BPF")]
 pub(crate) struct BpfStaticlibNotSupported;
+
+#[derive(Diagnostic)]
+#[diag(
+    "-Zstaticlib-hide-internal-symbols only supports ELF and Mach-O targets, but the target uses `{$binary_format}`"
+)]
+pub(crate) struct StaticlibHideInternalSymbolsUnsupported {
+    pub binary_format: String,
+}
+
+#[derive(Diagnostic)]
+#[diag(
+    "-Zstaticlib-rename-internal-symbols only supports ELF and Mach-O targets, but the target uses `{$binary_format}`"
+)]
+pub(crate) struct StaticlibRenameInternalSymbolsUnsupported {
+    pub binary_format: String,
+}
 
 #[derive(Diagnostic)]
 #[diag("entry symbol `main` declared multiple times")]
@@ -735,15 +764,7 @@ pub enum InvalidMonomorphization<'tcx> {
         #[primary_span]
         span: Span,
         name: Symbol,
-        f_ty: FloatTy,
-        in_ty: Ty<'tcx>,
-    },
-
-    #[diag("invalid monomorphization of `{$name}` intrinsic: `{$in_ty}` is not a floating-point type", code = E0511)]
-    FloatingPointType {
-        #[primary_span]
-        span: Span,
-        name: Symbol,
+        f_ty: String,
         in_ty: Ty<'tcx>,
     },
 
@@ -821,6 +842,17 @@ pub enum InvalidMonomorphization<'tcx> {
         in_ty: Ty<'tcx>,
         ret_ty: Ty<'tcx>,
         out_len: u64,
+    },
+
+    #[diag("invalid monomorphization of `{$name}` intrinsic: expected return type with {$in_num_vecs} vectors (same as input type `{$in_ty}`), found `{$ret_ty}` with length {$out_num_vecs}", code = E0511)]
+    ReturnNumVecsInputType {
+        #[primary_span]
+        span: Span,
+        name: Symbol,
+        in_num_vecs: NumScalableVectors,
+        in_ty: Ty<'tcx>,
+        ret_ty: Ty<'tcx>,
+        out_num_vecs: NumScalableVectors,
     },
 
     #[diag("invalid monomorphization of `{$name}` intrinsic: expected second argument with length {$in_len} (same as input type `{$in_ty}`), found `{$arg_ty}` with length {$out_len}", code = E0511)]
@@ -1071,7 +1103,7 @@ pub(crate) struct TargetFeatureSafeTrait {
 
 #[derive(Diagnostic)]
 #[diag("target feature `{$feature}` cannot be enabled with `#[target_feature]`: {$reason}")]
-pub struct ForbiddenTargetFeatureAttr<'a> {
+pub(crate) struct ForbiddenTargetFeatureAttr<'a> {
     #[primary_span]
     pub span: Span,
     pub feature: &'a str,
@@ -1196,24 +1228,28 @@ pub(crate) struct UnknownCTargetFeature<'a> {
 
 #[derive(Diagnostic)]
 #[diag("unstable feature specified for `-Ctarget-feature`: `{$feature}`")]
-#[note("this feature is not stably supported; its behavior can change in the future")]
+#[note("{$note}; its behavior can change in the future")]
 pub(crate) struct UnstableCTargetFeature<'a> {
     pub feature: &'a str,
+    pub note: &'a str,
 }
 
 #[derive(Diagnostic)]
 #[diag("target feature `{$feature}` cannot be {$enabled} with `-Ctarget-feature`: {$reason}")]
-#[note(
-    "this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!"
-)]
-#[note("for more information, see issue #116344 <https://github.com/rust-lang/rust/issues/116344>")]
 pub(crate) struct ForbiddenCTargetFeature<'a> {
     pub feature: &'a str,
     pub enabled: &'a str,
     pub reason: &'a str,
+    #[note(
+        "this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!"
+    )]
+    #[note(
+        "for more information, see issue #116344 <https://github.com/rust-lang/rust/issues/116344>"
+    )]
+    pub future_compat_note: bool,
 }
 
-pub struct TargetFeatureDisableOrEnable<'a> {
+pub(crate) struct TargetFeatureDisableOrEnable<'a> {
     pub features: &'a [&'a str],
     pub span: Option<Span>,
     pub missing_features: Option<MissingFeatures>,
@@ -1221,7 +1257,7 @@ pub struct TargetFeatureDisableOrEnable<'a> {
 
 #[derive(Subdiagnostic)]
 #[help("add the missing features in a `target_feature` attribute")]
-pub struct MissingFeatures;
+pub(crate) struct MissingFeatures;
 
 impl<G: EmissionGuarantee> Diagnostic<'_, G> for TargetFeatureDisableOrEnable<'_> {
     fn into_diag(self, dcx: DiagCtxtHandle<'_>, level: Level) -> Diag<'_, G> {
@@ -1249,20 +1285,43 @@ pub(crate) struct FeatureNotValid<'a> {
     #[label("`{$feature}` is not valid for this target")]
     pub span: Span,
     #[subdiagnostic]
-    pub plus_hint: Option<RemovePlusFromFeatureName<'a>>,
+    pub hint: FeatureNotValidHint<'a>,
+    #[subdiagnostic]
+    pub cross_arch: Option<CrossArchFeatureNote<'a>>,
 }
 
 #[derive(Subdiagnostic)]
-#[suggestion(
-    "consider removing the leading `+` in the feature name",
-    code = "enable = \"{stripped}\"",
-    applicability = "maybe-incorrect",
-    style = "verbose"
-)]
-pub struct RemovePlusFromFeatureName<'a> {
-    #[primary_span]
-    pub span: Span,
-    pub stripped: &'a str,
+pub(crate) enum CrossArchFeatureNote<'a> {
+    #[note(
+        "`{$feature}` is present on the `{$arch}` target architecture. Did you mean to compile for that target, or use conditional compilation?"
+    )]
+    Single { feature: &'a str, arch: &'a str },
+    #[note(
+        "`{$feature}` is present on the {$arches} target architectures. Did you mean to compile for one of those targets, or use conditional compilation?"
+    )]
+    Multiple { feature: &'a str, arches: DiagSymbolList<&'a str> },
+}
+
+#[derive(Subdiagnostic)]
+pub(crate) enum FeatureNotValidHint<'a> {
+    #[suggestion(
+        "consider removing the leading `+` in the feature name",
+        code = "enable = \"{stripped}\"",
+        applicability = "maybe-incorrect",
+        style = "verbose"
+    )]
+    RemovePlusFromFeatureName {
+        #[primary_span]
+        span: Span,
+        stripped: &'a str,
+    },
+    #[help(
+        "valid names are: {$possibilities}{$and_more ->
+            [0] {\"\"}
+            *[other] {\" \"}and {$and_more} more
+        }"
+    )]
+    ValidFeatureNames { possibilities: DiagSymbolList<&'a str>, and_more: usize },
 }
 
 #[derive(Diagnostic)]

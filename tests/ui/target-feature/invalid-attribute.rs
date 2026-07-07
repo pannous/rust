@@ -31,7 +31,7 @@ extern "Rust" {}
 //~| NOTE expected this to be of the form `enable = "..."`
 #[target_feature(disable = "baz")]
 //~^ ERROR malformed `target_feature` attribute
-//~| NOTE expected this to be of the form `enable = "..."`
+//~| NOTE the only valid argument here is `enable`
 unsafe fn foo() {}
 
 #[target_feature(enable = "sse2")]
@@ -67,8 +67,7 @@ trait Baz {}
 
 #[inline(always)]
 //~^ ERROR: cannot use `#[inline(always)]`
-//~| NOTE: see issue #145574 <https://github.com/rust-lang/rust/issues/145574> for more information
-//~| NOTE: this compiler was built on YYYY-MM-DD; consider upgrading it if it is out of date
+//~| NOTE: See this issue for full discussion: https://github.com/rust-lang/rust/issues/145574
 #[target_feature(enable = "sse2")]
 unsafe fn test() {}
 
@@ -119,7 +118,12 @@ fn main() {
 //~| NOTE `+sse2` is not valid for this target
 unsafe fn hey() {}
 
-#[target_feature(enable = "+sse5")]
-//~^ ERROR `+sse5` is not valid for this target
-//~| NOTE `+sse5` is not valid for this target
-unsafe fn typo() {}
+#[target_feature(enable = "sse5")]
+//~^ ERROR `sse5` is not valid for this target
+//~| NOTE `sse5` is not valid for this target
+unsafe fn typo_sse() {}
+
+#[target_feature(enable = "avx512")]
+//~^ ERROR `avx512` is not valid for this target
+//~| NOTE `avx512` is not valid for this target
+unsafe fn typo_avx512() {}

@@ -321,6 +321,10 @@ impl CString {
     /// assertion is made that `v` contains no 0 bytes, and it requires an
     /// actual byte vector, not anything that can be converted to one with Into.
     ///
+    /// # Safety
+    ///
+    /// The caller must ensure `v` contains no nul bytes in its contents.
+    ///
     /// # Examples
     ///
     /// ```
@@ -1073,9 +1077,17 @@ impl ToOwned for CStr {
     }
 
     fn clone_into(&self, target: &mut CString) {
-        let mut b = mem::take(&mut target.inner).into_vec();
-        self.to_bytes_with_nul().clone_into(&mut b);
-        target.inner = b.into_boxed_slice();
+        let src = self.to_bytes_with_nul();
+        // If the lengths match, we can reuse the existing allocation without any overhead.
+        if target.inner.len() == src.len() {
+            target.inner.copy_from_slice(src);
+        } else {
+            // Reuse the existing allocation's capacity by converting to a Vec.
+            // We temporarily replace `target` with a valid dummy to remain panic-safe.
+            let mut b = mem::replace(&mut target.inner, Box::new([0])).into_vec();
+            self.to_bytes_with_nul().clone_into(&mut b);
+            target.inner = b.into_boxed_slice();
+        }
     }
 }
 

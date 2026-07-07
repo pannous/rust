@@ -131,6 +131,10 @@ pub struct CargoConfig {
     pub run_build_script_command: Option<Vec<String>>,
     /// Extra args to pass to the cargo command.
     pub extra_args: Vec<String>,
+    /// Extra args passed only to `cargo metadata`, not other cargo commands.
+    pub metadata_extra_args: Vec<String>,
+    /// Path to an extra config file passed to every cargo invocation via `--config`.
+    pub config_path: Option<AbsPathBuf>,
     /// Extra env vars to set when invoking the cargo command
     pub extra_env: FxHashMap<String, Option<String>>,
     pub invocation_strategy: InvocationStrategy,
@@ -320,6 +324,10 @@ pub struct CargoMetadataConfig {
     pub targets: Vec<String>,
     /// Extra args to pass to the cargo command.
     pub extra_args: Vec<String>,
+    /// Extra args passed directly to `cargo metadata` without filtering.
+    pub metadata_extra_args: Vec<String>,
+    /// Path to an extra config file passed to `cargo metadata` via `--config`.
+    pub config_path: Option<AbsPathBuf>,
     /// Extra env vars to set when invoking the cargo command
     pub extra_env: FxHashMap<String, Option<String>>,
     /// What kind of metadata are we fetching: workspace, rustc, or sysroot.
@@ -678,6 +686,11 @@ impl FetchMetadata {
                 other_options.push("-Z".to_owned());
                 other_options.push(arg.to_owned());
             }
+        }
+        other_options.extend(config.metadata_extra_args.iter().cloned());
+        if let Some(config_path) = &config.config_path {
+            other_options.push("--config".to_owned());
+            other_options.push(config_path.to_string());
         }
 
         let mut lockfile_copy = None;
