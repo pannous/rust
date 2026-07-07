@@ -4817,24 +4817,23 @@ impl<'a> Parser<'a> {
             )?;
 
             // Check if this is a map literal: {key: value, ...}
-            // Convert to HashMap::from([("key", Val::from(value)), ...])
+            // Convert to Map::from([("key", value), ...]) (or Val::from(value) for
+            // heterogeneous value types). Duplicate keys accumulate via `+` rather
+            // than the last write silently overwriting earlier ones.
             if !is_underscore_entry_point {
                 if let ExprKind::Struct(struct_expr) = &expr.kind {
                     let span = expr.span;
 
-                    // Build ::std::collections::HashMap::from path
-                    let hashmap_from_path = Path {
+                    // Build ::Map::from path (Map is injected into script scope alongside Val)
+                    let map_from_path = Path {
                         span,
                         segments: thin_vec![
-                            PathSegment::from_ident(Ident::new(kw::PathRoot, span)),
-                            PathSegment::from_ident(Ident::new(sym::std, span)),
-                            PathSegment::from_ident(Ident::new(sym::collections, span)),
-                            PathSegment::from_ident(Ident::new(sym::HashMap, span)),
+                            PathSegment::from_ident(Ident::new(sym::Map, span)),
                             PathSegment::from_ident(Ident::new(sym::from, span)),
                         ],
                         tokens: None,
                     };
-                    let path_expr = self.mk_expr(span, ExprKind::Path(None, hashmap_from_path));
+                    let path_expr = self.mk_expr(span, ExprKind::Path(None, map_from_path));
 
                     // Helper to wrap value in Val::from(...)
                     let mk_val_from = |this: &Self, value: Box<Expr>, sp: Span| -> Box<Expr> {
@@ -4850,16 +4849,39 @@ impl<'a> Parser<'a> {
                         this.mk_expr(sp, ExprKind::Call(path_expr, thin_vec![value]))
                     };
 
-                    // Build [("key1", Val::from(v1)), ...]
-                    let tuple_exprs: ThinVec<Box<Expr>> = struct_expr
-                        .fields
-                        .iter()
-                        .map(|field| {
-                            let key_lit = token::Lit::new(token::LitKind::Str, field.ident.name, None);
-                            let key_expr = self.mk_expr(field.ident.span, ExprKind::Lit(key_lit));
-                            let val_expr = mk_val_from(self, field.expr.clone(), field.span);
+                    // Group fields by key (first-occurrence order), folding duplicate
+                    // keys' values together with `+` instead of dropping earlier ones.
+                    let mut grouped: Vec<(Ident, Box<Expr>)> = Vec::new();
+                    for field in &struct_expr.fields {
+                        if let Some((_, existing)) =
+                            grouped.iter_mut().find(|(ident, _)| ident.name == field.ident.name)
+                        {
+                            let lhs = existing.clone();
+                            let rhs = field.expr.clone();
+                            *existing = self.mk_expr(
+                                field.span,
+                                ExprKind::Binary(respan(field.span, BinOpKind::Add), lhs, rhs),
+                            );
+                        } else {
+                            grouped.push((field.ident, field.expr.clone()));
+                        }
+                    }
+
+                    let is_mixed =
+                        self.detect_mixed_literals(&struct_expr.fields.iter().map(|f| f.expr.clone()).collect::<Vec<_>>());
+
+                    // Build [("key1", v1), ...], one entry per unique key, wrapping
+                    // values in Val::from(...) only when the map is heterogeneous.
+                    let tuple_exprs: ThinVec<Box<Expr>> = grouped
+                        .into_iter()
+                        .map(|(ident, value)| {
+                            let key_lit = token::Lit::new(token::LitKind::Str, ident.name, None);
+                            let key_expr = self.mk_expr(ident.span, ExprKind::Lit(key_lit));
+                            let value_span = value.span;
+                            let val_expr =
+                                if is_mixed { mk_val_from(self, value, value_span) } else { value };
                             let tup = ExprKind::Tup(thin_vec![key_expr, val_expr]);
-                            self.mk_expr(field.span, tup)
+                            self.mk_expr(value_span, tup)
                         })
                         .collect();
 

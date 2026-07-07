@@ -309,6 +309,7 @@ symbols! {
         List,
         LocalKey,
         locate,
+        Map,
         mapped,
         max,
         Mutex,

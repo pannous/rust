@@ -8,8 +8,9 @@ use rustc_ast::token::{self, Delimiter, InvisibleOrigin, MetaVarKind, TokenKind}
 use rustc_ast::util::classify::{self, TrailingBrace};
 use rustc_ast::visit::{Visitor, walk_expr};
 use rustc_ast::{
-    AttrStyle, AttrVec, Block, BlockCheckMode, DUMMY_NODE_ID, Expr, ExprKind, HasAttrs, Local,
-    LocalKind, MacCall, MacCallStmt, MacStmtStyle, Recovered, Stmt, StmtKind,
+    AttrStyle, AttrVec, BindingMode, Block, BlockCheckMode, DUMMY_NODE_ID, Expr, ExprKind,
+    HasAttrs, Local, LocalKind, MacCall, MacCallStmt, MacStmtStyle, Pat, PatKind, Recovered, Stmt,
+    StmtKind,
 };
 use rustc_errors::{Applicability, Diag, PResult};
 use rustc_span::{BytePos, ErrorGuaranteed, Ident, Span, kw, sym};
@@ -25,6 +26,15 @@ use super::{
 };
 use crate::errors::{self, MalformedLoopLabel};
 use crate::exp;
+
+/// Rewrites a simple identifier binding (as produced by `var x = ...`) to bind
+/// by mutable value, matching `let mut x = ...`. Non-ident patterns (e.g. tuple
+/// destructuring) are left untouched.
+fn force_mut_binding(pat: &mut Pat) {
+    if let PatKind::Ident(binding_mode, _, None) = &mut pat.kind {
+        *binding_mode = BindingMode::MUT;
+    }
+}
 
 impl<'a> Parser<'a> {
     /// Parses a statement. This stops just before trailing semicolons on everything but items.
@@ -118,9 +128,10 @@ impl<'a> Parser<'a> {
             // In normal mode, recover but emit an error
             self.bump(); // `var`
             if self.is_script_mode() {
-                // Silent conversion in script mode
+                // Silent conversion in script mode: `var x = e` -> `let mut x = e`
                 self.collect_tokens(None, attrs, force_collect, |this, attrs| {
-                    let local = this.parse_local(None, attrs)?;
+                    let mut local = this.parse_local(None, attrs)?;
+                    force_mut_binding(&mut local.pat);
                     Ok((
                         this.mk_stmt(lo.to(this.prev_token.span), StmtKind::Let(local)),
                         Trailing::No,

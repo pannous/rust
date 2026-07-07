@@ -63,3 +63,49 @@ impl PartialEq<char> for Val {
 	}
 }
 
+// Untyped `{key: value, ...}` map literals desugar to `Map<V, N>`, backed by a
+// fixed-size array (the key count is known at the literal's parse site).
+// Unlike `std::collections::HashMap`, iterating a `Map` directly (`for key in map`)
+// yields keys only; use `.pairs()` for `(key, value)` tuples. Being array-backed
+// lets `Map` derive `Copy` when `V: Copy`, so `for key in map { ... map[key] ... }`
+// works without explicitly borrowing `map`.
+#[derive(Debug, Clone, Copy)]
+pub struct Map<V, const N: usize>(pub [(&'static str, V); N]);
+
+impl<V, const N: usize> Map<V, N> {
+	pub fn from(pairs: [(&'static str, V); N]) -> Self { Map(pairs) }
+	pub fn len(&self) -> usize { N }
+	pub fn is_empty(&self) -> bool { N == 0 }
+	fn keys(&self) -> [&'static str; N] { std::array::from_fn(|i| self.0[i].0) }
+}
+
+impl<V: Clone, const N: usize> Map<V, N> {
+	pub fn pairs(&self) -> Vec<(&'static str, V)> { self.0.to_vec() }
+}
+
+impl<V, const N: usize> std::ops::Index<&str> for Map<V, N> {
+	type Output = V;
+	fn index(&self, key: &str) -> &V {
+		self.0.iter().find(|(k, _)| *k == key).map(|(_, v)| v).expect("key not found in map")
+	}
+}
+
+impl<V, const N: usize> IntoIterator for Map<V, N> {
+	type Item = &'static str;
+	type IntoIter = std::array::IntoIter<&'static str, N>;
+	fn into_iter(self) -> Self::IntoIter {
+		// Method-call syntax (`arr.into_iter()`) resolves to the by-reference
+		// slice iterator on pre-2021 editions; UFCS syntax picks the by-value
+		// array impl unambiguously regardless of edition.
+		IntoIterator::into_iter(self.keys())
+	}
+}
+
+impl<'a, V, const N: usize> IntoIterator for &'a Map<V, N> {
+	type Item = &'static str;
+	type IntoIter = std::array::IntoIter<&'static str, N>;
+	fn into_iter(self) -> Self::IntoIter {
+		IntoIterator::into_iter(self.keys())
+	}
+}
+
