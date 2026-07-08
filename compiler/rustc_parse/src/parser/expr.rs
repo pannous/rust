@@ -1181,6 +1181,12 @@ impl<'a> Parser<'a> {
         if !self.token.is_non_reserved_ident() {
             return false;
         }
+        // Exclude `ident:` (e.g. the next field of a comma-less struct/map
+        // literal, `{x: 1 y: 2}`): `2 * y:` is never valid, so this is
+        // unambiguously a new field key rather than a multiplication operand.
+        if self.look_ahead(1, |t| *t == token::Colon) {
+            return false;
+        }
         // In script mode, exclude operator identifiers (or, and, xor) from implicit multiplication
         if self.is_script_mode() {
             if let Some((ident, token::IdentIsRaw::No)) = self.token.ident() {
@@ -5047,6 +5053,21 @@ impl<'a> Parser<'a> {
             // A shorthand field can be turned into a full field with `:`.
             // We should point this out.
             self.check_or_expected(!is_shorthand, TokenType::Colon);
+
+            // Comma between fields is optional, like in item-level struct/class
+            // field declarations (see `parse_single_struct_field`): accept a
+            // missing comma if the following token starts a new field, or is
+            // the closing brace.
+            let next_field_without_comma = self.token != token::Comma
+                && (self.check(close)
+                    || (self.token.is_ident() && !self.token.is_reserved_ident()));
+
+            if next_field_without_comma {
+                if let Ok(f) = parsed_field.or_else(|guar| field_ident(self, guar).ok_or(guar)) {
+                    fields.push(f);
+                }
+                continue;
+            }
 
             match self.expect_one_of(&[exp!(Comma)], &[close]) {
                 Ok(_) => {
