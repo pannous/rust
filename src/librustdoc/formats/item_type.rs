@@ -192,13 +192,13 @@ impl ItemType {
             | DefKind::Use
             | DefKind::ForeignMod
             | DefKind::AnonConst
-            | DefKind::InlineConst
             | DefKind::OpaqueTy
             | DefKind::LifetimeParam
             | DefKind::GlobalAsm
             | DefKind::Impl { .. }
             | DefKind::Closure
-            | DefKind::SyntheticCoroutineBody => Self::ForeignType,
+            | DefKind::SyntheticCoroutineBody
+            | DefKind::TestBinderConstraints => Self::ForeignType,
         }
     }
 

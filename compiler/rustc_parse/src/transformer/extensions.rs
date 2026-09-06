@@ -142,7 +142,6 @@ fn create_extern_crate_item(crate_name: &str, span: Span) -> Box<ast::Item> {
         vis: ast::Visibility {
             span,
             kind: ast::VisibilityKind::Inherited,
-            tokens: None,
         },
         span,
         tokens: None,

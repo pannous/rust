@@ -36,9 +36,11 @@ use rustc_abi::FIRST_VARIANT;
 use rustc_data_structures::fx::{FxIndexMap, FxIndexSet};
 use rustc_data_structures::unord::{ExtendUnord, UnordSet};
 use rustc_errors::{Applicability, Diag, DiagCtxtHandle, Diagnostic, Level, MultiSpan};
+use rustc_hir::attrs::lang_items::LangItem;
 use rustc_hir::def_id::LocalDefId;
 use rustc_hir::intravisit::{self, Visitor};
 use rustc_hir::{self as hir, HirId, find_attr};
+use rustc_lint_defs::builtin::RUST_2021_INCOMPATIBLE_CLOSURE_CAPTURES;
 use rustc_middle::hir::place::{Place, PlaceBase, PlaceWithHirId, Projection, ProjectionKind};
 use rustc_middle::mir::FakeReadCause;
 use rustc_middle::traits::ObligationCauseCode;
@@ -47,7 +49,6 @@ use rustc_middle::ty::{
     Unnormalized, UpvarArgs, UpvarCapture,
 };
 use rustc_middle::{bug, span_bug};
-use rustc_session::lint;
 use rustc_span::{BytePos, Pos, Span, Symbol, sym};
 use rustc_trait_selection::infer::InferCtxtExt;
 use tracing::{debug, instrument};
@@ -79,6 +80,83 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
 
         // it's our job to process these.
         assert!(self.deferred_call_resolutions.borrow().is_empty());
+    }
+
+    pub(crate) fn infer_closure_kind_for_diagnostic(
+        &self,
+        closure_def_id: LocalDefId,
+    ) -> Option<(ty::ClosureKind, Option<(Span, Place<'tcx>)>)> {
+        let hir_id = self.tcx.local_def_id_to_hir_id(closure_def_id);
+        let hir::Node::Expr(expr) = self.tcx.hir_node_by_def_id(closure_def_id) else {
+            return None;
+        };
+        let hir::ExprKind::Closure(&hir::Closure {
+            capture_clause,
+            body: body_id,
+            explicit_captures,
+            ..
+        }) = expr.kind
+        else {
+            return None;
+        };
+        let body = self.tcx.hir_body(body_id);
+
+        // We cannot reliably infer the closure kind if there are nested closures whose
+        // captures have not yet been analyzed.
+        struct HasNestedClosure(bool);
+        impl<'v> Visitor<'v> for HasNestedClosure {
+            fn visit_expr(&mut self, expr: &'v hir::Expr<'v>) {
+                if matches!(expr.kind, hir::ExprKind::Closure(..)) {
+                    self.0 = true;
+                    return;
+                }
+                intravisit::walk_expr(self, expr);
+            }
+        }
+        let mut has_nested = HasNestedClosure(false);
+        has_nested.visit_body(body);
+        if has_nested.0 {
+            return None;
+        }
+
+        let closure_fcx = FnCtxt::new(self, self.tcx.param_env(closure_def_id), closure_def_id);
+
+        let mut delegate = InferBorrowKind {
+            fcx: &closure_fcx,
+            closure_def_id,
+            capture_information: Default::default(),
+            fake_reads: Default::default(),
+        };
+
+        let _ = euv::ExprUseVisitor::new(&closure_fcx, &mut delegate).consume_body(body);
+
+        for capture in explicit_captures {
+            let place = closure_fcx.place_for_root_variable(closure_def_id, capture.var_hir_id);
+            delegate.consume(&PlaceWithHirId { hir_id: capture.var_hir_id, place }, hir_id);
+        }
+
+        let (_, closure_kind, mut origin) = self
+            .process_collected_capture_information(capture_clause, &delegate.capture_information);
+
+        // Bail out if a by-value capture has unresolved inference variables, since
+        // fallback might later resolve the type to `Copy` (making the closure `Fn`).
+        if closure_kind == ty::ClosureKind::FnOnce {
+            for (place, capture_info) in &delegate.capture_information {
+                if matches!(capture_info.capture_kind, ty::UpvarCapture::ByValue)
+                    && place.ty().has_infer()
+                {
+                    return None;
+                }
+            }
+        }
+
+        if !enable_precise_capture(expr.span) {
+            if let Some((_, ref mut place)) = origin {
+                place.projections.clear();
+            }
+        }
+
+        Some((closure_kind, origin))
     }
 }
 
@@ -1190,7 +1268,7 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
 
         if !need_migrations.is_empty() {
             self.tcx.emit_node_span_lint(
-                lint::builtin::RUST_2021_INCOMPATIBLE_CLOSURE_CAPTURES,
+                RUST_2021_INCOMPATIBLE_CLOSURE_CAPTURES,
                 self.tcx.local_def_id_to_hir_id(closure_def_id),
                 self.tcx.def_span(closure_def_id),
                 MigrationLint {
@@ -1637,7 +1715,7 @@ impl<'a, 'tcx> FnCtxt<'a, 'tcx> {
         };
 
         let is_drop_defined_for_ty = |ty: Ty<'tcx>| {
-            let drop_trait = self.tcx.require_lang_item(hir::LangItem::Drop, closure_span);
+            let drop_trait = self.tcx.require_lang_item(LangItem::Drop, closure_span);
             self.infcx
                 .type_implements_trait(drop_trait, [ty], self.tcx.param_env(closure_def_id))
                 .must_apply_modulo_regions()
@@ -2344,10 +2422,20 @@ fn adjust_for_non_move_closure(
         place.projections.iter().position(|proj| proj.kind == ProjectionKind::Deref);
 
     match kind {
-        ty::UpvarCapture::ByValue | ty::UpvarCapture::ByUse => {
+        ty::UpvarCapture::ByValue => {
             if let Some(idx) = contains_deref {
                 truncate_place_to_len_and_update_capture_kind(&mut place, &mut kind, idx);
             }
+        }
+
+        // A non-`move`/`use` closure that only `.use`s an upvar does not need to
+        // own (and thus clone-on-capture) the value. The `ByUse` kind here can only
+        // come from a `x.use` in the body (a `use ||` capture clause goes through
+        // `adjust_for_use_closure` instead). Capturing such a place by immutable
+        // borrow lets the `.use` expression clone per evaluation, rather than also
+        // cloning the value into the closure at construction time. See #157141.
+        ty::UpvarCapture::ByUse => {
+            kind = ty::UpvarCapture::ByRef(ty::BorrowKind::Immutable);
         }
 
         ty::UpvarCapture::ByRef(..) => {}
@@ -2431,8 +2519,7 @@ fn should_do_rust_2021_incompatible_closure_captures_analysis(
         return false;
     }
 
-    !tcx.lint_level_spec_at_node(lint::builtin::RUST_2021_INCOMPATIBLE_CLOSURE_CAPTURES, closure_id)
-        .is_allow()
+    !tcx.lint_level_spec_at_node(RUST_2021_INCOMPATIBLE_CLOSURE_CAPTURES, closure_id).is_allow()
 }
 
 /// Return a two string tuple (s1, s2)

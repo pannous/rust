@@ -9,9 +9,8 @@ use std::fmt::Debug;
 use rustc_data_structures::fx::{FxHashSet, FxIndexSet};
 use rustc_errors::{Diag, EmissionGuarantee};
 use rustc_hir::def_id::{CRATE_DEF_ID, DefId};
-use rustc_hir::find_attr;
 use rustc_infer::infer::{DefineOpaqueTypes, InferCtxt, TyCtxtInferExt};
-use rustc_infer::traits::PredicateObligations;
+use rustc_infer::traits::{PredicateObligations, TraitErrors};
 use rustc_macros::{TypeFoldable, TypeVisitable};
 use rustc_middle::bug;
 use rustc_middle::traits::query::NoSolution;
@@ -211,7 +210,7 @@ fn fresh_impl_header<'tcx>(
         trait_ref: is_of_trait
             .then(|| tcx.impl_trait_ref(impl_def_id).instantiate(tcx, impl_args).skip_norm_wip()),
         predicates: tcx
-            .predicates_of(impl_def_id)
+            .clauses_of(impl_def_id)
             .instantiate(tcx, impl_args)
             .iter()
             .map(|(c, _)| c.skip_norm_wip().as_predicate())
@@ -263,6 +262,7 @@ fn overlap<'tcx>(
         .infer_ctxt()
         .skip_leak_check(skip_leak_check.is_yes())
         .with_next_trait_solver(tcx.next_trait_solver_in_coherence())
+        .enable_next_solver_overflow_fcw(false)
         .build(TypingMode::Coherence);
     let selcx = &mut SelectionContext::new(&infcx);
     if track_ambiguity_causes.is_yes() {
@@ -424,7 +424,7 @@ fn impl_intersection_has_impossible_obligation<'a, 'cx, 'tcx>(
         let ocx = ObligationCtxt::new(infcx);
         ocx.register_obligations(obligations.iter().cloned());
         let hard_errors = ocx.try_evaluate_obligations();
-        if !hard_errors.is_empty() {
+        if let TraitErrors::HasErrors(hard_errors) = hard_errors {
             assert!(
                 hard_errors.iter().all(|e| e.is_true_error()),
                 "should not have detected ambiguity during first pass"
@@ -504,7 +504,11 @@ fn impl_intersection_has_negative_obligation(
 
     // N.B. We need to unify impl headers *with* `TypingMode::Coherence`,
     // even if proving negative predicates doesn't need `TypingMode::Coherence`.
-    let ref infcx = tcx.infer_ctxt().with_next_trait_solver(true).build(TypingMode::Coherence);
+    let ref infcx = tcx
+        .infer_ctxt()
+        .with_next_trait_solver(true)
+        .enable_next_solver_overflow_fcw(false)
+        .build(TypingMode::Coherence);
     let root_universe = infcx.universe();
     assert_eq!(root_universe, ty::UniverseIndex::ROOT);
 
@@ -546,7 +550,7 @@ fn impl_intersection_has_negative_obligation(
 
     util::elaborate(
         tcx,
-        tcx.predicates_of(impl2_def_id)
+        tcx.clauses_of(impl2_def_id)
             .instantiate(tcx, impl2_header.impl_args)
             .into_iter()
             .map(|(c, s)| (c.skip_norm_wip(), s)),
@@ -686,19 +690,14 @@ fn try_prove_negated_where_clause<'tcx>(
         param_env,
         negative_predicate,
     ));
-    if !ocx.evaluate_obligations_error_on_ambiguity().is_empty() {
+    if !ocx.evaluate_obligations_error_on_ambiguity().no_errors() {
         return false;
     }
 
     // FIXME: We could use the assumed_wf_types from both impls, I think,
     // if that wasn't implemented just for LocalDefId, and we'd need to do
     // the normalization ourselves since this is totally fallible...
-    let errors = ocx.resolve_regions(CRATE_DEF_ID, param_env, []);
-    if !errors.is_empty() {
-        return false;
-    }
-
-    true
+    ocx.resolve_regions(CRATE_DEF_ID, param_env, []).is_empty()
 }
 
 /// Compute the `intercrate_ambiguity_causes` for the new solver using
@@ -767,20 +766,6 @@ impl<'a, 'tcx> ProofTreeVisitor<'tcx> for AmbiguityCausesVisitor<'a, 'tcx> {
         }
 
         let mut candidates = goal.candidates();
-        for cand in goal.candidates() {
-            if let inspect::ProbeKind::TraitCandidate {
-                source: CandidateSource::Impl(def_id),
-                result: Ok(_),
-            } = cand.kind()
-                && let ty::ImplPolarity::Reservation = infcx.tcx.impl_polarity(def_id)
-            {
-                if let Some(message) =
-                    find_attr!(infcx.tcx, def_id, RustcReservationImpl(message) => *message)
-                {
-                    self.causes.insert(IntercrateAmbiguityCause::ReservationImpl { message });
-                }
-            }
-        }
 
         // We also look for unknowable candidates. In case a goal is unknowable, there's
         // always exactly 1 candidate.
@@ -806,7 +791,7 @@ impl<'a, 'tcx> ProofTreeVisitor<'tcx> for AmbiguityCausesVisitor<'a, 'tcx> {
                         Unnormalized::new_wip(ty),
                     )
                     .map_err(|_| ())?;
-                if !ocx.try_evaluate_obligations().is_empty() {
+                if !ocx.try_evaluate_obligations().no_errors() {
                     return Err(());
                 }
             }

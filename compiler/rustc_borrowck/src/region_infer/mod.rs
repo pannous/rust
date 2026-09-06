@@ -28,7 +28,6 @@ use crate::constraints::{ConstraintSccIndex, OutlivesConstraint, OutlivesConstra
 use crate::dataflow::BorrowIndex;
 use crate::diagnostics::{RegionErrorKind, RegionErrors, UniverseInfo};
 use crate::handle_placeholders::{LoweredConstraints, RegionTracker};
-use crate::polonius::LiveLoans;
 use crate::polonius::legacy::PoloniusOutput;
 use crate::region_infer::values::{LivenessValues, RegionElement, RegionValues};
 use crate::type_check::Locations;
@@ -345,7 +344,7 @@ impl<'tcx> RegionInferenceContext<'tcx> {
             outlives_constraints,
             scc_annotations,
             type_tests,
-            mut liveness_constraints,
+            liveness_constraints,
             universe_causes,
             placeholder_indices,
         } = lowered_constraints;
@@ -374,9 +373,6 @@ impl<'tcx> RegionInferenceContext<'tcx> {
             match definition.origin {
                 // For each free, universally quantified region X:
                 NllRegionVariableOrigin::FreeRegion => {
-                    // Add all nodes in the CFG to liveness constraints
-                    liveness_constraints.add_all_points(region);
-
                     // Add `end(X)` into the set for X.
                     scc_values.add_free_region(scc, region);
                 }
@@ -394,8 +390,7 @@ impl<'tcx> RegionInferenceContext<'tcx> {
             // has them, setting `scc_values[scc(region)] |= liveness_constraints[region]`.
             //
             // These values will later be propagated during [`Self::propagate_constraints()`].
-            // The values include any live-at-all-points constraints added above
-            // for free regions.
+            // The values include any live-at-all-points constraints added previously in `liveness::generate`.
             if let Some(liveness) = liveness_constraints.point_liveness(region) {
                 scc_values.merge_liveness(scc, liveness)
             }
@@ -1285,9 +1280,12 @@ impl<'tcx> RegionInferenceContext<'tcx> {
                 return RegionRelationCheckResult::Error;
             }
 
-            let blame_constraint = self
-                .best_blame_constraint(longer_fr, NllRegionVariableOrigin::FreeRegion, shorter_fr)
-                .0;
+            let best_blame = self.best_blame_constraint(
+                longer_fr,
+                NllRegionVariableOrigin::FreeRegion,
+                shorter_fr,
+            );
+            let OutlivesConstraint { category, span, .. } = best_blame.constraint();
 
             // Grow `shorter_fr` until we find some non-local regions.
             // We will always find at least one: `'static`. We'll call
@@ -1346,8 +1344,8 @@ impl<'tcx> RegionInferenceContext<'tcx> {
                 propagated_outlives_requirements.push(ClosureOutlivesRequirement {
                     subject: ClosureOutlivesSubject::Region(fr_minus),
                     outlived_free_region: fr_plus,
-                    blame_span: blame_constraint.span,
-                    category: blame_constraint.category,
+                    blame_span: *span,
+                    category: *category,
                 });
             }
             return RegionRelationCheckResult::Propagated;
@@ -1614,7 +1612,7 @@ impl<'tcx> RegionInferenceContext<'tcx> {
         from_region: RegionVid,
         from_region_origin: NllRegionVariableOrigin<'tcx>,
         to_region: RegionVid,
-    ) -> (BlameConstraint<'tcx>, Vec<OutlivesConstraint<'tcx>>) {
+    ) -> BestBlame<'tcx> {
         assert!(from_region != to_region, "Trying to blame a region for itself!");
 
         let path = self.constraint_path_between_regions(from_region, to_region).unwrap();
@@ -1630,7 +1628,7 @@ impl<'tcx> RegionInferenceContext<'tcx> {
         });
 
         // Edge case: it's possible that `'from_region` is an unnameable placeholder.
-        let path = if let Some(unnameable) = due_to_placeholder_outlives
+        let mut path = if let Some(unnameable) = due_to_placeholder_outlives
             && unnameable != from_region
         {
             // We ignore the extra edges due to unnameable placeholders to get
@@ -1787,41 +1785,34 @@ impl<'tcx> RegionInferenceContext<'tcx> {
 
         debug!(?best_choice, ?blame_source);
 
-        let best_constraint = if let Some(next) = path.get(best_choice + 1)
+        let best_blame_idx = if let Some(next) = path.get(best_choice + 1)
             && matches!(path[best_choice].category, ConstraintCategory::Return(_))
             && next.category == ConstraintCategory::OpaqueType
         {
             // The return expression is being influenced by the return type being
             // impl Trait, point at the return type and not the return expr.
-            *next
+            best_choice + 1
         } else if path[best_choice].category == ConstraintCategory::Return(ReturnConstraint::Normal)
             && let Some(field) = path.iter().find_map(|p| {
                 if let ConstraintCategory::ClosureUpvar(f) = p.category { Some(f) } else { None }
             })
         {
-            OutlivesConstraint {
-                category: ConstraintCategory::Return(ReturnConstraint::ClosureUpvar(field)),
-                ..path[best_choice]
-            }
+            path[best_choice].category =
+                ConstraintCategory::Return(ReturnConstraint::ClosureUpvar(field));
+            best_choice
         } else {
-            path[best_choice]
+            best_choice
         };
 
         assert!(
             !matches!(
-                best_constraint.category,
+                path[best_blame_idx].category,
                 ConstraintCategory::OutlivesUnnameablePlaceholder(_)
             ),
             "Illegal placeholder constraint blamed; should have redirected to other region relation"
         );
 
-        let blame_constraint = BlameConstraint {
-            category: best_constraint.category,
-            from_closure: best_constraint.from_closure,
-            span: best_constraint.span,
-            variance_info: best_constraint.variance_info,
-        };
-        (blame_constraint, path)
+        BestBlame { path, idx: best_blame_idx }
     }
 
     pub(crate) fn universe_info(&self, universe: ty::UniverseIndex) -> UniverseInfo<'tcx> {
@@ -1880,12 +1871,6 @@ impl<'tcx> RegionInferenceContext<'tcx> {
         &self.liveness_constraints
     }
 
-    /// When using `-Zpolonius=next`, records the given live loans for the loan scopes and active
-    /// loans dataflow computations.
-    pub(crate) fn record_live_loans(&mut self, live_loans: LiveLoans) {
-        self.liveness_constraints.record_live_loans(live_loans);
-    }
-
     /// Returns whether the `loan_idx` is live at the given `location`: whether its issuing
     /// region is contained within the type of a variable that is live at this point.
     /// Note: for now, the sets of live loans is only available when using `-Zpolonius=next`.
@@ -1896,21 +1881,19 @@ impl<'tcx> RegionInferenceContext<'tcx> {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct BlameConstraint<'tcx> {
-    pub category: ConstraintCategory<'tcx>,
-    pub from_closure: bool,
-    pub span: Span,
-    pub variance_info: ty::VarianceDiagInfo<TyCtxt<'tcx>>,
+pub(crate) struct BestBlame<'tcx> {
+    /// See docs on [`RegionInferenceContext::best_blame_constraint`] for what this is.
+    path: Vec<OutlivesConstraint<'tcx>>,
+    /// Index into `path` of the constraint most relevant to report to users.
+    idx: usize,
 }
 
-impl<'tcx> BlameConstraint<'tcx> {
-    pub(crate) fn to_obligation_cause_from_path(
-        &self,
-        path: &[OutlivesConstraint<'tcx>],
-    ) -> ObligationCause<'tcx> {
+impl<'tcx> BestBlame<'tcx> {
+    pub(crate) fn to_obligation_cause(&self) -> ObligationCause<'tcx> {
         // FIXME - determine what we should do if we encounter multiple
         // `ConstraintCategory::Predicate` constraints. Currently, we just pick the first one.
-        let cause_code = path
+        let cause_code = self
+            .path
             .iter()
             .find_map(|constraint| {
                 if let ConstraintCategory::Predicate(predicate_span) = constraint.category {
@@ -1924,6 +1907,14 @@ impl<'tcx> BlameConstraint<'tcx> {
             })
             .unwrap_or_else(|| ObligationCauseCode::Misc);
 
-        ObligationCause::new(self.span, CRATE_DEF_ID, cause_code.clone())
+        ObligationCause::new(self.constraint().span, CRATE_DEF_ID, cause_code.clone())
+    }
+
+    pub(crate) fn constraint(&self) -> &OutlivesConstraint<'tcx> {
+        &self.path[self.idx]
+    }
+
+    pub(crate) fn path(&self) -> &[OutlivesConstraint<'tcx>] {
+        &self.path
     }
 }

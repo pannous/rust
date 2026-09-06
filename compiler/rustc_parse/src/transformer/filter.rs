@@ -278,7 +278,7 @@ fn build_slice_filter_trait_item(span: Span, t_ident: Ident) -> Box<ast::AssocIt
             contract: None,
             body: None, // No body for trait method
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         })),
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
         span,
@@ -552,7 +552,7 @@ fn build_slice_filter_impl_item(span: Span, t_ident: Ident) -> Box<ast::AssocIte
             contract: None,
             body: Some(body),
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         })),
         vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
         span,
@@ -642,7 +642,7 @@ fn build_filter_body(span: Span) -> Box<ast::Block> {
             binder: ast::ClosureBinder::NotPresent,
             capture_clause: ast::CaptureBy::Ref,
             constness: ast::Const::No,
-            coroutine_kind: None,
+            coroutine_marker: None,
             movability: ast::Movability::Movable,
             fn_decl: Box::new(ast::FnDecl {
                 inputs: ThinVec::from([x_param]),

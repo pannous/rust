@@ -107,6 +107,7 @@ pub enum TokenType {
     KwMod,
     KwMove,
     KwMut,
+    KwPin,
     KwPub,
     KwRaw,
     KwRef,
@@ -248,6 +249,7 @@ impl TokenType {
             KwMod,
             KwMove,
             KwMut,
+            KwPin,
             KwPub,
             KwRaw,
             KwRef,
@@ -325,6 +327,7 @@ impl TokenType {
             TokenType::KwMod => Some(kw::Mod),
             TokenType::KwMove => Some(kw::Move),
             TokenType::KwMut => Some(kw::Mut),
+            TokenType::KwPin => Some(kw::Pin),
             TokenType::KwPub => Some(kw::Pub),
             TokenType::KwRaw => Some(kw::Raw),
             TokenType::KwRef => Some(kw::Ref),
@@ -543,6 +546,7 @@ macro_rules! exp {
     (Mod)            => { exp!(@kw, Mod,        KwMod) };
     (Move)           => { exp!(@kw, Move,       KwMove) };
     (Mut)            => { exp!(@kw, Mut,        KwMut) };
+    (Pin)            => { exp!(@kw, Pin,        KwMut) };
     (Pub)            => { exp!(@kw, Pub,        KwPub) };
     (Raw)            => { exp!(@kw, Raw,        KwRaw) };
     (Ref)            => { exp!(@kw, Ref,        KwRef) };

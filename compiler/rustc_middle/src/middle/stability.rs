@@ -9,11 +9,11 @@ use rustc_feature::GateIssue;
 use rustc_hir::attrs::{DeprecatedSince, Deprecation};
 use rustc_hir::def_id::{DefId, LocalDefId};
 use rustc_hir::{self as hir, ConstStability, DefaultBodyStability, HirId, Stability};
+use rustc_lint_defs::builtin::{DEPRECATED, DEPRECATED_IN_FUTURE};
+use rustc_lint_defs::{DeprecatedSinceKind, Lint};
 use rustc_macros::{Decodable, Encodable, StableHash, Subdiagnostic};
 use rustc_session::Session;
-use rustc_session::errors::feature_err_issue;
-use rustc_session::lint::builtin::{DEPRECATED, DEPRECATED_IN_FUTURE};
-use rustc_session::lint::{DeprecatedSinceKind, Lint};
+use rustc_session::diagnostics::feature_err_issue;
 use rustc_span::{Span, Symbol, sym};
 use tracing::debug;
 
@@ -102,7 +102,7 @@ fn deprecation_lint(is_in_effect: bool) -> &'static Lint {
     style = "verbose",
     applicability = "machine-applicable"
 )]
-pub struct DeprecationSuggestion {
+pub(crate) struct DeprecationSuggestion {
     #[primary_span]
     pub span: Span,
 
@@ -110,7 +110,7 @@ pub struct DeprecationSuggestion {
     pub suggestion: Symbol,
 }
 
-pub struct Deprecated {
+pub(crate) struct Deprecated {
     pub sub: Option<DeprecationSuggestion>,
 
     pub kind: String,

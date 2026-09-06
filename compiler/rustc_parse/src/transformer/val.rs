@@ -49,29 +49,24 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
             attrs: ThinVec::new(),
             id: ast::DUMMY_NODE_ID,
             span: def_site,
-            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
             ident: Ident::new(name, call_site),
             data: ast::VariantData::Tuple(
                 ThinVec::from([ast::FieldDef {
                     attrs: ThinVec::new(),
                     id: ast::DUMMY_NODE_ID,
                     span: def_site,
-                    vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
-                    mut_restriction: ast::MutRestriction {
-                        kind: ast::RestrictionKind::Unrestricted,
-                        span: def_site,
-                        tokens: None,
-                    },
+                    vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
+                    // `safety`, `mut_restriction` and `default` now live in `extras`; `None`
+                    // yields the same defaults this used to spell out.
+                    extras: None,
                     ident: None,
                     ty: Box::new(ast::Ty {
                         id: ast::DUMMY_NODE_ID,
                         kind: field_ty,
                         span: call_site,
-                        tokens: None,
                     }),
                     is_placeholder: false,
-                    safety: ast::Safety::Default,
-                    default: None,
                 }]),
                 ast::DUMMY_NODE_ID,
             ),
@@ -86,7 +81,7 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
             attrs: ThinVec::new(),
             id: ast::DUMMY_NODE_ID,
             span: def_site,
-            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
             ident: Ident::new(name, call_site),
             data: ast::VariantData::Unit(ast::DUMMY_NODE_ID),
             disr_expr: None,
@@ -109,11 +104,9 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
                         id: ast::DUMMY_NODE_ID,
                         kind: val_ty,
                         span: call_site,
-                        tokens: None,
                     })))]),
                 }))),
             }]),
-            tokens: None,
         },
     );
 
@@ -135,7 +128,7 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
         attrs: ThinVec::from([allow_dead_code, derive_attr]),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Enum(Ident::new(sym::Val, call_site), ast::Generics::default(), enum_def),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -143,14 +136,13 @@ fn build_val_enum(def_site: Span, call_site: Span, allow_dead_code: ast::Attribu
 
 /// Create #[derive(Trait1, Trait2, ...)] attribute
 fn create_derive_attr(span: Span, traits: &[rustc_span::Symbol]) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::{AttrArgs, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
     use rustc_ast::token::{IdentIsRaw, TokenKind};
     use rustc_ast::tokenstream::{TokenStream, TokenTree};
 
     let path = Path {
         span,
         segments: ThinVec::from([PathSegment::from_ident(Ident::new(sym::derive, span))]),
-        tokens: None,
     };
 
     // Build token stream for traits: Clone, Debug
@@ -173,8 +165,8 @@ fn create_derive_attr(span: Span, traits: &[rustc_span::Symbol]) -> ast::Attribu
             item: ast::AttrItem {
                 unsafety: Safety::Default,
                 path,
-                args: AttrItemKind::Unparsed(args),
-                tokens: None,
+                args: args,
+                span,
             },
             tokens: None,
         })),
@@ -233,7 +225,6 @@ fn build_val_display_impl(def_site: Span, call_site: Span) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span: def_site,
-        tokens: None,
     });
 
     let fn_def = ast::Fn {
@@ -244,14 +235,14 @@ fn build_val_display_impl(def_site: Span, call_site: Span) -> Box<ast::Item> {
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     let impl_item = Box::new(ast::Item {
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     });
@@ -264,14 +255,12 @@ fn build_val_display_impl(def_site: Span, call_site: Span) -> Box<ast::Item> {
             ast::PathSegment::from_ident(Ident::new(sym::fmt, call_site)),
             ast::PathSegment::from_ident(Ident::new(sym::Display, call_site)),
         ]),
-        tokens: None,
     };
 
     let val_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::Val, call_site))),
         span: call_site,
-        tokens: None,
     });
 
     let impl_def = ast::Impl {
@@ -291,7 +280,7 @@ fn build_val_display_impl(def_site: Span, call_site: Span) -> Box<ast::Item> {
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Impl(impl_def),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -317,7 +306,6 @@ fn build_display_fn_sig(def_site: Span, call_site: Span) -> ast::FnSig {
                 }))),
             },
         ]),
-        tokens: None,
     };
 
     let formatter_ty = Box::new(ast::Ty {
@@ -329,13 +317,11 @@ fn build_display_fn_sig(def_site: Span, call_site: Span) -> ast::FnSig {
                     id: ast::DUMMY_NODE_ID,
                     kind: ast::TyKind::Path(None, formatter_path),
                     span: call_site,
-                    tokens: None,
                 }),
                 mutbl: ast::Mutability::Mut,
             },
         ),
         span: call_site,
-        tokens: None,
     });
 
     // Build std::fmt::Result type
@@ -346,14 +332,12 @@ fn build_display_fn_sig(def_site: Span, call_site: Span) -> ast::FnSig {
             ast::PathSegment::from_ident(Ident::new(sym::fmt, call_site)),
             ast::PathSegment::from_ident(Ident::new(sym::Result, call_site)),
         ]),
-        tokens: None,
     };
 
     let result_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, result_path),
         span: call_site,
-        tokens: None,
     });
 
     ast::FnSig {
@@ -371,13 +355,11 @@ fn build_display_fn_sig(def_site: Span, call_site: Span) -> ast::FnSig {
                                     id: ast::DUMMY_NODE_ID,
                                     kind: ast::TyKind::ImplicitSelf,
                                     span: def_site,
-                                    tokens: None,
                                 }),
                                 mutbl: ast::Mutability::Not,
                             },
                         ),
                         span: def_site,
-                        tokens: None,
                     }),
                     pat: Box::new(ast::Pat {
                         id: ast::DUMMY_NODE_ID,
@@ -387,7 +369,6 @@ fn build_display_fn_sig(def_site: Span, call_site: Span) -> ast::FnSig {
                             None,
                         ),
                         span: def_site,
-                        tokens: None,
                     }),
                     id: ast::DUMMY_NODE_ID,
                     span: def_site,
@@ -405,7 +386,6 @@ fn build_display_fn_sig(def_site: Span, call_site: Span) -> ast::FnSig {
                             None,
                         ),
                         span: call_site,
-                        tokens: None,
                     }),
                     id: ast::DUMMY_NODE_ID,
                     span: call_site,
@@ -459,7 +439,6 @@ fn build_val_match_arm(
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(variant, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
@@ -470,14 +449,12 @@ fn build_val_match_arm(
             None,
         ),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // Body: write!(f, "{}" or "{:?}", binding)
@@ -511,14 +488,12 @@ fn build_val_nil_match_arm(span: Span, f_expr: &Box<ast::Expr>) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Nil, span)),
         ]),
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Path(None, pat_path),
         span,
-        tokens: None,
     });
 
     // Body: write!(f, "nil")
@@ -824,13 +799,11 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
                                     id: ast::DUMMY_NODE_ID,
                                     kind: ast::TyKind::ImplicitSelf,
                                     span: def_site,
-                                    tokens: None,
                                 }),
                                 mutbl: ast::Mutability::Not,
                             },
                         ),
                         span: def_site,
-                        tokens: None,
                     }),
                     pat: Box::new(ast::Pat {
                         id: ast::DUMMY_NODE_ID,
@@ -840,7 +813,6 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
                             None,
                         ),
                         span: def_site,
-                        tokens: None,
                     }),
                     id: ast::DUMMY_NODE_ID,
                     span: def_site,
@@ -859,7 +831,6 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
                             },
                         ),
                         span: call_site,
-                        tokens: None,
                     }),
                     pat: Box::new(ast::Pat {
                         id: ast::DUMMY_NODE_ID,
@@ -869,7 +840,6 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
                             None,
                         ),
                         span: call_site,
-                        tokens: None,
                     }),
                     id: ast::DUMMY_NODE_ID,
                     span: call_site,
@@ -880,7 +850,6 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
                 id: ast::DUMMY_NODE_ID,
                 kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
                 span: call_site,
-                tokens: None,
             })),
         }),
         header: ast::FnHeader::default(),
@@ -896,7 +865,6 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span: def_site,
-        tokens: None,
     });
 
     let fn_def = ast::Fn {
@@ -907,14 +875,14 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     let impl_item = Box::new(ast::Item {
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     });
@@ -932,14 +900,12 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
                 ))]),
             }))),
         }]),
-        tokens: None,
     };
 
     let val_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::Val, call_site))),
         span: call_site,
-        tokens: None,
     });
 
     let impl_def = ast::Impl {
@@ -959,7 +925,7 @@ fn build_val_partial_eq_char(def_site: Span, call_site: Span) -> Box<ast::Item> 
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Impl(impl_def),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -973,21 +939,18 @@ fn build_partial_eq_char_str_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Str, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::s, span), None),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // s == &other.to_string()
@@ -1059,7 +1022,6 @@ fn build_partial_eq_wildcard_arm(span: Span) -> ast::Arm {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Wild,
         span,
-        tokens: None,
     });
 
     let body = Box::new(ast::Expr {
@@ -1093,7 +1055,6 @@ fn build_val_variant_call(span: Span, variant: rustc_span::Symbol, inner: Box<as
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(variant, span)),
         ]),
-        tokens: None,
     };
 
     Box::new(ast::Expr {
@@ -1144,7 +1105,6 @@ pub fn build_simple_ty(span: Span, name: rustc_span::Symbol) -> Box<ast::Ty> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(name, span))),
         span,
-        tokens: None,
     })
 }
 
@@ -1159,13 +1119,11 @@ fn build_str_ref_ty(span: Span) -> Box<ast::Ty> {
                     id: ast::DUMMY_NODE_ID,
                     kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, span))),
                     span,
-                    tokens: None,
                 }),
                 mutbl: ast::Mutability::Not,
             },
         ),
         span,
-        tokens: None,
     })
 }
 
@@ -1191,7 +1149,6 @@ fn build_from_impl(
                         None,
                     ),
                     span: call_site,
-                    tokens: None,
                 }),
                 id: ast::DUMMY_NODE_ID,
                 span: call_site,
@@ -1201,7 +1158,6 @@ fn build_from_impl(
                 id: ast::DUMMY_NODE_ID,
                 kind: ast::TyKind::ImplicitSelf,
                 span: call_site,
-                tokens: None,
             })),
         }),
         header: ast::FnHeader::default(),
@@ -1217,7 +1173,6 @@ fn build_from_impl(
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span: def_site,
-        tokens: None,
     });
 
     let fn_def = ast::Fn {
@@ -1228,14 +1183,14 @@ fn build_from_impl(
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     let impl_item = Box::new(ast::Item {
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     });
@@ -1251,14 +1206,12 @@ fn build_from_impl(
                 args: ThinVec::from([ast::AngleBracketedArg::Arg(ast::GenericArg::Type(from_ty))]),
             }))),
         }]),
-        tokens: None,
     };
 
     let val_ty = Box::new(ast::Ty {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::Val, call_site))),
         span: call_site,
-        tokens: None,
     });
 
     let impl_def = ast::Impl {
@@ -1278,7 +1231,7 @@ fn build_from_impl(
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Impl(impl_def),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -1341,13 +1294,11 @@ fn build_val_truthy_impl(
                                 id: ast::DUMMY_NODE_ID,
                                 kind: ast::TyKind::ImplicitSelf,
                                 span: def_site,
-                                tokens: None,
                             }),
                             mutbl: ast::Mutability::Not,
                         },
                     ),
                     span: def_site,
-                    tokens: None,
                 }),
                 pat: Box::new(ast::Pat {
                     id: ast::DUMMY_NODE_ID,
@@ -1357,7 +1308,6 @@ fn build_val_truthy_impl(
                         None,
                     ),
                     span: def_site,
-                    tokens: None,
                 }),
                 id: ast::DUMMY_NODE_ID,
                 span: def_site,
@@ -1367,7 +1317,6 @@ fn build_val_truthy_impl(
                 id: ast::DUMMY_NODE_ID,
                 kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
                 span: call_site,
-                tokens: None,
             })),
         }),
         header: ast::FnHeader::default(),
@@ -1383,7 +1332,6 @@ fn build_val_truthy_impl(
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span: def_site,
-        tokens: None,
     });
 
     let fn_def = ast::Fn {
@@ -1394,14 +1342,14 @@ fn build_val_truthy_impl(
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     let impl_item = Box::new(ast::Item {
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::AssocItemKind::Fn(Box::new(fn_def)),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     });
@@ -1410,7 +1358,6 @@ fn build_val_truthy_impl(
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::Val, call_site))),
         span: call_site,
-        tokens: None,
     });
 
     let impl_def = ast::Impl {
@@ -1430,7 +1377,7 @@ fn build_val_truthy_impl(
         attrs: ThinVec::new(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Impl(impl_def),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -1444,14 +1391,12 @@ fn build_truthy_nil_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Nil, span)),
         ]),
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Path(None, pat_path),
         span,
-        tokens: None,
     });
 
     let body = Box::new(ast::Expr {
@@ -1485,21 +1430,18 @@ fn build_truthy_bool_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Bool, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::__b, span), None),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // *__b
@@ -1539,21 +1481,18 @@ fn build_truthy_int_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Int, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::__n, span), None),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // *__n != 0
@@ -1617,21 +1556,18 @@ fn build_truthy_float_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Float, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::f, span), None),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // *f != 0.0
@@ -1695,21 +1631,18 @@ fn build_truthy_str_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::Str, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::s, span), None),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // !s.is_empty()
@@ -1761,21 +1694,18 @@ fn build_truthy_list_arm(span: Span) -> ast::Arm {
             ast::PathSegment::from_ident(Ident::new(sym::Val, span)),
             ast::PathSegment::from_ident(Ident::new(sym::List, span)),
         ]),
-        tokens: None,
     };
 
     let binding_pat = ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::Ident(ast::BindingMode::NONE, Ident::new(sym::__v, span), None),
         span,
-        tokens: None,
     };
 
     let pat = Box::new(ast::Pat {
         id: ast::DUMMY_NODE_ID,
         kind: ast::PatKind::TupleStruct(None, pat_path, ThinVec::from([binding_pat])),
         span,
-        tokens: None,
     });
 
     // !__v.is_empty()

@@ -137,7 +137,8 @@ impl<'db> MirLowerCtx<'_, 'db> {
             }
             Pat::Wild => (current, current_else),
             Pat::Tuple { args, ellipsis } => {
-                let subst = match self.infer.pat_ty(pattern).kind() {
+                let place_ty = cond_place.ty(&self.result, &self.infcx, self.env).ty;
+                let subst = match place_ty.kind() {
                     TyKind::Tuple(s) => s,
                     _ => {
                         return Err(MirLowerError::TypeError(
@@ -490,6 +491,12 @@ impl<'db> MirLowerCtx<'_, 'db> {
                 )?
             }
             Pat::Ref { pat, mutability: _ } => {
+                let ty = cond_place.ty(&self.result, &self.infcx, self.env).ty;
+                if !ty.is_ref() {
+                    return Err(MirLowerError::TypeError(
+                        "non reference type matched with reference pattern",
+                    ));
+                }
                 let cond_place = cond_place.project(ProjectionElem::Deref);
                 self.pattern_match_inner(current, current_else, cond_place, *pat, mode)?
             }
@@ -601,6 +608,14 @@ impl<'db> MirLowerCtx<'_, 'db> {
         shape: AdtPatternShape<'_>,
         mode: MatchingMode,
     ) -> Result<'db, (BasicBlockId, Option<BasicBlockId>)> {
+        let place_ty = cond_place.ty(&self.result, &self.infcx, self.env).ty;
+        let Some((place_adt, _)) = place_ty.as_adt() else {
+            return Err(MirLowerError::TypeError("non ADT type matched with ADT pattern"));
+        };
+        if place_adt != variant.adt_id(self.db) {
+            return Err(MirLowerError::TypeError("ADT pattern does not match place type"));
+        }
+
         Ok(match variant {
             VariantId::EnumVariantId(v) => {
                 if mode == MatchingMode::Check {

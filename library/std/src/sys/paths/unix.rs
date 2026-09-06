@@ -47,7 +47,7 @@ pub fn getcwd() -> io::Result<PathBuf> {
 
 #[cfg(target_os = "espidf")]
 pub fn chdir(_p: &path::Path) -> io::Result<()> {
-    crate::sys::pal::unsupported::unsupported()
+    crate::sys::pal::unsupported()
 }
 
 #[cfg(not(target_os = "espidf"))]
@@ -285,7 +285,7 @@ pub fn current_exe() -> io::Result<PathBuf> {
 #[cfg(any(target_os = "nto", target_os = "qnx"))]
 pub fn current_exe() -> io::Result<PathBuf> {
     let mut e = crate::fs::read("/proc/self/exefile")?;
-    // Current versions of QNX Neutrino provide a null-terminated path.
+    // Current versions of QNX SDP provide a null-terminated path.
     // Ensure the trailing null byte is not returned here.
     if let Some(0) = e.last() {
         e.pop();
@@ -385,7 +385,7 @@ pub fn current_exe() -> io::Result<PathBuf> {
 
 #[cfg(any(target_os = "espidf", target_os = "horizon", target_os = "vita"))]
 pub fn current_exe() -> io::Result<PathBuf> {
-    crate::sys::pal::unsupported::unsupported()
+    crate::sys::pal::unsupported()
 }
 
 #[cfg(target_os = "fuchsia")]

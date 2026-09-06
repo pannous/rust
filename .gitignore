@@ -25,6 +25,7 @@ Session.vim
 .vim/
 .helix/
 .zed/
+.gram/
 .favorites.json
 .settings/
 .vs/

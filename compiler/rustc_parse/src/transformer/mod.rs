@@ -25,12 +25,11 @@ pub use val::build_simple_ty;
 
 /// Create #[no_mangle] attribute for exported functions
 pub fn create_no_mangle_attr(span: Span) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::{AttrArgs, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
 
     let path = Path {
         span,
         segments: vec![PathSegment::from_ident(Ident::new(sym::no_mangle, span))].into(),
-        tokens: None,
     };
 
     ast::Attribute {
@@ -38,8 +37,8 @@ pub fn create_no_mangle_attr(span: Span) -> ast::Attribute {
             item: ast::AttrItem {
                 unsafety: Safety::Default,
                 path,
-                args: AttrItemKind::Unparsed(AttrArgs::Empty),
-                tokens: None,
+                args: AttrArgs::Empty,
+                span,
             },
             tokens: None,
         })),
@@ -51,7 +50,7 @@ pub fn create_no_mangle_attr(span: Span) -> ast::Attribute {
 
 /// Create #[allow(lint_name)] attribute for suppressing warnings
 pub fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::{AttrArgs, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
 
     let path = Path {
         span,
@@ -59,7 +58,6 @@ pub fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attr
             PathSegment::from_ident(Ident::new(sym::allow, span)),
         ]
         .into(),
-        tokens: None,
     };
 
     let args = AttrArgs::Delimited(ast::DelimArgs {
@@ -80,8 +78,8 @@ pub fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attr
             item: ast::AttrItem {
                 unsafety: Safety::Default,
                 path,
-                args: AttrItemKind::Unparsed(args),
-                tokens: None
+                args: args,
+                span,
             },
             tokens: None
         })),
@@ -93,14 +91,13 @@ pub fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attr
 
 /// Create #[derive(Trait1, Trait2, ...)] attribute
 pub fn create_derive_attr(span: Span, traits: &[rustc_span::Symbol]) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::{AttrArgs, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
     use rustc_ast::token::{IdentIsRaw, TokenKind};
     use rustc_ast::tokenstream::{TokenStream, TokenTree};
 
     let path = Path {
         span,
         segments: vec![PathSegment::from_ident(Ident::new(sym::derive, span))].into(),
-        tokens: None,
     };
 
     let mut tokens = Vec::new();
@@ -122,8 +119,8 @@ pub fn create_derive_attr(span: Span, traits: &[rustc_span::Symbol]) -> ast::Att
             item: ast::AttrItem {
                 unsafety: Safety::Default,
                 path,
-                args: AttrItemKind::Unparsed(args),
-                tokens: None,
+                args: args,
+                span,
             },
             tokens: None,
         })),

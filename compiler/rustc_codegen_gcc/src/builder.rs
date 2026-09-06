@@ -36,7 +36,7 @@ use rustc_target::spec::{HasTargetSpec, HasX86AbiOpt, Target, X86Abi};
 use crate::abi::FnAbiGccExt;
 use crate::common::{SignType, TypeReflection, type_is_pointer};
 use crate::context::CodegenCx;
-use crate::errors;
+use crate::diagnostics;
 use crate::intrinsic::llvm;
 use crate::type_of::LayoutGccExt;
 
@@ -81,8 +81,13 @@ impl<'a, 'gcc, 'tcx> Builder<'a, 'gcc, 'tcx> {
             AtomicOrdering::AcqRel | AtomicOrdering::Release => AtomicOrdering::Acquire,
             _ => order,
         };
-        let previous_value =
-            self.atomic_load(dst.get_type(), dst, load_ordering, Size::from_bytes(size));
+        let previous_value = self.atomic_load(
+            dst.get_type(),
+            dst,
+            load_ordering,
+            /* volatile */ false,
+            Size::from_bytes(size),
+        );
         let previous_var =
             func.new_local(self.location, previous_value.get_type(), "previous_value");
         let return_value = func.new_local(self.location, previous_value.get_type(), "return_value");
@@ -1008,6 +1013,7 @@ impl<'a, 'gcc, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'gcc, 'tcx> {
         _ty: Type<'gcc>,
         ptr: RValue<'gcc>,
         order: AtomicOrdering,
+        _volatile: bool, // FIXME we are always making the load volatile
         size: Size,
     ) -> RValue<'gcc> {
         // FIXME(antoyo): use ty.
@@ -1054,7 +1060,7 @@ impl<'a, 'gcc, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'gcc, 'tcx> {
         let val = if place.val.llextra.is_some() {
             // FIXME: Merge with the `else` below?
             OperandValue::Ref(place.val)
-        } else if place.layout.is_gcc_immediate() {
+        } else if place.layout.backend_repr.is_scalar_or_simd() {
             let load = self.load(place.layout.gcc_type(self), place.val.llval, place.val.align);
             OperandValue::Immediate(
                 if let abi::BackendRepr::Scalar(ref scalar) = place.layout.backend_repr {
@@ -1064,9 +1070,9 @@ impl<'a, 'gcc, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'gcc, 'tcx> {
                     load
                 },
             )
-        } else if let abi::BackendRepr::ScalarPair(ref a, ref b) = place.layout.backend_repr {
-            let b_offset = a.size(self).align_to(b.default_align(self).abi);
-
+        } else if let abi::BackendRepr::ScalarPair { ref a, ref b, b_offset } =
+            place.layout.backend_repr
+        {
             let mut load = |i, scalar: &abi::Scalar, align| {
                 let ptr = if i == 0 {
                     place.val.llval
@@ -1155,7 +1161,7 @@ impl<'a, 'gcc, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'gcc, 'tcx> {
         // NOTE: libgccjit does not support specifying the alignment on the assignment, so we cast
         // to type so it gets the proper alignment.
         let destination_type = destination.to_rvalue().get_type().unqualified();
-        let align = if flags.contains(MemFlags::UNALIGNED) { 1 } else { align.bytes() };
+        let align = align.bytes();
         let mut modified_destination_type = destination_type.get_aligned(align);
         if flags.contains(MemFlags::VOLATILE) {
             modified_destination_type = modified_destination_type.make_volatile();
@@ -1177,6 +1183,7 @@ impl<'a, 'gcc, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'gcc, 'tcx> {
         value: RValue<'gcc>,
         ptr: RValue<'gcc>,
         order: AtomicOrdering,
+        _volatile: bool, // FIXME we are always making the store volatile
         size: Size,
     ) {
         // FIXME(antoyo): handle alignment.
@@ -1803,7 +1810,7 @@ impl<'a, 'gcc, 'tcx> BuilderMethods<'a, 'tcx> for Builder<'a, 'gcc, 'tcx> {
         _instance: Option<Instance<'tcx>>,
     ) {
         // FIXME: implement support for explicit tail calls like rustc_codegen_llvm.
-        self.tcx.dcx().emit_fatal(errors::ExplicitTailCallsUnsupported);
+        self.tcx.dcx().emit_fatal(diagnostics::ExplicitTailCallsUnsupported);
     }
 
     fn zext(&mut self, value: RValue<'gcc>, dest_typ: Type<'gcc>) -> RValue<'gcc> {

@@ -100,7 +100,7 @@ enum UnsafeDiagnostic {
 
 pub fn unsafe_operations_for_body(
     db: &dyn HirDatabase,
-    infer: &InferenceResult,
+    infer: &InferenceResult<'_>,
     def: DefWithBodyId,
     body: &Body,
     callback: &mut dyn FnMut(ExprOrPatId),
@@ -119,7 +119,7 @@ pub fn unsafe_operations_for_body(
 
 pub fn unsafe_operations(
     db: &dyn HirDatabase,
-    infer: &InferenceResult,
+    infer: &InferenceResult<'_>,
     def: ExpressionStoreOwnerId,
     body: &ExpressionStore,
     current: ExprId,
@@ -137,7 +137,7 @@ pub fn unsafe_operations(
 
 struct UnsafeVisitor<'db> {
     db: &'db dyn HirDatabase,
-    infer: &'db InferenceResult,
+    infer: &'db InferenceResult<'db>,
     body: &'db ExpressionStore,
     resolver: Resolver<'db>,
     def: ExpressionStoreOwnerId,
@@ -156,7 +156,7 @@ struct UnsafeVisitor<'db> {
 impl<'db> UnsafeVisitor<'db> {
     fn new(
         db: &'db dyn HirDatabase,
-        infer: &'db InferenceResult,
+        infer: &'db InferenceResult<'db>,
         body: &'db ExpressionStore,
         def: ExpressionStoreOwnerId,
         unsafe_expr_cb: &'db mut dyn FnMut(UnsafeDiagnostic),
@@ -315,9 +315,7 @@ impl<'db> UnsafeVisitor<'db> {
                     // https://github.com/rust-lang/rust/pull/129248
                     // Taking a raw ref to a deref place expr is always safe.
                     Expr::UnaryOp { expr, op: UnaryOp::Deref } => {
-                        self.body
-                            .walk_child_exprs_without_pats(expr, |child| self.walk_expr(child));
-
+                        self.walk_expr(expr);
                         return;
                     }
                     _ => (),

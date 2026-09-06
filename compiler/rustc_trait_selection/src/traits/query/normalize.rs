@@ -3,7 +3,6 @@
 //! `normalize_canonicalized_projection` query when it encounters projections.
 
 use rustc_data_structures::sso::SsoHashMap;
-use rustc_data_structures::stack::ensure_sufficient_stack;
 use rustc_infer::traits::PredicateObligations;
 use rustc_macros::extension;
 pub use rustc_middle::traits::query::NormalizationResult;
@@ -220,7 +219,7 @@ impl<'a, 'tcx> FallibleTypeFolder<TyCtxt<'tcx>> for QueryNormalizer<'a, 'tcx> {
                     | TypingMode::PostTypeckUntilBorrowck { .. }
                     | TypingMode::PostBorrowck { .. } => ty.try_super_fold_with(self)?,
 
-                    TypingMode::PostAnalysis | TypingMode::Codegen => {
+                    TypingMode::Reflection | TypingMode::PostAnalysis | TypingMode::Codegen => {
                         let args = data.args.try_fold_with(self)?;
                         let recursion_limit = self.cx().recursion_limit();
 
@@ -248,7 +247,7 @@ impl<'a, 'tcx> FallibleTypeFolder<TyCtxt<'tcx>> for QueryNormalizer<'a, 'tcx> {
                                 "recursive opaque type",
                             );
                         }
-                        let folded_ty = ensure_sufficient_stack(|| self.try_fold_ty(concrete_ty));
+                        let folded_ty = self.try_fold_ty(concrete_ty);
                         self.anon_depth -= 1;
                         folded_ty?
                     }
@@ -332,7 +331,9 @@ impl<'a, 'tcx> QueryNormalizer<'a, 'tcx> {
             ty::AliasTermKind::FreeTy { .. } | ty::AliasTermKind::FreeConst { .. } => {
                 tcx.normalize_canonicalized_free_alias(c_term)
             }
-            ty::AliasTermKind::InherentTy { .. } | ty::AliasTermKind::InherentConst { .. } => {
+            ty::AliasTermKind::InherentTy { .. }
+            | ty::AliasTermKind::InherentConstSelf { .. }
+            | ty::AliasTermKind::InherentConstImpl { .. } => {
                 tcx.normalize_canonicalized_inherent_projection(c_term)
             }
             kind @ (ty::AliasTermKind::OpaqueTy { .. } | ty::AliasTermKind::AnonConst { .. }) => {
@@ -376,7 +377,7 @@ impl<'a, 'tcx> QueryNormalizer<'a, 'tcx> {
         // of type/const and we need to continue folding it to reveal the TAIT behind it
         // or further normalize nested alias consts.
         if res != term.to_term(tcx, ty::IsRigid::No)
-            && (res.has_type_flags(ty::TypeFlags::HAS_CT_PROJECTION)
+            && (res.has_type_flags(ty::TypeFlags::HAS_CONST_ALIAS)
                 || matches!(
                     term.kind,
                     ty::AliasTermKind::FreeTy { .. } | ty::AliasTermKind::FreeConst { .. }

@@ -14,3 +14,5 @@ Before and after your work do
 and 
 git diff test-results.log | grep "\-✓"
 To get the base line and make sure that no regression occurred. 
+
+@AGENTS.md

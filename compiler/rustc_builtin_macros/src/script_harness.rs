@@ -115,11 +115,10 @@ fn build_use_statements(span: Span) -> ThinVec<Box<ast::Item>> {
                     ast::PathSegment::from_ident(Ident::new(sym::collections, span)),
                     ast::PathSegment::from_ident(Ident::new(sym::HashMap, span)),
                 ],
-                tokens: None,
             },
             kind: ast::UseTreeKind::Simple(None),
         }),
-        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited },
         span,
         tokens: None,
     });
@@ -150,7 +149,7 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
                 bounds: ThinVec::new(),
                 ty: Some(transformer::build_simple_ty(span, target)),
             })),
-            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited },
             span,
             tokens: None,
         })
@@ -170,13 +169,11 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
                         id: ast::DUMMY_NODE_ID,
                         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::str, span))),
                         span,
-                        tokens: None,
                     }),
                     mutbl: ast::Mutability::Not,
                 },
             ),
             span,
-            tokens: None,
         });
         Box::new(ast::Item {
             attrs: ThinVec::new(),
@@ -193,7 +190,7 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
                 bounds: ThinVec::new(),
                 ty: Some(str_ref_ty),
             })),
-            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited, tokens: None },
+            vis: ast::Visibility { span, kind: ast::VisibilityKind::Inherited },
             span,
             tokens: None,
         })
@@ -213,7 +210,7 @@ fn build_type_aliases(span: Span) -> ThinVec<Box<ast::Item>> {
 
 /// Create #[allow(lint_name)] attribute for suppressing warnings
 fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::{AttrArgs, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
 
     let path = Path {
         span,
@@ -221,7 +218,6 @@ fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribut
             PathSegment::from_ident(Ident::new(sym::allow, span)),
         ]
         .into(),
-        tokens: None,
     };
 
     let args = AttrArgs::Delimited(ast::DelimArgs {
@@ -242,8 +238,8 @@ fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribut
             item: ast::AttrItem {
                 unsafety: Safety::Default,
                 path,
-                args: AttrItemKind::Unparsed(args),
-                tokens: None
+                args: args,
+                span,
             },
             tokens: None
         })),
@@ -257,7 +253,7 @@ fn create_allow_attr(span: Span, lint_name: rustc_span::Symbol) -> ast::Attribut
 
 /// Create #[derive(Debug, Clone, PartialEq)] attribute for script mode types
 fn create_derive_attr(span: Span) -> ast::Attribute {
-    use rustc_ast::{AttrArgs, AttrItemKind, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
+    use rustc_ast::{AttrArgs, AttrKind, AttrStyle, NormalAttr, Path, PathSegment, Safety};
     use rustc_ast::token::{IdentIsRaw, TokenKind};
     use rustc_ast::tokenstream::{TokenStream, TokenTree};
 
@@ -267,7 +263,6 @@ fn create_derive_attr(span: Span) -> ast::Attribute {
             PathSegment::from_ident(Ident::new(sym::derive, span)),
         ]
         .into(),
-        tokens: None,
     };
 
     // Build tokens: Debug, Clone, PartialEq (not Copy since String fields prevent it)
@@ -290,8 +285,8 @@ fn create_derive_attr(span: Span) -> ast::Attribute {
             item: ast::AttrItem {
                 unsafety: Safety::Default,
                 path,
-                args: AttrItemKind::Unparsed(args),
-                tokens: None
+                args: args,
+                span,
             },
             tokens: None
         })),
@@ -349,7 +344,8 @@ fn partition_items(
             | ast::ItemKind::Const(_)
             | ast::ItemKind::ConstBlock(_)
             | ast::ItemKind::Delegation(_)
-            | ast::ItemKind::DelegationMac(_) => {
+            | ast::ItemKind::DelegationMac(_)
+            | ast::ItemKind::TestBinderConstraints(_) => {
                 module_items.push(item.clone());
             }
 
@@ -384,7 +380,6 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Tup(ThinVec::new()),
         span,
-        tokens: None,
     });
 
     let decl = Box::new(ast::FnDecl {
@@ -404,7 +399,6 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span,
-        tokens: None,
     });
 
     let main_fn = ast::ItemKind::Fn(Box::new(ast::Fn {
@@ -415,7 +409,7 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
         contract: None,
         body: Some(main_body),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     }));
 
     // Suppress common warnings in script mode for convenience
@@ -427,7 +421,7 @@ fn build_main(span: Span, stmts: ThinVec<ast::Stmt>) -> Box<ast::Item> {
         attrs: vec![allow_unused_mut, allow_unused_variables].into(),
         id: ast::DUMMY_NODE_ID,
         kind: main_fn,
-        vis: ast::Visibility { span, kind: ast::VisibilityKind::Public, tokens: None },
+        vis: ast::Visibility { span, kind: ast::VisibilityKind::Public },
         span,
         tokens: None,
     })

@@ -140,7 +140,7 @@ fn build_truthy_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
         contract: None,
         body: None, // No body for trait method signature
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     items.push(Box::new(ast::Item {
@@ -638,7 +638,7 @@ fn build_truthy_impl_with_ty(
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     let impl_item = Box::new(ast::Item {
@@ -749,7 +749,7 @@ fn build_truthy_impl_with_ty_and_generics(
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     let impl_item = Box::new(ast::Item {

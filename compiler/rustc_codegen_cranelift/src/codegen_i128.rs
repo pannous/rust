@@ -25,6 +25,8 @@ pub(crate) fn maybe_codegen<'tcx>(
         BinOp::Add | BinOp::AddUnchecked | BinOp::Sub | BinOp::SubUnchecked => None,
         BinOp::Mul | BinOp::MulUnchecked => None,
         BinOp::Offset => unreachable!("offset should only be used on pointers, not 128bit ints"),
+        // This fork's `**` operator is only implemented in the default backend (`bx.int_pow`).
+        BinOp::Pow => unimplemented!("`**` (Pow) on 128-bit ints is unsupported by cranelift"),
         BinOp::Div | BinOp::Rem => {
             let name = match (bin_op, is_signed) {
                 (BinOp::Div, false) => "__udivti3",

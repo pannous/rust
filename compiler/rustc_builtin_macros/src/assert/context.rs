@@ -153,7 +153,7 @@ impl<'cx, 'a> Context<'cx, 'a> {
                     } else {
                         format!(
                             "Assertion failed: {escaped_expr_str}\nWith captures:\n{}",
-                            &self.fmt_string
+                            self.fmt_string
                         )
                     }),
                     suffix: None,
@@ -326,6 +326,7 @@ impl<'cx, 'a> Context<'cx, 'a> {
             | ExprKind::Yeet(_)
             | ExprKind::Become(_)
             | ExprKind::Yield(_)
+            | ExprKind::DirectConstArg(_)
             | ExprKind::UnsafeBinderCast(..) => {}
         }
     }

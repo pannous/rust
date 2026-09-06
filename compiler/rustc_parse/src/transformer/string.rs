@@ -176,7 +176,7 @@ pub fn build_debug_string_helper(def_site: Span, call_site: Span) -> Box<ast::It
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {
@@ -355,7 +355,7 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
             contract: None,
             body: None, // No body for trait method signature
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         };
 
         Box::new(ast::Item {
@@ -413,7 +413,7 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
             contract: None,
             body: None,
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         };
 
         Box::new(ast::Item {
@@ -517,7 +517,7 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
             contract: None,
             body: None,
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         };
 
         Box::new(ast::Item {
@@ -618,7 +618,7 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
             contract: None,
             body: None,
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         };
 
         Box::new(ast::Item {
@@ -712,7 +712,7 @@ fn build_str_ext_trait_items(span: Span) -> ThinVec<Box<ast::AssocItem>> {
             contract: None,
             body: None,
             define_opaque: None,
-            eii_impls: ThinVec::new(),
+            eii_impl: None,
         };
 
         Box::new(ast::Item {
@@ -938,7 +938,7 @@ fn build_first_expr(span: Span) -> Box<ast::Expr> {
             binder: ast::ClosureBinder::NotPresent,
             capture_clause: ast::CaptureBy::Ref,
             constness: ast::Const::No,
-            coroutine_kind: None,
+            coroutine_marker: None,
             movability: ast::Movability::Movable,
             fn_decl: Box::new(ast::FnDecl {
                 inputs: ThinVec::from([c_param]),
@@ -1069,7 +1069,7 @@ fn build_last_expr(span: Span) -> Box<ast::Expr> {
             binder: ast::ClosureBinder::NotPresent,
             capture_clause: ast::CaptureBy::Ref,
             constness: ast::Const::No,
-            coroutine_kind: None,
+            coroutine_marker: None,
             movability: ast::Movability::Movable,
             fn_decl: Box::new(ast::FnDecl {
                 inputs: ThinVec::from([c_param]),
@@ -1244,7 +1244,7 @@ fn build_impl_method_with_expr(
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {
@@ -1384,7 +1384,7 @@ fn build_contains_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {
@@ -1548,7 +1548,7 @@ fn build_find_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::Asso
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {
@@ -1716,7 +1716,7 @@ fn build_replace_impl(name: &str, def_site: Span, call_site: Span) -> Box<ast::A
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {

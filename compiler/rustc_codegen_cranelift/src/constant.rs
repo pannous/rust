@@ -131,7 +131,7 @@ pub(crate) fn codegen_const_value<'tcx>(
                     // FIXME avoid this extra copy to the stack and directly write to the final
                     // destination
                     let place = CPlace::new_stack_slot(fx, layout);
-                    place.to_ptr().store(fx, val, MemFlags::trusted());
+                    place.to_ptr().store(fx, val, MemFlagsData::trusted());
                     place.to_cvalue(fx)
                 }
             }
@@ -206,9 +206,10 @@ pub(crate) fn codegen_const_value<'tcx>(
                     }
                 };
                 let val = if offset.bytes() != 0 {
-                    fx.bcx
-                        .ins()
-                        .iadd_imm(base_addr, fx.tcx.truncate_to_target_usize(offset.bytes()) as i64)
+                    fx.bcx.ins().iadd_imm_u(
+                        base_addr,
+                        fx.tcx.truncate_to_target_usize(offset.bytes()) as i64,
+                    )
                 } else {
                     base_addr
                 };
@@ -240,7 +241,7 @@ fn pointer_for_allocation<'tcx>(fx: &mut FunctionCx<'_, '_, 'tcx>, alloc_id: All
     fx.bcx.ins().symbol_value(fx.pointer_type, local_data_id)
 }
 
-fn data_id_for_alloc_id(
+pub(crate) fn data_id_for_alloc_id(
     cx: &mut ConstantCx,
     module: &mut dyn Module,
     alloc_id: AllocId,

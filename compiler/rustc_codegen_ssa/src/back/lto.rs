@@ -8,13 +8,14 @@ use rustc_errors::DiagCtxtHandle;
 use rustc_hir::def_id::{CrateNum, LOCAL_CRATE};
 use rustc_middle::middle::exported_symbols::{ExportedSymbol, SymbolExportInfo, SymbolExportLevel};
 use rustc_middle::ty::TyCtxt;
-use rustc_session::config::{CrateType, Lto};
+use rustc_session::config::Lto;
+use rustc_structures::CrateType;
 use tracing::info;
 
 use crate::back::symbol_export::{self, allocator_shim_symbols, symbol_name_for_instance_in_crate};
 use crate::back::write::CodegenContext;
 use crate::base::allocator_kind_for_codegen;
-use crate::errors::{DynamicLinkingWithLTO, LtoDisallowed, LtoDylib, LtoProcMacro};
+use crate::diagnostics::{DynamicLinkingWithLTO, LtoDisallowed, LtoDylib, LtoProcMacro};
 use crate::traits::*;
 
 pub struct ThinModule<B: WriteBackendMethods> {

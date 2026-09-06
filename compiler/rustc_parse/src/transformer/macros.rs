@@ -171,7 +171,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         id: ast::DUMMY_NODE_ID,
         // Use call_site for the macro name so it's visible to user code
         kind: ast::ItemKind::MacroDef(Ident::new(sym::put, call_site), put_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -220,7 +220,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::printf, call_site), printf_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -270,7 +270,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         id: ast::DUMMY_NODE_ID,
         // Use call_site for the macro name so it's visible to user code
         kind: ast::ItemKind::MacroDef(Ident::new(sym::eq, call_site), eq_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -328,7 +328,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::eqs, call_site), eqs_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -383,7 +383,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::seq, call_site), seq_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -437,7 +437,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::s, call_site), s_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -483,7 +483,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::typeid, call_site), typeid_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -539,7 +539,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::exit, call_site), exit_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -601,7 +601,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused.clone()].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__if, call_site), if_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -648,7 +648,7 @@ pub fn build_script_macros(def_site: Span, call_site: Span) -> ThinVec<Box<ast::
         attrs: vec![allow_unused].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::MacroDef(Ident::new(sym::__stmt, call_site), stmt_macro),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     }));
@@ -672,7 +672,6 @@ fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
             id: ast::DUMMY_NODE_ID,
             kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::i32, call_site))),
             span: call_site,
-            tokens: None,
         }),
         pat: Box::new(ast::Pat {
             id: ast::DUMMY_NODE_ID,
@@ -682,7 +681,6 @@ fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
                 None,
             ),
             span: call_site,
-            tokens: None,
         }),
         id: ast::DUMMY_NODE_ID,
         span: call_site,
@@ -694,7 +692,6 @@ fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Never,
         span: call_site,
-        tokens: None,
     });
 
     let fn_sig = ast::FnSig {
@@ -714,7 +711,6 @@ fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
             ast::PathSegment::from_ident(Ident::new(sym::process, call_site)),
             ast::PathSegment::from_ident(Ident::new(sym::exit, call_site)),
         ]),
-        tokens: None,
     };
 
     let code_arg = Box::new(ast::Expr {
@@ -751,7 +747,6 @@ fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span: def_site,
-        tokens: None,
     });
 
     let fn_def = ast::Fn {
@@ -762,14 +757,14 @@ fn build_exit_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {
         attrs: vec![allow_dead_code].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Fn(Box::new(fn_def)),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -792,7 +787,6 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
             id: ast::DUMMY_NODE_ID,
             kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::f64, call_site))),
             span: call_site,
-            tokens: None,
         }),
         pat: Box::new(ast::Pat {
             id: ast::DUMMY_NODE_ID,
@@ -802,7 +796,6 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
                 None,
             ),
             span: call_site,
-            tokens: None,
         }),
         id: ast::DUMMY_NODE_ID,
         span: call_site,
@@ -816,7 +809,6 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
             id: ast::DUMMY_NODE_ID,
             kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::f64, call_site))),
             span: call_site,
-            tokens: None,
         }),
         pat: Box::new(ast::Pat {
             id: ast::DUMMY_NODE_ID,
@@ -826,7 +818,6 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
                 None,
             ),
             span: call_site,
-            tokens: None,
         }),
         id: ast::DUMMY_NODE_ID,
         span: call_site,
@@ -838,7 +829,6 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::bool, call_site))),
         span: call_site,
-        tokens: None,
     });
 
     let fn_sig = ast::FnSig {
@@ -1012,7 +1002,6 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         id: ast::DUMMY_NODE_ID,
         rules: ast::BlockCheckMode::Default,
         span: def_site,
-        tokens: None,
     });
 
     let fn_def = ast::Fn {
@@ -1023,14 +1012,14 @@ fn build_approx_eq_function(def_site: Span, call_site: Span) -> Box<ast::Item> {
         contract: None,
         body: Some(body_block),
         define_opaque: None,
-        eii_impls: ThinVec::new(),
+        eii_impl: None,
     };
 
     Box::new(ast::Item {
         attrs: vec![allow_dead_code].into(),
         id: ast::DUMMY_NODE_ID,
         kind: ast::ItemKind::Fn(Box::new(fn_def)),
-        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+        vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
         span: def_site,
         tokens: None,
     })
@@ -1054,7 +1043,6 @@ fn build_math_constants(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Ite
                 ast::PathSegment::from_ident(Ident::new(sym::consts, call_site)),
                 ast::PathSegment::from_ident(Ident::new(const_name, call_site)),
             ]),
-            tokens: None,
         };
 
         let const_expr = Box::new(ast::Expr {
@@ -1069,7 +1057,6 @@ fn build_math_constants(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Ite
             id: ast::DUMMY_NODE_ID,
             kind: ast::TyKind::Path(None, ast::Path::from_ident(Ident::new(sym::f64, call_site))),
             span: call_site,
-            tokens: None,
         });
 
         Box::new(ast::Item {
@@ -1080,10 +1067,11 @@ fn build_math_constants(def_site: Span, call_site: Span) -> ThinVec<Box<ast::Ite
                 ident: Ident::new(name, call_site),
                 generics: ast::Generics::default(),
                 ty: const_ty,
-                rhs_kind: ast::ConstItemRhsKind::new_body(const_expr),
+                body: Some(const_expr),
+                kind: ast::ConstItemKind::Body,
                 define_opaque: None,
             })),
-            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited, tokens: None },
+            vis: ast::Visibility { span: def_site, kind: ast::VisibilityKind::Inherited },
             span: def_site,
             tokens: None,
         })

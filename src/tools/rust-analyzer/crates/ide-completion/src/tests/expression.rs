@@ -3278,6 +3278,7 @@ fn bar() {
             ma panic!(…)                         macro_rules! panic
             ma print!(…)                         macro_rules! print
             md core::
+            md panic::
             md result:: (use core::result)
             md rust_2015:: (use core::prelude::rust_2015)
             md rust_2018:: (use core::prelude::rust_2018)
@@ -4205,5 +4206,40 @@ fn foo(t: T) {
                 sn unsafe    unsafe {}
                 sn while while expr {}
             "#]],
+    );
+}
+
+#[test]
+fn const_is_type_owner() {
+    check(
+        r#"
+pub struct Boo;
+pub struct A(Boo);
+impl A {
+    const X: A = A(B$0);
+}
+    "#,
+        expect![[r#"
+            sp Self    A
+            st A       A
+            st Boo   Boo
+            st Boo   Boo
+            bt u32   u32
+            kw const
+            kw crate::
+            kw false
+            kw for
+            kw if
+            kw if let
+            kw loop
+            kw match
+            kw self::
+            kw true
+            kw unsafe
+            kw while
+            kw while let
+            ex A::X.0
+            ex Boo
+        "#]],
     );
 }

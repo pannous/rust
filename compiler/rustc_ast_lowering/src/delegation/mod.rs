@@ -45,6 +45,8 @@ use hir::def::Res;
 use rustc_abi::ExternAbi;
 use rustc_ast as ast;
 use rustc_ast::*;
+use rustc_hir::attrs::lang_items::LangItem;
+use rustc_hir::def::DefKind;
 use rustc_hir::{self as hir, FnDeclFlags};
 use rustc_middle::ty::Asyncness;
 use rustc_span::def_id::DefId;
@@ -129,6 +131,7 @@ impl<'hir> LoweringContext<'_, 'hir> {
                 hir::InferDelegationSig::Output(self.arena.alloc(hir::DelegationInfo {
                     call_expr_id,
                     call_path_res,
+                    arguments_to_map: res.sig_mapping.arguments_to_map.clone(),
                     child_seg_id: generics.child.args_segment_id,
                     child_seg_id_for_sig: generics.child.segment_id_for_sig(),
                     parent_seg_id_for_sig: generics.parent.segment_id_for_sig(),
@@ -137,9 +140,11 @@ impl<'hir> LoweringContext<'_, 'hir> {
                         let id = match source {
                             DelegationSource::Single => None,
                             DelegationSource::List(expn_id) => Some(expn_id),
-                            DelegationSource::Glob => {
-                                Some(self.tcx.expn_that_defined(self.owner.def_id).expect_local())
-                            }
+                            DelegationSource::Glob => Some(
+                                self.tcx
+                                    .expn_that_defined(self.curr_owner.owner.def_id)
+                                    .expect_local(),
+                            ),
                         };
 
                         id.map(|id| (id, unused_target_expr))
@@ -249,20 +254,19 @@ impl<'hir> LoweringContext<'_, 'hir> {
         let mut unused_target_expr = false;
 
         let block_id = self.lower_body(|this| {
-            let &DelegationResolution {
-                param_info, span, should_generate_block, is_method, ..
-            } = res;
-
+            let &DelegationResolution { param_info, span, is_method, .. } = res;
             let ParamInfo { param_count, .. } = param_info;
+            let arguments_to_map = &res.sig_mapping.arguments_to_map;
 
             let mut parameters: Vec<hir::Param<'_>> = Vec::with_capacity(param_count);
             let mut args: Vec<hir::Expr<'_>> = Vec::with_capacity(param_count);
-            let mut stmts: &[hir::Stmt<'hir>] = &[];
+            let mut stmts = vec![];
 
             // Consider non-specified target expression as generated,
             // as we do not want to emit error when target expression is
             // not specified.
-            unused_target_expr = block.is_some() && (param_count == 0 || !should_generate_block);
+            unused_target_expr =
+                block.is_some() && (param_count == 0 || arguments_to_map.is_empty());
 
             for idx in 0..param_count {
                 let (param, pat_node_id) = this.generate_param(is_method, idx, span);
@@ -271,41 +275,38 @@ impl<'hir> LoweringContext<'_, 'hir> {
                 let generate_arg =
                     |this: &mut Self| this.generate_arg(is_method, idx, param.pat.hir_id, span);
 
-                let arg = if let Some(block) = block
-                    && idx == 0
-                    && should_generate_block
-                {
-                    let mut self_resolver = SelfResolver {
-                        ctxt: this,
-                        path_id: delegation.id,
-                        self_param_id: pat_node_id,
-                    };
-                    self_resolver.visit_block(block);
-                    // Target expr needs to lower `self` path.
-                    this.ident_and_label_to_local_id.insert(pat_node_id, param.pat.hir_id.local_id);
+                let arg = block
+                    .filter(|_| arguments_to_map.contains(&idx))
+                    .and_then(|block| {
+                        let block = this.lower_block_maybe_more_than_once(
+                            block,
+                            pat_node_id,
+                            param.pat.hir_id.local_id,
+                            delegation.id,
+                        );
 
-                    // Lower with `HirId::INVALID` as we will use only expr and stmts.
-                    // FIXME(fn_delegation): Alternatives for target expression lowering:
-                    // https://github.com/rust-lang/rfcs/pull/3530#issuecomment-2197170600.
-                    let block = this.lower_block_noalloc(HirId::INVALID, block, false);
+                        stmts.push(block.stmts);
 
-                    stmts = block.stmts;
-
-                    // The behavior of the delegation's target expression differs from the
-                    // behavior of the usual block, where if there is no final expression
-                    // the `()` is returned. In case of the similar situation in delegation
-                    // (no final expression) we propagate first argument instead of replacing
-                    // it with `()`.
-                    if let Some(&expr) = block.expr { expr } else { generate_arg(this) }
-                } else {
-                    generate_arg(this)
-                };
+                        // The behavior of the delegation's target expression differs from the
+                        // behavior of the usual block, where if there is no final expression
+                        // the `()` is returned. In case of the similar situation in delegation
+                        // (no final expression) we propagate first argument instead of replacing
+                        // it with `()`.
+                        block.expr.copied()
+                    })
+                    .unwrap_or_else(|| generate_arg(this));
 
                 args.push(arg);
             }
 
-            let (final_expr, hir_id) =
-                this.finalize_body_lowering(delegation, stmts, args, res, generics, span);
+            let (final_expr, hir_id) = this.finalize_body_lowering(
+                delegation,
+                this.arena.alloc_from_iter(stmts.into_iter().flatten().copied()),
+                args,
+                res,
+                generics,
+                span,
+            );
 
             call_expr_id = hir_id;
 
@@ -315,6 +316,48 @@ impl<'hir> LoweringContext<'_, 'hir> {
         debug_assert_ne!(call_expr_id, HirId::INVALID);
 
         (block_id, call_expr_id, unused_target_expr)
+    }
+
+    fn lower_block_maybe_more_than_once(
+        &mut self,
+        block: &Block,
+        pat_node_id: NodeId,
+        param_local_id: hir::ItemLocalId,
+        delegation_id: NodeId,
+    ) -> hir::Block<'hir> {
+        let mut self_resolver = SelfResolver {
+            ctxt: self,
+            path_id: delegation_id,
+            self_param_id: pat_node_id,
+            overwrites: vec![],
+        };
+
+        self_resolver.visit_block(block);
+
+        let overwrites = self_resolver.overwrites;
+
+        // Target expr needs to lower `self` path.
+        self.curr_owner.ident_and_label_to_local_id.insert(pat_node_id, param_local_id);
+
+        let block = cfg_select! {
+            debug_assertions => {
+                crate::re_lowering::ReloweringChecker::allow_relowering(self, |this| {
+                    this.lower_block_noalloc(HirId::INVALID, block, false)
+                })
+            }
+            _ => self.lower_block_noalloc(HirId::INVALID, block, false),
+        };
+
+        // Remove node ids for which we overwrote resolution to generated param
+        // before block lowering as block can be relowered. We need to do it because
+        // check in `SelfResolver` uses `get_partial_res` to decide whether to overwrite
+        // resolution, and if it is already overwritten from previous block lowering this
+        // check will not pass.
+        for id in overwrites {
+            self.partial_res_overrides.remove(&id);
+        }
+
+        block
     }
 
     fn finalize_body_lowering(
@@ -392,10 +435,14 @@ impl<'hir> LoweringContext<'_, 'hir> {
         let args = self.arena.alloc_from_iter(args);
         let call = self.mk_expr(hir::ExprKind::Call(callee_path, args), span);
 
-        let expr = if let Some((parent, of_trait)) = res.output_self_mapping {
-            let res = Res::SelfTyAlias { alias_to: parent.to_def_id(), is_trait_impl: of_trait };
+        let expr = if res.sig_mapping.map_return {
+            let res = Res::SelfTyAlias {
+                alias_to: res.parent.to_def_id(),
+                is_trait_impl: self.tcx.def_kind(res.parent) == DefKind::Impl { of_trait: true },
+            };
+
             let ident = Ident::new(kw::SelfUpper, span);
-            let path = self.create_resolved_path(res, ident, span);
+            let path = self.create_resolved_qpath(res, ident, span);
 
             // FIXME(fn_delegation): add default `..` for all other fields.
             let initializer = hir::ExprKind::Struct(
@@ -410,7 +457,14 @@ impl<'hir> LoweringContext<'_, 'hir> {
                 hir::StructTailExpr::None,
             );
 
-            self.arena.alloc(self.mk_expr(initializer, span))
+            let expr = self.mk_expr(initializer, span);
+
+            let path = self.make_lang_item_qpath(LangItem::FromFn, span, None);
+            let path = self.arena.alloc(self.mk_expr(hir::ExprKind::Path(path), span));
+
+            let call = hir::ExprKind::Call(path, self.arena.alloc_slice(&[expr]));
+
+            self.arena.alloc(self.mk_expr(call, span))
         } else {
             self.arena.alloc(call)
         };
@@ -453,11 +507,14 @@ impl<'hir> LoweringContext<'_, 'hir> {
             })
             .unwrap_or_else(|| self.arena.alloc_from_iter(args_iter.consume_all(self)));
 
+        // Do not omit constraints as there might be some and they must be present in HIR (#158812).
+        let has_constraints = segment.args.is_some_and(|a| !a.constraints.is_empty());
+
         // Needed for better error messages (`trait-impl-wrong-args-count.rs` test).
-        segment.args = (!new_args.is_empty()).then(|| {
+        segment.args = (has_constraints || !new_args.is_empty()).then(|| {
             &*self.arena.alloc(hir::GenericArgs {
                 args: new_args,
-                constraints: &[],
+                constraints: segment.args.map(|a| a.constraints).unwrap_or(&[]),
                 parenthesized: hir::GenericArgsParentheses::No,
                 span_ext: segment.args.map_or(span, |args| args.span_ext),
             })
@@ -538,6 +595,7 @@ struct SelfResolver<'a, 'b, 'hir> {
     ctxt: &'a mut LoweringContext<'b, 'hir>,
     path_id: NodeId,
     self_param_id: NodeId,
+    overwrites: Vec<NodeId>,
 }
 
 impl SelfResolver<'_, '_, '_> {
@@ -546,6 +604,7 @@ impl SelfResolver<'_, '_, '_> {
             && let Some(Res::Local(sig_id)) = res.full_res()
             && sig_id == self.path_id
         {
+            self.overwrites.push(id);
             self.ctxt.partial_res_overrides.insert(id, self.self_param_id);
         }
     }
